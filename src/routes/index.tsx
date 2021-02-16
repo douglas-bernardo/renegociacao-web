@@ -11,6 +11,7 @@ import ResetPassword from '../pages/ResetPassword';
 import Profile from '../pages/Profile';
 import Dashboard from '../pages/Dashboard';
 import Ocorrencias from '../pages/Ocorrencias';
+import Negociacoes from '../pages/Negociacoes';
 
 const Routes: React.FC = () => (
   <Switch>
@@ -22,6 +23,7 @@ const Routes: React.FC = () => (
     <Route path="/profile" exact component={Profile} isPrivate />
     <Route path="/dashboard" exact component={Dashboard} isPrivate />
     <Route path="/ocorrencias" exact component={Ocorrencias} isPrivate />
+    <Route path="/negociacoes" exact component={Negociacoes} isPrivate />
   </Switch>
 );
 

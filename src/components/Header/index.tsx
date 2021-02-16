@@ -16,7 +16,7 @@ import {
   DropdownMenuContent,
 } from './styles';
 
-const Header: React.FC = () => {
+const Header: React.FC = ({ children }) => {
   const { visible, setVisible, ref } = OutSideClick(false);
 
   const handleClickButton = useCallback(() => {
@@ -25,6 +25,7 @@ const Header: React.FC = () => {
 
   return (
     <Container>
+      <div>{children}</div>
       <Content>
         <FaBell title="Notificações" />
 

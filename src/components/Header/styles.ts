@@ -1,17 +1,28 @@
 import styled, { css } from 'styled-components';
 
+import searchIcon from '../../assets/search.svg';
+
 interface DropdownMenuProps {
   isVisible?: boolean;
 }
 
 export const Container = styled.header`
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   border-bottom: solid 2px #e5e5e5;
 
   max-width: 1120px;
   height: 100px;
+
+  div input {
+    width: 220px;
+    border: 0;
+    height: 34px;
+    padding-left: 50px;
+    font-size: 12px;
+    background: url(${searchIcon}) no-repeat 5px center;
+  }
 `;
 
 export const Content = styled.div`

@@ -7,7 +7,7 @@ export const OutSideClick = (initialValue: boolean) => {
   const [visible, setVisible] = useState<boolean>(initialValue);
 
   const handleClickOutside = (event: any) => {
-    if (ref.current && !ref.current?.contains(event.target)) setVisible(false);
+    if (!ref.current?.contains(event.target)) setVisible(false);
   };
 
   const handleKeyPress = (event: KeyboardEvent) => {

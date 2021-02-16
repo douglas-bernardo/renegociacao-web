@@ -6,18 +6,18 @@ import Header from '../../components/Header';
 
 import { Main } from './styles';
 
-const Dashboard: React.FC = () => {
+const Negociacoes: React.FC = () => {
   return (
     <Container>
       <Sidebar />
       <Content>
         <Header />
         <Main>
-          <h1>Dashboard Page</h1>
+          <h1>Negociações Page</h1>
         </Main>
       </Content>
     </Container>
   );
 };
 
-export default Dashboard;
+export default Negociacoes;

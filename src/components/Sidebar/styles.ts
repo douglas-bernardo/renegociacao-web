@@ -90,11 +90,11 @@ export const Aside = styled.aside<AsideProps>`
     }
   }
   hr {
-    position: relative;
+    position: absolute;
     background: #d2cfcf;
     height: 2px;
     border: 0;
-    /* width: 256px; */
+    width: 256px;
     margin-top: 20px;
     margin-bottom: 20px;
   }
