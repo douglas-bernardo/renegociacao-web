@@ -31,8 +31,8 @@ export const AuthContext = createContext<AuthContextData>(
 
 export const AuthProvider: React.FC = ({ children }) => {
   const [data, setData] = useState<AuthState>(() => {
-    const token = localStorage.getItem('@GoBarber:token');
-    const user = localStorage.getItem('@GoBarber:user');
+    const token = localStorage.getItem('@Renegociacao:token');
+    const user = localStorage.getItem('@Renegociacao:user');
 
     if (token && user) {
       api.defaults.headers.authorization = `Bearer ${token}`;
@@ -43,42 +43,31 @@ export const AuthProvider: React.FC = ({ children }) => {
   });
 
   const signIn = useCallback(async ({ email, password }) => {
-    api
-      .post('sessions', {
-        email,
-        password,
-      })
-      .then(response => {
-        const { token, user } = response.data;
+    const response = await api.post('sessions', {
+      email,
+      password,
+    });
 
-        localStorage.setItem('@GoBarber:token', token);
-        localStorage.setItem('@GoBarber:user', JSON.stringify(user));
+    const { token, user } = response.data;
 
-        api.defaults.headers.authorization = `Bearer ${token}`;
+    localStorage.setItem('@Renegociacao:token', token);
+    localStorage.setItem('@Renegociacao:user', JSON.stringify(user));
 
-        setData({ token, user });
-      })
-      .catch(err => {
-        if (err.response) {
-          console.log(err);
-        } else if (err.request) {
-          console.log(err);
-        } else {
-          console.log(err);
-        }
-      });
+    api.defaults.headers.authorization = `Bearer ${token}`;
+
+    setData({ token, user });
   }, []);
 
   const signOut = useCallback(() => {
-    localStorage.removeItem('@GoBarber:token');
-    localStorage.removeItem('@GoBarber:token');
+    localStorage.removeItem('@Renegociacao:token');
+    localStorage.removeItem('@Renegociacao:token');
 
     setData({} as AuthState);
   }, []);
 
   const updateUser = useCallback(
     (user: User) => {
-      localStorage.setItem('@GoBarber:user', JSON.stringify(user));
+      localStorage.setItem('@Renegociacao:user', JSON.stringify(user));
       setData({
         token: data.token,
         user,

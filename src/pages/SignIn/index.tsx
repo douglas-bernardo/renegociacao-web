@@ -57,7 +57,8 @@ const SignIn: React.FC = () => {
         addToast({
           type: 'error',
           title: 'Erro na autenticação',
-          description: 'Ocorreu um erro ao fazer login, cheque as credenciais.',
+          description:
+            'Ocorreu um erro na autenticação verifique as credenciais',
         });
       }
     },
@@ -87,10 +88,10 @@ const SignIn: React.FC = () => {
             {/* <Link to="forgot-password">Esqueci minha conta</Link> */}
           </Form>
 
-          <Link to="/signup">
+          {/* <Link to="/signup">
             <FiLogIn />
             Criar conta
-          </Link>
+          </Link> */}
         </AnimationContainer>
       </Content>
       <Background />
