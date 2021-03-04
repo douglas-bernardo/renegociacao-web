@@ -42,7 +42,7 @@ export const DropActionContent = styled.div<DropActionContentProps>`
   ${props =>
     props.position && props.position > 500
       ? css`
-          top: -230px;
+          bottom: 40px;
           box-shadow: rgb(0 0 0 / 40%) 0px -2px 5px;
         `
       : css`
@@ -56,6 +56,32 @@ export const DropActionContent = styled.div<DropActionContentProps>`
     padding-left: 10px;
     color: #a3a3a3;
     text-align: start;
+  }
+
+  a.btnDropAction {
+    text-decoration: none;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    font-size: 16px;
+    color: #3c3c3c;
+    padding: 12px 20px;
+    transition: background 0.2s ease 0s;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    width: 100%;
+
+    svg.drop {
+      width: 16;
+      height: 16;
+      margin-right: 10px;
+      color: #00a8cb;
+    }
+
+    &:hover {
+      background: #e5e5e5;
+    }
   }
 
   button.btnDropAction {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
   FaChartLine,
   FaComments,
@@ -13,43 +13,40 @@ import { Aside } from './styles';
 
 import { useAuth } from '../../hooks/auth';
 
+interface Page {
+  page: string;
+  label: string;
+  icon: Object;
+}
+
+const pages: Array<Page> = [
+  { page: '/dashboard', label: 'Dashboard', icon: <FaChartLine /> },
+  { page: '/ocorrencias', label: 'Ocorrencias', icon: <FaComments /> },
+  { page: '/negociacoes', label: 'Negociações', icon: <FaHandsHelping /> },
+];
+
 const Sidebar: React.FC = () => {
   const { signOut } = useAuth();
-  const items = [
-    { page: 'dashboard', label: 'Dashboard', icom: <FaChartLine /> },
-    { page: 'ocorrencias', label: 'Ocorrencias', icom: <FaComments /> },
-    { page: 'negociacoes', label: 'Negociações', icom: <FaHandsHelping /> },
-    { page: 'logout', label: 'Log out', icom: <FaSignOutAlt /> },
-  ];
 
   return (
-    <Aside isSelected>
+    <Aside>
       <img src={logoimg} className="logo" alt="RenegociacaoWeb" />
-
       <h1>Renegociação</h1>
-
       <ul>
-        {items.map(({ label, page, icom }) => (
-          <li
-            key={page}
-            className={
-              window.location.pathname.replace('/', '') === page ? 'active' : ''
-            }
-          >
-            {page === 'logout' ? (
-              <button type="button" title="Deslogar" onClick={signOut}>
-                {icom}
-                {label}
-              </button>
-            ) : (
-              <Link to={page}>
-                {icom}
-                {label}
-              </Link>
-            )}
+        {pages.map(({ label, page, icon }) => (
+          <li key={page}>
+            <NavLink key={page} to={page} activeClassName="active">
+              {icon}
+              {label}
+            </NavLink>
           </li>
         ))}
       </ul>
+      <hr />
+      <button type="button" title="Deslogar" onClick={signOut}>
+        <FaSignOutAlt />
+        Log out
+      </button>
     </Aside>
   );
 };

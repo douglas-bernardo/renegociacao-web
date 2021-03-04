@@ -1,18 +1,18 @@
 import styled, { css } from 'styled-components';
-
 import Tooltip from '../Tooltip';
 
 interface ContainerProps {
-  isFocused: boolean;
-  isFilled: boolean;
-  isErrored: boolean;
+  isFocused?: boolean;
+  isFilled?: boolean;
+  isErrored?: boolean;
 }
 
 export const Container = styled.div<ContainerProps>`
   background: #fff;
   border-radius: 10px;
-  padding: 16px;
+  padding: 8px;
   width: 100%;
+  margin-bottom: 18px;
 
   border: 2px solid #f0f0f0;
   color: #666360;
@@ -20,8 +20,8 @@ export const Container = styled.div<ContainerProps>`
   display: flex;
   align-items: center;
 
-  & + div {
-    margin-top: 8px;
+  div:first-child {
+    flex: 1;
   }
 
   ${props =>
@@ -33,29 +33,16 @@ export const Container = styled.div<ContainerProps>`
   ${props =>
     props.isFocused &&
     css`
-      border: 2px solid #003379;
-      color: #003379;
+      border: 2px solid #f0f0f0;
+      color: #666360;
     `}
 
-  ${props =>
-    props.isFilled &&
-    css`
-      color: #003379;
-    `}
-
-  input {
-    flex: 1;
-    background: transparent;
-    border: 0;
-    color: #000000;
-
-    &::placeholder {
-      color: #b7b7cc;
-    }
+  .react-select__control {
+    border-style: none;
   }
 
-  svg {
-    margin-right: 16px;
+  .react-select__placeholder {
+    color: #a9a9a9;
   }
 `;
 

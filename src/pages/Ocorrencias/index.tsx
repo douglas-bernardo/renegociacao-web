@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useCallback, useEffect, useState } from 'react';
+import Select from 'react-select';
 
 import {
   FaAngleDoubleLeft,
@@ -15,15 +17,26 @@ import {
   Main,
   MainHeader,
   OcorrenciasTable,
-  StatusSituacao,
   PaginationBar,
   Pagination,
   Page,
+  Loading,
 } from './styles';
+
 import api from '../../services/api';
+import ModalRetencao from '../../components/ModalRetencao';
+import Tag from '../../components/Tag';
+
+import { useToast } from '../../hooks/toast';
+
+interface Situacao {
+  id: number;
+  nome: string;
+}
 
 interface Ocorrencia {
   id: number;
+  dtocorrencia: string;
   numero_ocorrencia: number;
   nome_cliente: string;
   numeroprojeto: number;
@@ -34,11 +47,42 @@ interface Ocorrencia {
   };
 }
 
+interface IRetencaoDTO {
+  origem_id: number;
+  tipo_solicitacao_id: number;
+  tipo_contato_id: number;
+  motivo_id: number;
+  valor_primeira_parcela: number;
+  observacao: string;
+  valor_financiado: number;
+}
+
 const Ocorrencias: React.FC = () => {
-  const situacao = [
-    { value: 'chocolate', label: 'Chocolate' },
-    { value: 'strawberry', label: 'Strawberry' },
-    { value: 'vanilla', label: 'Vanilla' },
+  const { addToast } = useToast();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [situacaoOptions, setSituacaoOptions] = useState<Situacao[]>([]);
+  const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([]);
+  const [tableRefresh, setTableRefresh] = useState(false);
+  const [totalOcorrencias, setTotalOcorrencias] = useState(0);
+  const [selectedOcorrencia, setSelectedOcorrencia] = useState<number | null>(
+    null,
+  );
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [limit, setLimit] = useState(10);
+  const [offset, setOffset] = useState(0);
+
+  const [firstPageRangeDisplayed, setFirstPageRangeDisplayed] = useState(0);
+  const [pageRangeDisplayed, setPageRangeDisplayed] = useState(3);
+  const [pagesDisplayed, setPagesDisplayed] = useState<Array<Number>>([]);
+  const [pages, setPages] = useState<Array<Number>>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const pageLimitToShow = [
+    { value: 10, label: '10' },
+    { value: 25, label: '25' },
+    { value: 50, label: '50' },
+    { value: 100, label: '100' },
   ];
 
   const situacaoStyle = {
@@ -47,16 +91,16 @@ const Ocorrencias: React.FC = () => {
     '7': 'info',
   };
 
-  const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([]);
-  const [limit, setLimit] = useState(10); // per page
-  const [offset, setOffset] = useState(0); // increment com tot limit
+  useEffect(() => {
+    api.get(`/dominio/situacao`).then(response => {
+      const { data } = response.data;
 
-  const [firstPageRangeDisplayed, setFirstPageRangeDisplayed] = useState(0);
-  const [pageRangeDisplayed, setPageRangeDisplayed] = useState(3);
-  const [pagesDisplayed, setPagesDisplayed] = useState<Array<Number>>([]);
-
-  const [pages, setPages] = useState<Array<Number>>([]);
-  const [currentPage, setCurrentPage] = useState(1);
+      const options = data.map(opt => {
+        return { value: opt.id, label: opt.nome };
+      });
+      setSituacaoOptions(options);
+    });
+  }, []);
 
   useEffect(() => {
     api
@@ -67,13 +111,13 @@ const Ocorrencias: React.FC = () => {
         },
       })
       .then(response => {
-        const total = Math.ceil(response.headers['x-total-count'] / limit);
+        setTotalOcorrencias(response.headers['x-total-count']);
 
-        const arrayPages = new Array<Number>();
-        for (let i = 1; i <= total; i += 1) {
-          arrayPages.push(i);
-        }
+        const totalPages = Math.ceil(response.headers['x-total-count'] / limit);
+
+        const arrayPages = Array.from({ length: totalPages }, (_, i) => i + 1);
         setPages(arrayPages);
+
         setPagesDisplayed(
           arrayPages.slice(
             firstPageRangeDisplayed,
@@ -83,8 +127,19 @@ const Ocorrencias: React.FC = () => {
 
         const { data } = response.data;
         setOcorrencias(data);
+        setIsLoading(false);
       });
-  }, [limit, offset, pageRangeDisplayed, firstPageRangeDisplayed]);
+  }, [
+    limit,
+    offset,
+    pageRangeDisplayed,
+    firstPageRangeDisplayed,
+    tableRefresh,
+  ]);
+
+  const handleSelectPageLimitToShow = useCallback(value => {
+    setLimit(value.value);
+  }, []);
 
   const handleGotoPage = useCallback(
     page => {
@@ -105,7 +160,7 @@ const Ocorrencias: React.FC = () => {
     setFirstPageRangeDisplayed(iniRange);
 
     const currentFirstPage = iniRange + 1;
-    console.log(`offset ${(currentFirstPage - 1) * limit}`);
+
     setOffset((currentFirstPage - 1) * limit);
     setCurrentPage(currentFirstPage);
   }, [firstPageRangeDisplayed, pageRangeDisplayed, limit]);
@@ -115,7 +170,7 @@ const Ocorrencias: React.FC = () => {
     setFirstPageRangeDisplayed(iniRange);
 
     const currentFirstPage = iniRange + 1;
-    console.log(`offset ${(currentFirstPage - 1) * limit}`);
+
     setOffset((currentFirstPage - 1) * limit);
     setCurrentPage(currentFirstPage);
   }, [firstPageRangeDisplayed, pageRangeDisplayed, limit]);
@@ -126,6 +181,50 @@ const Ocorrencias: React.FC = () => {
     setOffset((pages.length - 1) * limit);
     setCurrentPage(pages.length);
   }, [pageRangeDisplayed, pages, limit]);
+
+  function toggleModal(): void {
+    setModalOpen(!modalOpen);
+  }
+
+  const handleRetencao = useCallback(
+    async (data: IRetencaoDTO) => {
+      try {
+        const retencao = {
+          situacao: {
+            situacao_id: 6,
+          },
+          negociacao: {
+            origem_id: data.origem_id,
+            tipo_solicitacao_id: data.tipo_solicitacao_id,
+            tipo_contato_id: data.tipo_contato_id,
+            motivo_id: data.motivo_id,
+            valor_primeira_parcela: data.valor_primeira_parcela,
+            observacao: data.observacao,
+          },
+          retencao: {
+            valor_financiado: data.valor_financiado,
+          },
+        };
+
+        await api.post(
+          `/ocorrencias/${selectedOcorrencia}/finaliza-retencao`,
+          retencao,
+        );
+        setTableRefresh(true);
+        addToast({
+          type: 'success',
+          title: 'Ocorrência Finalizada!',
+          description: 'Reversão de Contrato',
+        });
+      } catch (err) {
+        addToast({
+          type: 'error',
+          title: 'Erro na solicitação',
+        });
+      }
+    },
+    [addToast, selectedOcorrencia],
+  );
 
   return (
     <Container>
@@ -138,43 +237,83 @@ const Ocorrencias: React.FC = () => {
           <MainHeader>
             <h1>Ocorrências</h1>
           </MainHeader>
-          <OcorrenciasTable>
-            <thead>
-              <tr>
-                <th>Número</th>
-                <th>Cliente</th>
-                <th>Projeto-Contrato</th>
-                <th colSpan={2}>Situação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ocorrencias.map(ocorrencia => (
-                <tr key={ocorrencia.id}>
-                  <td>{ocorrencia.numero_ocorrencia}</td>
-                  <td>{ocorrencia.nome_cliente}</td>
-                  <td>
-                    {`${ocorrencia.numeroprojeto}-${ocorrencia.numero_ocorrencia}`}
-                  </td>
-                  <td>
-                    <StatusSituacao
-                      theme={situacaoStyle[ocorrencia.situacao.id] || 'default'}
+          <ModalRetencao
+            isOpen={modalOpen}
+            setIsOpen={toggleModal}
+            handleRetencao={handleRetencao}
+          />
+          {isLoading ? (
+            <Loading>
+              <h1>Carregando...</h1>
+            </Loading>
+          ) : (
+            <>
+              <OcorrenciasTable>
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Número</th>
+                    <th>Cliente</th>
+                    <th>Projeto-Contrato</th>
+                    <th colSpan={2}>Situação</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ocorrencias.map(ocorrencia => (
+                    <tr
+                      key={ocorrencia.id}
+                      onClick={() => setSelectedOcorrencia(ocorrencia.id)}
                     >
-                      {ocorrencia.situacao.nome}
-                    </StatusSituacao>
-                  </td>
-                  <td>
-                    <DropAction situacao={situacao} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </OcorrenciasTable>
+                      <td>{ocorrencia.dtocorrencia}</td>
+                      <td>{ocorrencia.numero_ocorrencia}</td>
+                      <td>{ocorrencia.nome_cliente}</td>
+                      <td>
+                        {`${ocorrencia.numeroprojeto}-${ocorrencia.numero_ocorrencia}`}
+                      </td>
+                      <td>
+                        <Tag
+                          theme={
+                            situacaoStyle[ocorrencia.situacao.id] || 'default'
+                          }
+                        >
+                          {ocorrencia.situacao.nome}
+                        </Tag>
+                      </td>
+                      <td>
+                        <DropAction
+                          openModal={toggleModal}
+                          situacao={situacaoOptions}
+                          ocorrenciaProps={{
+                            ocorrenciaId: ocorrencia.id,
+                            finalizada: Number(ocorrencia.situacao.id) === 1,
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </OcorrenciasTable>
 
-          <PaginationBar>
-            <Pagination>
-              {currentPage > pageRangeDisplayed && (
-                <>
+              <PaginationBar>
+                <div className="pageLimitToShow">
+                  <span>Mostrar</span>
+                  <div className="pageLimitToShowControl">
+                    <Select
+                      onChange={handleSelectPageLimitToShow}
+                      menuPlacement="auto"
+                      options={pageLimitToShow}
+                      defaultValue={pageLimitToShow[0]}
+                    />
+                  </div>
+                  <span>
+                    de
+                    {` ${totalOcorrencias} `}
+                    ocorrências
+                  </span>
+                </div>
+                <Pagination>
                   <button
+                    disabled={!(currentPage > 1)}
                     className="controlNavPage"
                     type="button"
                     title="Primeira"
@@ -183,6 +322,7 @@ const Ocorrencias: React.FC = () => {
                     <FaAngleDoubleLeft />
                   </button>
                   <button
+                    disabled={!(currentPage > pageRangeDisplayed)}
                     className="controlNavPage"
                     type="button"
                     title="Anterior"
@@ -190,24 +330,21 @@ const Ocorrencias: React.FC = () => {
                   >
                     <FaAngleLeft />
                   </button>
-                </>
-              )}
-              {pagesDisplayed.map(page => (
-                <Page
-                  isSelected={page === currentPage}
-                  key={page.toString()}
-                  type="button"
-                  onClick={() => handleGotoPage(page)}
-                >
-                  {page}
-                </Page>
-              ))}
-              {!(
-                pagesDisplayed[pagesDisplayed.length - 1] === pages.length ||
-                currentPage === pages.length
-              ) && (
-                <>
+                  {pagesDisplayed.map(page => (
+                    <Page
+                      isSelected={page === currentPage}
+                      key={page.toString()}
+                      type="button"
+                      onClick={() => handleGotoPage(page)}
+                    >
+                      {page}
+                    </Page>
+                  ))}
                   <button
+                    disabled={
+                      pagesDisplayed[pagesDisplayed.length - 1] ===
+                        pages.length || currentPage === pages.length
+                    }
                     className="controlNavPage"
                     type="button"
                     title="Próxima"
@@ -216,6 +353,10 @@ const Ocorrencias: React.FC = () => {
                     <FaAngleRight />
                   </button>
                   <button
+                    disabled={
+                      pagesDisplayed[pagesDisplayed.length - 1] ===
+                        pages.length || currentPage === pages.length
+                    }
                     className="controlNavPage"
                     type="button"
                     title="Última"
@@ -223,10 +364,10 @@ const Ocorrencias: React.FC = () => {
                   >
                     <FaAngleDoubleRight />
                   </button>
-                </>
-              )}
-            </Pagination>
-          </PaginationBar>
+                </Pagination>
+              </PaginationBar>
+            </>
+          )}
         </Main>
       </Content>
     </Container>

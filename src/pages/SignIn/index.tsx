@@ -1,9 +1,9 @@
-import React, { useCallback, useRef } from 'react';
-import { FiLogIn, FiMail, FiLock } from 'react-icons/fi';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { FiMail, FiLock } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 import { Form } from '@unform/web';
 import * as Yup from 'yup';
-import { Link, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import { useAuth } from '../../hooks/auth';
 import { useToast } from '../../hooks/toast';
@@ -27,6 +27,18 @@ const SignIn: React.FC = () => {
   const history = useHistory();
   const { signIn } = useAuth();
   const { addToast } = useToast();
+
+  useEffect(() => {
+    const isExpired = localStorage.getItem('@Renegociacao:expired');
+    if (isExpired) {
+      addToast({
+        type: 'info',
+        title: 'Sessão expirou',
+        description: 'Sua sessão expirou! Por favor, faça login novamente.',
+      });
+      localStorage.removeItem('@Renegociacao:expired');
+    }
+  }, [addToast]);
 
   const handleSubmit = useCallback(
     async (data: SingInFormData) => {

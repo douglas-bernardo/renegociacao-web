@@ -1,10 +1,6 @@
 import styled from 'styled-components';
 
-interface AsideProps {
-  isSelected?: boolean;
-}
-
-export const Aside = styled.aside<AsideProps>`
+export const Aside = styled.aside`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -18,7 +14,7 @@ export const Aside = styled.aside<AsideProps>`
   }
 
   h1 {
-    color: #182390;
+    color: #003379;
     font-size: 24px;
     font-weight: bold;
     margin-top: 30px;
@@ -41,7 +37,7 @@ export const Aside = styled.aside<AsideProps>`
       }
 
       &:hover {
-        background: #182390;
+        background: #003379;
         a {
           color: #fff;
         }
@@ -54,14 +50,6 @@ export const Aside = styled.aside<AsideProps>`
       }
     }
 
-    li.active {
-      background: #182390;
-      a {
-        color: #fff;
-        cursor: default;
-      }
-    }
-
     a {
       display: flex;
       height: 56px;
@@ -69,33 +57,48 @@ export const Aside = styled.aside<AsideProps>`
       text-decoration: none;
       color: #a3a3a3;
       align-items: center;
-      justify-content: start;
-      margin-left: 30px;
+      justify-content: center;
+      border-radius: 30px;
     }
 
-    button {
-      display: flex;
-      height: 56px;
-      width: 200px;
-      text-decoration: none;
-      color: #a3a3a3;
-      align-items: center;
-      justify-content: start;
-      margin-left: 30px;
-      background: transparent;
-      border: 0;
-      &:hover {
-        color: #fff;
-      }
+    a.active {
+      background: #003379;
+      color: #fff;
+      cursor: default;
     }
   }
+
   hr {
-    position: absolute;
     background: #d2cfcf;
     height: 2px;
     border: 0;
     width: 256px;
     margin-top: 20px;
     margin-bottom: 20px;
+  }
+
+  button {
+    display: flex;
+    height: 56px;
+    width: 200px;
+    align-items: center;
+    justify-content: start;
+    color: #a3a3a3;
+    background: transparent;
+    border: 0;
+    border-radius: 30px;
+    text-decoration: none;
+
+    &:hover {
+      background: #003379;
+      color: #fff;
+    }
+
+    svg {
+      width: 30px;
+      height: 30px;
+      margin-right: 20px;
+      margin-left: 30px;
+    }
   }
 `;
