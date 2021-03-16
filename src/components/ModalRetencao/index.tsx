@@ -2,7 +2,7 @@ import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { FiCheckSquare } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 import * as Yup from 'yup';
-import api from '../../services/api';
+import { api } from '../../services/api';
 import { Form } from './styles';
 
 import Modal from '../Modal';
@@ -66,37 +66,41 @@ const ModalRetencao: React.FC<IModalProps> = ({
       api.get(`/dominio/tipo-solicitacao`),
       api.get(`/dominio/origem`),
       api.get(`/dominio/tipo-contato`),
-    ]).then(response => {
-      const [motivos, tiposSol, origem, tipoContato] = response;
+    ])
+      .then(response => {
+        const [motivos, tiposSol, origem, tipoContato] = response;
 
-      const { data: motivoResponse } = motivos.data;
-      setMotivoOptions(
-        motivoResponse.map((opt: Motivo) => {
-          return { value: opt.id, label: opt.nome };
-        }),
-      );
+        const { data: motivoResponse } = motivos.data;
+        setMotivoOptions(
+          motivoResponse.map((opt: Motivo) => {
+            return { value: opt.id, label: opt.nome };
+          }),
+        );
 
-      const { data: tipoSolResponse } = tiposSol.data;
-      setTipoSolOptions(
-        tipoSolResponse.map((opt: TipoSol) => {
-          return { value: opt.id, label: opt.nome };
-        }),
-      );
+        const { data: tipoSolResponse } = tiposSol.data;
+        setTipoSolOptions(
+          tipoSolResponse.map((opt: TipoSol) => {
+            return { value: opt.id, label: opt.nome };
+          }),
+        );
 
-      const { data: origemResponse } = origem.data;
-      setOrigemOptions(
-        origemResponse.map((opt: Origem) => {
-          return { value: opt.id, label: opt.nome };
-        }),
-      );
+        const { data: origemResponse } = origem.data;
+        setOrigemOptions(
+          origemResponse.map((opt: Origem) => {
+            return { value: opt.id, label: opt.nome };
+          }),
+        );
 
-      const { data: tipoContatoResponse } = tipoContato.data;
-      setTipoContatoOptions(
-        tipoContatoResponse.map((opt: TipoContato) => {
-          return { value: opt.id, label: opt.nome };
-        }),
-      );
-    });
+        const { data: tipoContatoResponse } = tipoContato.data;
+        setTipoContatoOptions(
+          tipoContatoResponse.map((opt: TipoContato) => {
+            return { value: opt.id, label: opt.nome };
+          }),
+        );
+      })
+      .catch((error: Error) => {
+        console.log(error.message);
+      });
   }, []);
 
   const handleSubmit = useCallback(

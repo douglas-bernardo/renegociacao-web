@@ -7,8 +7,7 @@ interface PaginationProps {
 export const Main = styled.div`
   height: 100%;
   max-width: 1120px;
-  padding: 30px;
-
+  padding: 20px;
   color: #3c3c3c;
 `;
 
@@ -18,12 +17,9 @@ export const MainHeader = styled.div`
   align-items: flex-end;
 `;
 
-export const Loading = styled.div`
-  font-size: 15px;
-  font-weight: bold;
+export const LoadingContainder = styled.div`
   display: flex;
   justify-content: center;
-  align-items: center;
   height: 100%;
 `;
 

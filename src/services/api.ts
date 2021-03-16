@@ -6,6 +6,10 @@ const api = axios.create({
   baseURL: 'http://app.renegociacao',
 });
 
+const apiTimesharing = axios.create({
+  baseURL: 'http://api.timesharing',
+});
+
 api.interceptors.request.use(
   async config => {
     const token = localStorage.getItem('@Renegociacao:token');
@@ -27,4 +31,4 @@ api.interceptors.request.use(
   },
 );
 
-export default api;
+export { api, apiTimesharing };

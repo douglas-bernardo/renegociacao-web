@@ -21,7 +21,7 @@ const Routes: React.FC = () => (
     <Route path="/profile" exact component={Profile} isPrivate />
     <Route path="/dashboard" exact component={Dashboard} isPrivate />
     <Route
-      path="/ocorrencias/:ocorrenciaId/detalhes"
+      path="/ocorrencias/:id/detalhes"
       exact
       component={OcorrenciaDetalhes}
       isPrivate

@@ -11,6 +11,7 @@ export const Container = styled.header`
   justify-content: space-between;
   align-items: center;
   border-bottom: solid 2px #e5e5e5;
+  padding: 20px;
 
   max-width: 1120px;
   height: 100px;

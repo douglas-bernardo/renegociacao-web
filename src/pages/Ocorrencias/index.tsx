@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useCallback, useEffect, useState } from 'react';
 import Select from 'react-select';
+import format from 'date-fns/format';
+import { parseISO } from 'date-fns';
 
 import {
   FaAngleDoubleLeft,
@@ -12,6 +14,7 @@ import { Container, Content } from '../../components/Container';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import DropAction from '../../components/DropAction';
+import Whoops from '../../components/Whoops';
 
 import {
   Main,
@@ -20,14 +23,15 @@ import {
   PaginationBar,
   Pagination,
   Page,
-  Loading,
+  LoadingContainder,
 } from './styles';
 
-import api from '../../services/api';
+import { api } from '../../services/api';
 import ModalRetencao from '../../components/ModalRetencao';
 import Tag from '../../components/Tag';
 
 import { useToast } from '../../hooks/toast';
+import Loading from '../../components/Loading';
 
 interface Situacao {
   id: number;
@@ -37,6 +41,7 @@ interface Situacao {
 interface Ocorrencia {
   id: number;
   dtocorrencia: string;
+  dateFormatted: string;
   numero_ocorrencia: number;
   nome_cliente: string;
   numeroprojeto: number;
@@ -68,6 +73,7 @@ const Ocorrencias: React.FC = () => {
     null,
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
 
   const [limit, setLimit] = useState(10);
   const [offset, setOffset] = useState(0);
@@ -92,14 +98,21 @@ const Ocorrencias: React.FC = () => {
   };
 
   useEffect(() => {
-    api.get(`/dominio/situacao`).then(response => {
-      const { data } = response.data;
+    api
+      .get(`/dominio/situacao`)
+      .then(response => {
+        const { data } = response.data;
 
-      const options = data.map(opt => {
-        return { value: opt.id, label: opt.nome };
+        const options = data.map(opt => {
+          return { value: opt.id, label: opt.nome };
+        });
+        setSituacaoOptions(options);
+      })
+      .catch((error: Error) => {
+        setIsLoading(false);
+        setIsError(true);
+        console.log(error.message);
       });
-      setSituacaoOptions(options);
-    });
   }, []);
 
   useEffect(() => {
@@ -126,8 +139,19 @@ const Ocorrencias: React.FC = () => {
         );
 
         const { data } = response.data;
-        setOcorrencias(data);
+        const ocorrenciaFormatted = data.map((ocorr: Ocorrencia) => {
+          return {
+            ...ocorr,
+            dateFormatted: format(parseISO(ocorr.dtocorrencia), 'dd-MM-yyyy'),
+          };
+        });
+        setOcorrencias(ocorrenciaFormatted);
         setIsLoading(false);
+      })
+      .catch((error: Error) => {
+        setIsLoading(false);
+        setIsError(true);
+        console.log(error.message);
       });
   }, [
     limit,
@@ -234,138 +258,146 @@ const Ocorrencias: React.FC = () => {
           <input type="text" className="search-bar" placeholder="Pesquisar" />
         </Header>
         <Main>
-          <MainHeader>
-            <h1>Ocorrências</h1>
-          </MainHeader>
-          <ModalRetencao
-            isOpen={modalOpen}
-            setIsOpen={toggleModal}
-            handleRetencao={handleRetencao}
-          />
-          {isLoading ? (
-            <Loading>
-              <h1>Carregando...</h1>
-            </Loading>
+          {isError ? (
+            <Whoops />
           ) : (
             <>
-              <OcorrenciasTable>
-                <thead>
-                  <tr>
-                    <th>Data</th>
-                    <th>Número</th>
-                    <th>Cliente</th>
-                    <th>Projeto-Contrato</th>
-                    <th colSpan={2}>Situação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ocorrencias.map(ocorrencia => (
-                    <tr
-                      key={ocorrencia.id}
-                      onClick={() => setSelectedOcorrencia(ocorrencia.id)}
-                    >
-                      <td>{ocorrencia.dtocorrencia}</td>
-                      <td>{ocorrencia.numero_ocorrencia}</td>
-                      <td>{ocorrencia.nome_cliente}</td>
-                      <td>
-                        {`${ocorrencia.numeroprojeto}-${ocorrencia.numero_ocorrencia}`}
-                      </td>
-                      <td>
-                        <Tag
-                          theme={
-                            situacaoStyle[ocorrencia.situacao.id] || 'default'
-                          }
+              <MainHeader>
+                <h1>Ocorrências</h1>
+              </MainHeader>
+              <ModalRetencao
+                isOpen={modalOpen}
+                setIsOpen={toggleModal}
+                handleRetencao={handleRetencao}
+              />
+              {isLoading ? (
+                <LoadingContainder>
+                  <Loading />
+                </LoadingContainder>
+              ) : (
+                <>
+                  <OcorrenciasTable>
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>Número</th>
+                        <th>Cliente</th>
+                        <th>Projeto-Contrato</th>
+                        <th colSpan={2}>Situação</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ocorrencias.map(ocorrencia => (
+                        <tr
+                          key={ocorrencia.id}
+                          onClick={() => setSelectedOcorrencia(ocorrencia.id)}
                         >
-                          {ocorrencia.situacao.nome}
-                        </Tag>
-                      </td>
-                      <td>
-                        <DropAction
-                          openModal={toggleModal}
-                          situacao={situacaoOptions}
-                          ocorrenciaProps={{
-                            ocorrenciaId: ocorrencia.id,
-                            finalizada: Number(ocorrencia.situacao.id) === 1,
-                          }}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </OcorrenciasTable>
+                          <td>{ocorrencia.dateFormatted}</td>
+                          <td>{ocorrencia.numero_ocorrencia}</td>
+                          <td>{ocorrencia.nome_cliente}</td>
+                          <td>
+                            {`${ocorrencia.numeroprojeto}-${ocorrencia.numero_ocorrencia}`}
+                          </td>
+                          <td>
+                            <Tag
+                              theme={
+                                situacaoStyle[ocorrencia.situacao.id] ||
+                                'default'
+                              }
+                            >
+                              {ocorrencia.situacao.nome}
+                            </Tag>
+                          </td>
+                          <td>
+                            <DropAction
+                              openModal={toggleModal}
+                              situacao={situacaoOptions}
+                              ocorrenciaProps={{
+                                id: ocorrencia.id,
+                                finalizada:
+                                  Number(ocorrencia.situacao.id) === 1,
+                              }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </OcorrenciasTable>
 
-              <PaginationBar>
-                <div className="pageLimitToShow">
-                  <span>Mostrar</span>
-                  <div className="pageLimitToShowControl">
-                    <Select
-                      onChange={handleSelectPageLimitToShow}
-                      menuPlacement="auto"
-                      options={pageLimitToShow}
-                      defaultValue={pageLimitToShow[0]}
-                    />
-                  </div>
-                  <span>
-                    de
-                    {` ${totalOcorrencias} `}
-                    ocorrências
-                  </span>
-                </div>
-                <Pagination>
-                  <button
-                    disabled={!(currentPage > 1)}
-                    className="controlNavPage"
-                    type="button"
-                    title="Primeira"
-                    onClick={handleFirstPage}
-                  >
-                    <FaAngleDoubleLeft />
-                  </button>
-                  <button
-                    disabled={!(currentPage > pageRangeDisplayed)}
-                    className="controlNavPage"
-                    type="button"
-                    title="Anterior"
-                    onClick={handlePrevious}
-                  >
-                    <FaAngleLeft />
-                  </button>
-                  {pagesDisplayed.map(page => (
-                    <Page
-                      isSelected={page === currentPage}
-                      key={page.toString()}
-                      type="button"
-                      onClick={() => handleGotoPage(page)}
-                    >
-                      {page}
-                    </Page>
-                  ))}
-                  <button
-                    disabled={
-                      pagesDisplayed[pagesDisplayed.length - 1] ===
-                        pages.length || currentPage === pages.length
-                    }
-                    className="controlNavPage"
-                    type="button"
-                    title="Próxima"
-                    onClick={handleNext}
-                  >
-                    <FaAngleRight />
-                  </button>
-                  <button
-                    disabled={
-                      pagesDisplayed[pagesDisplayed.length - 1] ===
-                        pages.length || currentPage === pages.length
-                    }
-                    className="controlNavPage"
-                    type="button"
-                    title="Última"
-                    onClick={handleLastPage}
-                  >
-                    <FaAngleDoubleRight />
-                  </button>
-                </Pagination>
-              </PaginationBar>
+                  <PaginationBar>
+                    <div className="pageLimitToShow">
+                      <span>Mostrar</span>
+                      <div className="pageLimitToShowControl">
+                        <Select
+                          onChange={handleSelectPageLimitToShow}
+                          menuPlacement="auto"
+                          options={pageLimitToShow}
+                          defaultValue={pageLimitToShow[0]}
+                        />
+                      </div>
+                      <span>
+                        de
+                        {` ${totalOcorrencias} `}
+                        ocorrências
+                      </span>
+                    </div>
+                    <Pagination>
+                      <button
+                        disabled={!(currentPage > 1)}
+                        className="controlNavPage"
+                        type="button"
+                        title="Primeira"
+                        onClick={handleFirstPage}
+                      >
+                        <FaAngleDoubleLeft />
+                      </button>
+                      <button
+                        disabled={!(currentPage > pageRangeDisplayed)}
+                        className="controlNavPage"
+                        type="button"
+                        title="Anterior"
+                        onClick={handlePrevious}
+                      >
+                        <FaAngleLeft />
+                      </button>
+                      {pagesDisplayed.map(page => (
+                        <Page
+                          isSelected={page === currentPage}
+                          key={page.toString()}
+                          type="button"
+                          onClick={() => handleGotoPage(page)}
+                        >
+                          {page}
+                        </Page>
+                      ))}
+                      <button
+                        disabled={
+                          pagesDisplayed[pagesDisplayed.length - 1] ===
+                            pages.length || currentPage === pages.length
+                        }
+                        className="controlNavPage"
+                        type="button"
+                        title="Próxima"
+                        onClick={handleNext}
+                      >
+                        <FaAngleRight />
+                      </button>
+                      <button
+                        disabled={
+                          pagesDisplayed[pagesDisplayed.length - 1] ===
+                            pages.length || currentPage === pages.length
+                        }
+                        className="controlNavPage"
+                        type="button"
+                        title="Última"
+                        onClick={handleLastPage}
+                      >
+                        <FaAngleDoubleRight />
+                      </button>
+                    </Pagination>
+                  </PaginationBar>
+                </>
+              )}
             </>
           )}
         </Main>

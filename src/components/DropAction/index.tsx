@@ -15,7 +15,7 @@ import { OutSideClick } from '../../hooks/outSideClick';
 import { Container, DropActionContent } from './styles';
 
 interface OcorrenciaProps {
-  ocorrenciaId: number;
+  id: number;
   finalizada: boolean;
 }
 
@@ -56,7 +56,7 @@ const DropAction: React.FC<DropActionProps> = ({
         <DropActionContent position={positionContent}>
           <Link
             className="btnDropAction"
-            to={`/ocorrencias/${ocorrenciaProps.ocorrenciaId}/detalhes`}
+            to={`/ocorrencias/${ocorrenciaProps.id}/detalhes`}
           >
             <FaInfoCircle className="drop info" />
             Detalhar
