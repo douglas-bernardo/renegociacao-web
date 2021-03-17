@@ -1,28 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useCallback, useEffect, useState } from 'react';
-import Select from 'react-select';
 import format from 'date-fns/format';
 import { parseISO } from 'date-fns';
 
-import {
-  FaAngleDoubleLeft,
-  FaAngleDoubleRight,
-  FaAngleLeft,
-  FaAngleRight,
-} from 'react-icons/fa';
 import { Container, Content } from '../../components/Container';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import DropAction from '../../components/DropAction';
 import Whoops from '../../components/Whoops';
 
+import Pagination from '../../components/Pagination';
+
 import {
   Main,
   MainHeader,
   OcorrenciasTable,
-  PaginationBar,
-  Pagination,
-  Page,
   LoadingContainder,
 } from './styles';
 
@@ -78,19 +69,6 @@ const Ocorrencias: React.FC = () => {
   const [limit, setLimit] = useState(10);
   const [offset, setOffset] = useState(0);
 
-  const [firstPageRangeDisplayed, setFirstPageRangeDisplayed] = useState(0);
-  const [pageRangeDisplayed, setPageRangeDisplayed] = useState(3);
-  const [pagesDisplayed, setPagesDisplayed] = useState<Array<Number>>([]);
-  const [pages, setPages] = useState<Array<Number>>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const pageLimitToShow = [
-    { value: 10, label: '10' },
-    { value: 25, label: '25' },
-    { value: 50, label: '50' },
-    { value: 100, label: '100' },
-  ];
-
   const situacaoStyle = {
     '1': 'warning',
     '6': 'success',
@@ -126,18 +104,6 @@ const Ocorrencias: React.FC = () => {
       .then(response => {
         setTotalOcorrencias(response.headers['x-total-count']);
 
-        const totalPages = Math.ceil(response.headers['x-total-count'] / limit);
-
-        const arrayPages = Array.from({ length: totalPages }, (_, i) => i + 1);
-        setPages(arrayPages);
-
-        setPagesDisplayed(
-          arrayPages.slice(
-            firstPageRangeDisplayed,
-            firstPageRangeDisplayed + pageRangeDisplayed,
-          ),
-        );
-
         const { data } = response.data;
         const ocorrenciaFormatted = data.map((ocorr: Ocorrencia) => {
           return {
@@ -153,58 +119,7 @@ const Ocorrencias: React.FC = () => {
         setIsError(true);
         console.log(error.message);
       });
-  }, [
-    limit,
-    offset,
-    pageRangeDisplayed,
-    firstPageRangeDisplayed,
-    tableRefresh,
-  ]);
-
-  const handleSelectPageLimitToShow = useCallback(value => {
-    setLimit(value.value);
-  }, []);
-
-  const handleGotoPage = useCallback(
-    page => {
-      setOffset((page - 1) * limit);
-      setCurrentPage(page);
-    },
-    [limit],
-  );
-
-  const handleFirstPage = useCallback(() => {
-    setFirstPageRangeDisplayed(0);
-    setOffset(0);
-    setCurrentPage(1);
-  }, []);
-
-  const handlePrevious = useCallback(() => {
-    const iniRange = firstPageRangeDisplayed - pageRangeDisplayed;
-    setFirstPageRangeDisplayed(iniRange);
-
-    const currentFirstPage = iniRange + 1;
-
-    setOffset((currentFirstPage - 1) * limit);
-    setCurrentPage(currentFirstPage);
-  }, [firstPageRangeDisplayed, pageRangeDisplayed, limit]);
-
-  const handleNext = useCallback(() => {
-    const iniRange = firstPageRangeDisplayed + pageRangeDisplayed;
-    setFirstPageRangeDisplayed(iniRange);
-
-    const currentFirstPage = iniRange + 1;
-
-    setOffset((currentFirstPage - 1) * limit);
-    setCurrentPage(currentFirstPage);
-  }, [firstPageRangeDisplayed, pageRangeDisplayed, limit]);
-
-  const handleLastPage = useCallback(() => {
-    const iniRange = pages.length - pageRangeDisplayed + 1;
-    setFirstPageRangeDisplayed(iniRange);
-    setOffset((pages.length - 1) * limit);
-    setCurrentPage(pages.length);
-  }, [pageRangeDisplayed, pages, limit]);
+  }, [limit, offset, tableRefresh]);
 
   function toggleModal(): void {
     setModalOpen(!modalOpen);
@@ -248,6 +163,14 @@ const Ocorrencias: React.FC = () => {
       }
     },
     [addToast, selectedOcorrencia],
+  );
+
+  const handleOffsetAndLimit = useCallback(
+    (_limit: number, _offset: number) => {
+      setLimit(_limit);
+      setOffset(_offset);
+    },
+    [],
   );
 
   return (
@@ -323,79 +246,14 @@ const Ocorrencias: React.FC = () => {
                       ))}
                     </tbody>
                   </OcorrenciasTable>
-
-                  <PaginationBar>
-                    <div className="pageLimitToShow">
-                      <span>Mostrar</span>
-                      <div className="pageLimitToShowControl">
-                        <Select
-                          onChange={handleSelectPageLimitToShow}
-                          menuPlacement="auto"
-                          options={pageLimitToShow}
-                          defaultValue={pageLimitToShow[0]}
-                        />
-                      </div>
-                      <span>
-                        de
-                        {` ${totalOcorrencias} `}
-                        ocorrências
-                      </span>
-                    </div>
-                    <Pagination>
-                      <button
-                        disabled={!(currentPage > 1)}
-                        className="controlNavPage"
-                        type="button"
-                        title="Primeira"
-                        onClick={handleFirstPage}
-                      >
-                        <FaAngleDoubleLeft />
-                      </button>
-                      <button
-                        disabled={!(currentPage > pageRangeDisplayed)}
-                        className="controlNavPage"
-                        type="button"
-                        title="Anterior"
-                        onClick={handlePrevious}
-                      >
-                        <FaAngleLeft />
-                      </button>
-                      {pagesDisplayed.map(page => (
-                        <Page
-                          isSelected={page === currentPage}
-                          key={page.toString()}
-                          type="button"
-                          onClick={() => handleGotoPage(page)}
-                        >
-                          {page}
-                        </Page>
-                      ))}
-                      <button
-                        disabled={
-                          pagesDisplayed[pagesDisplayed.length - 1] ===
-                            pages.length || currentPage === pages.length
-                        }
-                        className="controlNavPage"
-                        type="button"
-                        title="Próxima"
-                        onClick={handleNext}
-                      >
-                        <FaAngleRight />
-                      </button>
-                      <button
-                        disabled={
-                          pagesDisplayed[pagesDisplayed.length - 1] ===
-                            pages.length || currentPage === pages.length
-                        }
-                        className="controlNavPage"
-                        type="button"
-                        title="Última"
-                        onClick={handleLastPage}
-                      >
-                        <FaAngleDoubleRight />
-                      </button>
-                    </Pagination>
-                  </PaginationBar>
+                  {totalOcorrencias > 0 && (
+                    <Pagination
+                      count={totalOcorrencias}
+                      limit={limit}
+                      pageRangeDisplayed={5}
+                      onChange={handleOffsetAndLimit}
+                    />
+                  )}
                 </>
               )}
             </>

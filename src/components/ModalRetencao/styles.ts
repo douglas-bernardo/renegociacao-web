@@ -33,7 +33,7 @@ export const Form = styled(Unform)`
   }
 
   div.row div {
-    width: 250px;
+    /* width: 250px; */
     :not(:last-child) {
       margin-right: 20px;
     }

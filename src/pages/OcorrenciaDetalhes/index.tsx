@@ -40,6 +40,7 @@ import outrosAtLogo from '../../assets/speak.svg';
 import Tag from '../../components/Tag';
 import { api, apiTimesharing } from '../../services/api';
 import Loading from '../../components/Loading';
+import { numberFormat } from '../../utils/numberFormat';
 
 interface Ocorrencia {
   id: number;
@@ -51,6 +52,7 @@ interface Ocorrencia {
   numeroprojeto: number;
   numerocontrato: number;
   valor_venda: string;
+  valorVendaFormatted: string;
   produto: string;
   status: string;
   motivo: string;
@@ -128,8 +130,8 @@ const OcorrenciaDetalhes: React.FC = () => {
             parseISO(data.dtocorrencia),
             'dd-MM-yyyy HH:mm:ss',
           ),
+          valorVendaFormatted: numberFormat(data.valor_venda),
         };
-        // console.log(ocorrenciaFormatted);
         setOcorrencia(ocorrenciaFormatted);
         setIdPessoaCliente(ocorrenciaFormatted.idpessoa_cliente);
       })
@@ -154,7 +156,6 @@ const OcorrenciaDetalhes: React.FC = () => {
             dateFormatted: format(parseISO(atend.dataobservacao), 'dd-MM-yyyy'),
           };
         });
-        // console.log(atendimentosFormatted);
         setAtendimentos(atendimentosFormatted);
         setIsLoading(false);
       })
@@ -222,7 +223,7 @@ const OcorrenciaDetalhes: React.FC = () => {
                     </div>
                     <div className="row">
                       <span>Valor de Venda:</span>
-                      <div>{ocorrencia.valor_venda}</div>
+                      <div>{ocorrencia.valorVendaFormatted}</div>
                     </div>
                     <div className="row">
                       <span>Produto:</span>
