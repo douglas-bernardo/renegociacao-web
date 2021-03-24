@@ -2,6 +2,7 @@ import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { FiCheckSquare } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 import * as Yup from 'yup';
+import { OptionsType, OptionTypeBase } from 'react-select';
 import { api } from '../../services/api';
 import { Form } from './styles';
 
@@ -11,20 +12,21 @@ import Select from '../Select';
 
 import getValidationErros from '../../utils/getValidationErros';
 
-interface IRetencaoDTO {
+interface IOutrosDTO {
+  situacao_id: number;
   origem_id: number;
   tipo_solicitacao_id: number;
   tipo_contato_id: number;
   motivo_id: number;
-  valor_primeira_parcela: number;
   observacao: string;
-  valor_financiado: number;
 }
 
 interface IModalProps {
   isOpen: boolean;
   setIsOpen: () => void;
-  handleRetencao: (data: IRetencaoDTO) => void;
+  handleOutros: (data: IOutrosDTO) => void;
+  situacaoOptions: OptionsType<OptionTypeBase>;
+  defaultSituacaoOption: OptionsType<OptionTypeBase>;
 }
 
 interface Motivo {
@@ -47,10 +49,12 @@ interface TipoContato {
   nome: string;
 }
 
-const ModalRetencao: React.FC<IModalProps> = ({
+const ModalOutros: React.FC<IModalProps> = ({
   isOpen,
   setIsOpen,
-  handleRetencao,
+  handleOutros,
+  situacaoOptions,
+  defaultSituacaoOption,
 }) => {
   const formRef = useRef<FormHandles>(null);
   const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
@@ -104,14 +108,11 @@ const ModalRetencao: React.FC<IModalProps> = ({
   }, []);
 
   const handleSubmit = useCallback(
-    async (data: IRetencaoDTO) => {
+    async (data: IOutrosDTO) => {
       try {
         formRef.current?.setErrors({});
 
         const schema = Yup.object().shape({
-          valor_financiado: Yup.string().required(
-            'Valor financiado obrigatório',
-          ),
           motivo_id: Yup.string().required('Motivo é obrigatório'),
           tipo_solicitacao_id: Yup.string().required(
             'Tipo de Solicitação é obrigatório',
@@ -120,11 +121,12 @@ const ModalRetencao: React.FC<IModalProps> = ({
           tipo_contato_id: Yup.string().required(
             'Tipo de contato é obrigatório',
           ),
+          situacao_id: Yup.string().required('Situação é obrigatório'),
         });
 
         await schema.validate(data, { abortEarly: false });
 
-        handleRetencao(data);
+        handleOutros(data);
         setIsOpen();
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
@@ -133,13 +135,13 @@ const ModalRetencao: React.FC<IModalProps> = ({
         }
       }
     },
-    [handleRetencao, setIsOpen],
+    [handleOutros, setIsOpen],
   );
 
   return (
     <Modal isOpen={isOpen} setIsOpen={setIsOpen} width="912px">
       <Form ref={formRef} onSubmit={handleSubmit}>
-        <h1>Finalização de Negociação | Retenção Contrato</h1>
+        <h1>Finalização de Negociação | Outros</h1>
         <Select
           name="motivo_id"
           options={motivoOptions}
@@ -166,21 +168,16 @@ const ModalRetencao: React.FC<IModalProps> = ({
             placeholder="Tipo de Contato"
           />
         </div>
-        <div className="row">
-          <Input
-            name="valor_financiado"
-            placeholder="Valor Financiado"
-            mask="currency"
-          />
-          <Input
-            name="valor_primeira_parcela"
-            placeholder="Valor 1ª Parcela"
-            mask="currency"
-          />
-        </div>
-
+        <Select
+          name="situacao_id"
+          options={situacaoOptions}
+          menuPlacement="auto"
+          placeholder="Situação"
+          defaultValue={defaultSituacaoOption}
+        />
+        <Input name="observacao" placeholder="Observações" />
         <button type="submit" data-testid="add-food-button">
-          <p className="text">Finalizar Retenção</p>
+          <p className="text">Finalizar Negociação</p>
           <div className="icon">
             <FiCheckSquare size={24} />
           </div>
@@ -190,4 +187,4 @@ const ModalRetencao: React.FC<IModalProps> = ({
   );
 };
 
-export default ModalRetencao;
+export default ModalOutros;

@@ -13,7 +13,8 @@ export const Container = styled.header`
   border-bottom: solid 2px #e5e5e5;
   padding: 20px;
 
-  max-width: 1120px;
+  /* max-width: 1120px; */
+  margin-right: 20px;
   height: 100px;
 
   div input {
@@ -59,7 +60,9 @@ export const Content = styled.div`
   }
 `;
 
-export const DropdownMenu = styled.div``;
+export const DropdownMenu = styled.div`
+  z-index: 1;
+`;
 
 export const DropdownMenuContent = styled.div<DropdownMenuProps>`
   position: absolute;

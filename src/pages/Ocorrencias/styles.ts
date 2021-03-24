@@ -2,7 +2,8 @@ import styled from 'styled-components';
 
 export const Main = styled.div`
   height: 100%;
-  max-width: 1120px;
+  /* max-width: 1120px; */
+  margin-right: 20px;
   padding: 20px;
   color: #3c3c3c;
 `;

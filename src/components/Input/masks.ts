@@ -21,6 +21,15 @@ export function currency(
   return e;
 }
 
+export function number(
+  e: React.FormEvent<HTMLInputElement>,
+): React.FormEvent<HTMLInputElement> {
+  let { value } = e.currentTarget;
+  value = value.replace(/\D/g, '');
+  e.currentTarget.value = value;
+  return e;
+}
+
 export function cpf(
   e: React.FormEvent<HTMLInputElement>,
 ): React.FormEvent<HTMLInputElement> {

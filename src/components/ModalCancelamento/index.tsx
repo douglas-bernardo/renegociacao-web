@@ -11,20 +11,23 @@ import Select from '../Select';
 
 import getValidationErros from '../../utils/getValidationErros';
 
-interface IRetencaoDTO {
+interface ICancelamentoDTO {
   origem_id: number;
   tipo_solicitacao_id: number;
   tipo_contato_id: number;
   motivo_id: number;
-  valor_primeira_parcela: number;
-  observacao: string;
   valor_financiado: number;
+  reembolso: number;
+  numero_pc: number;
+  taxas_extras: number;
+  observacao: string;
+  multa: string;
 }
 
 interface IModalProps {
   isOpen: boolean;
   setIsOpen: () => void;
-  handleRetencao: (data: IRetencaoDTO) => void;
+  handleCancelamento: (data: ICancelamentoDTO) => void;
 }
 
 interface Motivo {
@@ -47,10 +50,10 @@ interface TipoContato {
   nome: string;
 }
 
-const ModalRetencao: React.FC<IModalProps> = ({
+const ModalCancelamento: React.FC<IModalProps> = ({
   isOpen,
   setIsOpen,
-  handleRetencao,
+  handleCancelamento,
 }) => {
   const formRef = useRef<FormHandles>(null);
   const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
@@ -104,14 +107,11 @@ const ModalRetencao: React.FC<IModalProps> = ({
   }, []);
 
   const handleSubmit = useCallback(
-    async (data: IRetencaoDTO) => {
+    async (data: ICancelamentoDTO) => {
       try {
         formRef.current?.setErrors({});
 
         const schema = Yup.object().shape({
-          valor_financiado: Yup.string().required(
-            'Valor financiado obrigatório',
-          ),
           motivo_id: Yup.string().required('Motivo é obrigatório'),
           tipo_solicitacao_id: Yup.string().required(
             'Tipo de Solicitação é obrigatório',
@@ -120,11 +120,18 @@ const ModalRetencao: React.FC<IModalProps> = ({
           tipo_contato_id: Yup.string().required(
             'Tipo de contato é obrigatório',
           ),
+          numero_pc: Yup.string().when('reembolso', {
+            is: value => value && value.length > 0,
+            then: Yup.string().required(
+              'Número do PC é obrigatório quando há reembolso',
+            ),
+            otherwise: Yup.string(),
+          }),
         });
 
         await schema.validate(data, { abortEarly: false });
 
-        handleRetencao(data);
+        handleCancelamento(data);
         setIsOpen();
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
@@ -133,13 +140,13 @@ const ModalRetencao: React.FC<IModalProps> = ({
         }
       }
     },
-    [handleRetencao, setIsOpen],
+    [handleCancelamento, setIsOpen],
   );
 
   return (
     <Modal isOpen={isOpen} setIsOpen={setIsOpen} width="912px">
       <Form ref={formRef} onSubmit={handleSubmit}>
-        <h1>Finalização de Negociação | Retenção Contrato</h1>
+        <h1>Finalização de Negociação | Cancelamento Contrato</h1>
         <Select
           name="motivo_id"
           options={motivoOptions}
@@ -168,19 +175,23 @@ const ModalRetencao: React.FC<IModalProps> = ({
         </div>
         <div className="row">
           <Input
-            name="valor_financiado"
-            placeholder="Valor Financiado"
+            name="multa"
+            placeholder="Multa Cancelamento"
             mask="currency"
           />
+          <Input name="reembolso" placeholder="Reembolso" mask="currency" />
+          <Input name="numero_pc" placeholder="Número da PC" mask="number" />
+        </div>
+        <div className="row">
           <Input
-            name="valor_primeira_parcela"
-            placeholder="Valor 1ª Parcela"
+            name="taxas_extras"
+            placeholder="Taxas e Multas Extras"
             mask="currency"
           />
         </div>
-
+        <Input name="observacao" placeholder="Observações" />
         <button type="submit" data-testid="add-food-button">
-          <p className="text">Finalizar Retenção</p>
+          <p className="text">Finalizar Cancelamento</p>
           <div className="icon">
             <FiCheckSquare size={24} />
           </div>
@@ -190,4 +201,4 @@ const ModalRetencao: React.FC<IModalProps> = ({
   );
 };
 
-export default ModalRetencao;
+export default ModalCancelamento;

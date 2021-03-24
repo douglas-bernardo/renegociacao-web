@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import { Form as Unform } from '@unform/web';
 
 export const Form = styled(Unform)`
-  padding: 48px 60px;
+  padding: 40px 50px;
   display: flex;
   flex-direction: column;
 
@@ -22,7 +22,7 @@ export const Form = styled(Unform)`
   }
 
   div.control > div {
-    width: 250px;
+    /* width: 250px; */
     :not(:last-child) {
       margin-right: 20px;
     }
@@ -30,6 +30,7 @@ export const Form = styled(Unform)`
 
   div.row {
     display: flex;
+    margin-bottom: 18px;
   }
 
   div.row div {
@@ -40,7 +41,7 @@ export const Form = styled(Unform)`
   }
 
   button {
-    margin-top: 48px;
+    margin-top: 18px;
     align-self: flex-end;
   }
 

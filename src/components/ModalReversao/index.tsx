@@ -11,20 +11,26 @@ import Select from '../Select';
 
 import getValidationErros from '../../utils/getValidationErros';
 
-interface IRetencaoDTO {
+interface IReversaoDTO {
   origem_id: number;
   tipo_solicitacao_id: number;
   tipo_contato_id: number;
   motivo_id: number;
-  valor_primeira_parcela: number;
-  observacao: string;
   valor_financiado: number;
+  reembolso: number;
+  numero_pc: number;
+  taxas_extras: number;
+  valor_primeira_parcela: number;
+  projeto_id: number;
+  numerocontrato: number;
+  valor_venda: number;
+  observacao: string;
 }
 
 interface IModalProps {
   isOpen: boolean;
   setIsOpen: () => void;
-  handleRetencao: (data: IRetencaoDTO) => void;
+  handleReversao: (data: IReversaoDTO) => void;
 }
 
 interface Motivo {
@@ -47,10 +53,15 @@ interface TipoContato {
   nome: string;
 }
 
-const ModalRetencao: React.FC<IModalProps> = ({
+interface Produto {
+  id: number;
+  nomeprojeto: string;
+}
+
+const ModalReversao: React.FC<IModalProps> = ({
   isOpen,
   setIsOpen,
-  handleRetencao,
+  handleReversao,
 }) => {
   const formRef = useRef<FormHandles>(null);
   const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
@@ -59,6 +70,7 @@ const ModalRetencao: React.FC<IModalProps> = ({
   const [tipoContatoOptions, setTipoContatoOptions] = useState<TipoContato[]>(
     [],
   );
+  const [produtoOptions, setProdutoOptions] = useState<Produto[]>([]);
 
   useEffect(() => {
     Promise.all([
@@ -66,9 +78,10 @@ const ModalRetencao: React.FC<IModalProps> = ({
       api.get(`/dominio/tipo-solicitacao`),
       api.get(`/dominio/origem`),
       api.get(`/dominio/tipo-contato`),
+      api.get(`/dominio/projeto`),
     ])
       .then(response => {
-        const [motivos, tiposSol, origem, tipoContato] = response;
+        const [motivos, tiposSol, origem, tipoContato, produto] = response;
 
         const { data: motivoResponse } = motivos.data;
         setMotivoOptions(
@@ -97,6 +110,13 @@ const ModalRetencao: React.FC<IModalProps> = ({
             return { value: opt.id, label: opt.nome };
           }),
         );
+
+        const { data: produtoResponse } = produto.data;
+        setProdutoOptions(
+          produtoResponse.map((opt: Produto) => {
+            return { value: opt.id, label: opt.nomeprojeto };
+          }),
+        );
       })
       .catch((error: Error) => {
         console.log(error.message);
@@ -104,14 +124,11 @@ const ModalRetencao: React.FC<IModalProps> = ({
   }, []);
 
   const handleSubmit = useCallback(
-    async (data: IRetencaoDTO) => {
+    async (data: IReversaoDTO) => {
       try {
         formRef.current?.setErrors({});
 
         const schema = Yup.object().shape({
-          valor_financiado: Yup.string().required(
-            'Valor financiado obrigatório',
-          ),
           motivo_id: Yup.string().required('Motivo é obrigatório'),
           tipo_solicitacao_id: Yup.string().required(
             'Tipo de Solicitação é obrigatório',
@@ -120,11 +137,23 @@ const ModalRetencao: React.FC<IModalProps> = ({
           tipo_contato_id: Yup.string().required(
             'Tipo de contato é obrigatório',
           ),
+          projeto_id: Yup.string().required('Produto é obrigatório'),
+          numerocontrato: Yup.string().required(
+            'Número Contrato é obrigatório',
+          ),
+          valor_venda: Yup.string().required('Valor de venda obrigatório'),
+          numero_pc: Yup.string().when('reembolso', {
+            is: value => value && value.length > 0,
+            then: Yup.string().required(
+              'Número do PC é obrigatório quando há reembolso',
+            ),
+            otherwise: Yup.string(),
+          }),
         });
 
         await schema.validate(data, { abortEarly: false });
 
-        handleRetencao(data);
+        handleReversao(data);
         setIsOpen();
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
@@ -133,13 +162,13 @@ const ModalRetencao: React.FC<IModalProps> = ({
         }
       }
     },
-    [handleRetencao, setIsOpen],
+    [handleReversao, setIsOpen],
   );
 
   return (
     <Modal isOpen={isOpen} setIsOpen={setIsOpen} width="912px">
       <Form ref={formRef} onSubmit={handleSubmit}>
-        <h1>Finalização de Negociação | Retenção Contrato</h1>
+        <h1>Finalização de Negociação | Reversão Contrato</h1>
         <Select
           name="motivo_id"
           options={motivoOptions}
@@ -166,10 +195,30 @@ const ModalRetencao: React.FC<IModalProps> = ({
             placeholder="Tipo de Contato"
           />
         </div>
+        <Select
+          name="projeto_id"
+          options={produtoOptions}
+          menuPlacement="auto"
+          placeholder="Produto"
+        />
         <div className="row">
           <Input
-            name="valor_financiado"
-            placeholder="Valor Financiado"
+            name="numerocontrato"
+            placeholder="Número Contrato Novo"
+            mask="number"
+          />
+          <Input
+            name="valor_venda"
+            placeholder="Valor de Venda"
+            mask="currency"
+          />
+          <Input name="reembolso" placeholder="Reembolso" mask="currency" />
+        </div>
+        <div className="row">
+          <Input name="numero_pc" placeholder="Número da PC" mask="number" />
+          <Input
+            name="taxas_extras"
+            placeholder="Taxas e Multas Extras"
             mask="currency"
           />
           <Input
@@ -178,9 +227,9 @@ const ModalRetencao: React.FC<IModalProps> = ({
             mask="currency"
           />
         </div>
-
+        <Input name="observacao" placeholder="Observações" />
         <button type="submit" data-testid="add-food-button">
-          <p className="text">Finalizar Retenção</p>
+          <p className="text">Finalizar Reversão</p>
           <div className="icon">
             <FiCheckSquare size={24} />
           </div>
@@ -190,4 +239,4 @@ const ModalRetencao: React.FC<IModalProps> = ({
   );
 };
 
-export default ModalRetencao;
+export default ModalReversao;

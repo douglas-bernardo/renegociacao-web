@@ -81,7 +81,7 @@ const Ocorrencias: React.FC = () => {
       .then(response => {
         const { data } = response.data;
 
-        const options = data.map(opt => {
+        const options = data.map((opt: Situacao) => {
           return { value: opt.id, label: opt.nome };
         });
         setSituacaoOptions(options);

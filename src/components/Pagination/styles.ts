@@ -9,7 +9,8 @@ export const Container = styled.div`
   padding: 12px 0;
   align-items: center;
   justify-content: space-between;
-  max-width: 1120px;
+  /* max-width: 1120px; */
+  margin-right: 20px;
 
   div.pageLimitToShow {
     display: flex;

@@ -1,5 +1,4 @@
 import styled, { css } from 'styled-components';
-import { shade } from 'polished';
 
 interface DropDetailsContentProps {
   position?: number;
@@ -7,14 +6,19 @@ interface DropDetailsContentProps {
 
 export const Main = styled.div`
   height: 100%;
+  width: 100%;
   max-width: 1120px;
+  /* max-width: 980px; */
+
+  margin: auto;
   padding: 20px;
   color: #3c3c3c;
 `;
 
 export const BoardDetails = styled.div`
   display: flex;
-  max-height: 700px;
+  margin-right: 20px;
+  max-height: 716px;
   overflow: auto;
 
   border: 1px solid #f0f0f0;
@@ -29,7 +33,7 @@ export const SectionLeft = styled.section`
 
   header {
     position: relative;
-    height: 90px;
+    min-height: 90px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -40,8 +44,10 @@ export const SectionLeft = styled.section`
       text-decoration: none;
       font-size: 14px;
       font-weight: bold;
+      padding: 12px 20px;
+      border-radius: 20px;
       &:hover {
-        color: ${shade(0.2, '#182390')};
+        background: #e5e5e5;
       }
     }
 
@@ -49,6 +55,62 @@ export const SectionLeft = styled.section`
       position: absolute;
       right: 0;
     }
+  }
+`;
+
+export const ActionsGroup = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+
+  strong {
+    margin-right: 5px;
+    color: #3c3c3c;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: #3c3c3c;
+    padding: 12px 20px;
+    transition: background 0.2s ease 0s;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    border-radius: 20px;
+
+    svg.drop {
+      width: 16;
+      height: 16;
+      margin-right: 10px;
+      color: #006100;
+    }
+
+    svg.drop.rev {
+      color: #0d6efd;
+    }
+
+    svg.drop.cancel {
+      color: #9c0006;
+    }
+
+    &:hover {
+      background: #e5e5e5;
+    }
+  }
+`;
+
+export const ActionGroupOthers = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  margin-bottom: 20px;
+
+  strong {
+    margin-right: 5px;
+    color: #3c3c3c;
   }
 `;
 
@@ -78,6 +140,7 @@ export const CardBody = styled.div`
 export const SectionRight = styled.section`
   flex: 1;
   padding: 24px;
+  width: 100%;
   max-width: 400px;
 
   header {
@@ -94,6 +157,9 @@ export const SectionRight = styled.section`
 export const LoadingContainder = styled.div`
   display: flex;
   justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  font-size: 14px;
 `;
 
 export const AtendimentoContainer = styled.div`
@@ -132,6 +198,10 @@ export const Atendimento = styled.div`
   padding: 10px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.25);
   width: 340px;
+
+  &:hover {
+    background: #f5f5f5;
+  }
 
   header {
     margin-right: 10px;

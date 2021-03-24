@@ -82,7 +82,11 @@ const DropAction: React.FC<DropActionProps> = ({
               </button>
               <span className="dropTitle">Outros:</span>
               <div className="otherOptions">
-                <Select options={situacao} menuPlacement="top" />
+                <Select
+                  options={situacao}
+                  menuPlacement="auto"
+                  placeholder="Situação"
+                />
               </div>
             </>
           )}
