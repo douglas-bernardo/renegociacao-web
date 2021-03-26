@@ -1,9 +1,14 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
+
 import { FiCheckSquare } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
+
 import * as Yup from 'yup';
 import { api } from '../../services/api';
 import { Form } from './styles';
+
+import { useNegociacao } from '../../hooks/negociacao';
+import { useToast } from '../../hooks/toast';
 
 import Modal from '../Modal';
 import Input from '../Input';
@@ -22,9 +27,10 @@ interface IRetencaoDTO {
 }
 
 interface IModalProps {
+  ocorrencia_id: string;
   isOpen: boolean;
   setIsOpen: () => void;
-  handleRetencao: (data: IRetencaoDTO) => void;
+  refreshPage: () => void;
 }
 
 interface Motivo {
@@ -48,11 +54,15 @@ interface TipoContato {
 }
 
 const ModalRetencao: React.FC<IModalProps> = ({
+  ocorrencia_id,
   isOpen,
   setIsOpen,
-  handleRetencao,
+  refreshPage,
 }) => {
   const formRef = useRef<FormHandles>(null);
+  const { retencao } = useNegociacao();
+  const { addToast } = useToast();
+
   const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
   const [tipoSolOptions, setTipoSolOptions] = useState<TipoSol[]>([]);
   const [origemOptions, setOrigemOptions] = useState<Origem[]>([]);
@@ -123,17 +133,27 @@ const ModalRetencao: React.FC<IModalProps> = ({
         });
 
         await schema.validate(data, { abortEarly: false });
+        await retencao(data, ocorrencia_id);
 
-        handleRetencao(data);
         setIsOpen();
+        refreshPage();
+        addToast({
+          type: 'success',
+          title: 'Ocorrência Finalizada!',
+          description: 'Retenção de Contrato',
+        });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErros(err);
           formRef.current?.setErrors(errors);
         }
+        addToast({
+          type: 'error',
+          title: 'Erro na solicitação',
+        });
       }
     },
-    [handleRetencao, setIsOpen],
+    [retencao, refreshPage, setIsOpen, addToast, ocorrencia_id],
   );
 
   return (

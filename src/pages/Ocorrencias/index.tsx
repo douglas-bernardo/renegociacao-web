@@ -21,8 +21,13 @@ import { api } from '../../services/api';
 import ModalRetencao from '../../components/ModalRetencao';
 import Tag from '../../components/Tag';
 
-import { useToast } from '../../hooks/toast';
 import Loading from '../../components/Loading';
+
+const situacaoStyle = {
+  '1': 'warning',
+  '6': 'success',
+  '7': 'info',
+};
 
 interface Situacao {
   id: number;
@@ -43,19 +48,8 @@ interface Ocorrencia {
   };
 }
 
-interface IRetencaoDTO {
-  origem_id: number;
-  tipo_solicitacao_id: number;
-  tipo_contato_id: number;
-  motivo_id: number;
-  valor_primeira_parcela: number;
-  observacao: string;
-  valor_financiado: number;
-}
-
 const Ocorrencias: React.FC = () => {
-  const { addToast } = useToast();
-  const [modalOpen, setModalOpen] = useState(false);
+  const [showModalRetencao, setShowModalRetencao] = useState(false);
   const [situacaoOptions, setSituacaoOptions] = useState<Situacao[]>([]);
   const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([]);
   const [tableRefresh, setTableRefresh] = useState(false);
@@ -68,12 +62,6 @@ const Ocorrencias: React.FC = () => {
 
   const [limit, setLimit] = useState(10);
   const [offset, setOffset] = useState(0);
-
-  const situacaoStyle = {
-    '1': 'warning',
-    '6': 'success',
-    '7': 'info',
-  };
 
   useEffect(() => {
     api
@@ -121,49 +109,13 @@ const Ocorrencias: React.FC = () => {
       });
   }, [limit, offset, tableRefresh]);
 
-  function toggleModal(): void {
-    setModalOpen(!modalOpen);
-  }
+  const toggleModalRetencao = useCallback(() => {
+    setShowModalRetencao(!showModalRetencao);
+  }, [showModalRetencao]);
 
-  const handleRetencao = useCallback(
-    async (data: IRetencaoDTO) => {
-      try {
-        const retencao = {
-          situacao: {
-            situacao_id: 6,
-          },
-          negociacao: {
-            origem_id: data.origem_id,
-            tipo_solicitacao_id: data.tipo_solicitacao_id,
-            tipo_contato_id: data.tipo_contato_id,
-            motivo_id: data.motivo_id,
-            valor_primeira_parcela: data.valor_primeira_parcela,
-            observacao: data.observacao,
-          },
-          retencao: {
-            valor_financiado: data.valor_financiado,
-          },
-        };
-
-        await api.post(
-          `/ocorrencias/${selectedOcorrencia}/finaliza-retencao`,
-          retencao,
-        );
-        setTableRefresh(true);
-        addToast({
-          type: 'success',
-          title: 'Ocorrência Finalizada!',
-          description: 'Reversão de Contrato',
-        });
-      } catch (err) {
-        addToast({
-          type: 'error',
-          title: 'Erro na solicitação',
-        });
-      }
-    },
-    [addToast, selectedOcorrencia],
-  );
+  const refreshPage = useCallback(() => {
+    setTableRefresh(true);
+  }, []);
 
   const handleOffsetAndLimit = useCallback(
     (_limit: number, _offset: number) => {
@@ -189,9 +141,10 @@ const Ocorrencias: React.FC = () => {
                 <h1>Ocorrências</h1>
               </MainHeader>
               <ModalRetencao
-                isOpen={modalOpen}
-                setIsOpen={toggleModal}
-                handleRetencao={handleRetencao}
+                ocorrencia_id={String(selectedOcorrencia)}
+                isOpen={showModalRetencao}
+                setIsOpen={toggleModalRetencao}
+                refreshPage={refreshPage}
               />
               {isLoading ? (
                 <LoadingContainder>
@@ -233,13 +186,13 @@ const Ocorrencias: React.FC = () => {
                           </td>
                           <td>
                             <DropAction
-                              openModal={toggleModal}
-                              situacao={situacaoOptions}
+                              openModal={toggleModalRetencao}
                               ocorrenciaProps={{
                                 id: ocorrencia.id,
                                 finalizada:
                                   Number(ocorrencia.situacao.id) === 1,
                               }}
+                              situacaoOptions={situacaoOptions}
                             />
                           </td>
                         </tr>

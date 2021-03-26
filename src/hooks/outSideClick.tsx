@@ -1,8 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { useState, useRef, useEffect } from 'react';
 
-export const OutSideClick = (initialValue: boolean) => {
+export const OutSideClick = (initialValue: boolean): any => {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState<boolean>(initialValue);
 

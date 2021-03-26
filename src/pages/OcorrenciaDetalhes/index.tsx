@@ -50,7 +50,6 @@ import ModalCancelamento from '../../components/ModalCancelamento';
 import Loading from '../../components/Loading';
 import { numberFormat } from '../../utils/numberFormat';
 
-import { useToast } from '../../hooks/toast';
 import ModalOutros from '../../components/ModalOutros';
 
 interface Situacao {
@@ -121,54 +120,6 @@ const statusTimesharingTypes = {
   P: 'Pendente',
 };
 
-interface IRetencaoDTO {
-  origem_id: number;
-  tipo_solicitacao_id: number;
-  tipo_contato_id: number;
-  motivo_id: number;
-  valor_primeira_parcela: number;
-  observacao: string;
-  valor_financiado: number;
-}
-
-interface IReversaoDTO {
-  origem_id: number;
-  tipo_solicitacao_id: number;
-  tipo_contato_id: number;
-  motivo_id: number;
-  valor_financiado: number;
-  reembolso: number;
-  numero_pc: number;
-  taxas_extras: number;
-  valor_primeira_parcela: number;
-  projeto_id: number;
-  numerocontrato: number;
-  valor_venda: number;
-  observacao: string;
-}
-
-interface ICancelamentoDTO {
-  origem_id: number;
-  tipo_solicitacao_id: number;
-  tipo_contato_id: number;
-  motivo_id: number;
-  valor_financiado: number;
-  reembolso: number;
-  numero_pc: number;
-  taxas_extras: number;
-  observacao: string;
-  multa: string;
-}
-
-interface IOutrosDTO {
-  situacao_id: number;
-  origem_id: number;
-  tipo_solicitacao_id: number;
-  tipo_contato_id: number;
-  motivo_id: number;
-  observacao: string;
-}
-
 const selectCustomStyles = {
   container: base => ({
     ...base,
@@ -177,27 +128,29 @@ const selectCustomStyles = {
 };
 
 const OcorrenciaDetalhes: React.FC = () => {
+  const params = useParams<OcorrenciaParams>();
+  const btnActionDropRef = useRef<HTMLButtonElement>(null);
+
   const [situacaoOptions, setSituacaoOptions] = useState<Situacao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [errorCode, setErrorCode] = useState(0);
-  const params = useParams<OcorrenciaParams>();
   const [ocorrencia, setOcorrencia] = useState<Ocorrencia>();
   const [idPessoaCliente, setIdPessoaCliente] = useState<number | null>(null);
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);
 
   const { visible, setVisible, ref } = OutSideClick(false);
   const [currentAtendimento, setCurrentAtendimento] = useState('');
-  const btnActionDropRef = useRef<HTMLButtonElement>(null);
   const [positionContent, setPositionContent] = useState(0);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [modalReversaoOpen, setModalReversaoOpen] = useState(false);
   const [modalCancelamentoOpen, setModalCancelamentoOpen] = useState(false);
   const [modalOutrosOpen, setModalOutrosOpen] = useState(false);
+
   const [optionModalOutrosSelected, setOptionModalOutrosSelected] = useState<
     OptionsType<OptionTypeBase>
   >({} as OptionsType<OptionTypeBase>);
-  const { addToast } = useToast();
 
   const [refreshPageData, setRefreshPageData] = useState(false);
 
@@ -284,201 +237,63 @@ const OcorrenciaDetalhes: React.FC = () => {
     [setCurrentAtendimento, setVisible],
   );
 
+  const refreshPage = useCallback(() => {
+    setRefreshPageData(true);
+  }, []);
+
   const toggleRetencaoModal = useCallback(() => {
     setModalOpen(!modalOpen);
   }, [modalOpen]);
-
-  const handleRetencao = useCallback(
-    async (data: IRetencaoDTO) => {
-      try {
-        const retencao = {
-          situacao: {
-            situacao_id: 6,
-          },
-          negociacao: {
-            origem_id: data.origem_id,
-            tipo_solicitacao_id: data.tipo_solicitacao_id,
-            tipo_contato_id: data.tipo_contato_id,
-            motivo_id: data.motivo_id,
-            valor_primeira_parcela: data.valor_primeira_parcela,
-            observacao: data.observacao,
-          },
-          reversao: {
-            valor_financiado: data.valor_financiado,
-          },
-        };
-
-        await api.post(`/ocorrencias/${params.id}/finaliza-retencao`, retencao);
-        setRefreshPageData(true);
-        addToast({
-          type: 'success',
-          title: 'Ocorrência Finalizada!',
-          description: 'Retenção de Contrato',
-        });
-      } catch (err) {
-        addToast({
-          type: 'error',
-          title: 'Erro na solicitação',
-        });
-      }
-    },
-    [addToast, params.id],
-  );
 
   const toggleReversaoModal = useCallback(() => {
     setModalReversaoOpen(!modalReversaoOpen);
   }, [modalReversaoOpen]);
 
-  const handleReversao = useCallback(
-    async (data: IReversaoDTO) => {
-      try {
-        const reversao = {
-          situacao: {
-            situacao_id: 7,
-          },
-          negociacao: {
-            origem_id: data.origem_id,
-            tipo_solicitacao_id: data.tipo_solicitacao_id,
-            tipo_contato_id: data.tipo_contato_id,
-            motivo_id: data.motivo_id,
-            reembolso: data.reembolso,
-            numero_pc: data.numero_pc,
-            taxas_extras: data.taxas_extras,
-            valor_primeira_parcela: data.valor_primeira_parcela,
-            observacao: data.observacao,
-          },
-          reversao: {
-            projeto_id: data.projeto_id,
-            numerocontrato: data.numerocontrato,
-            valor_venda: data.valor_venda,
-          },
-        };
-        await api.post(`/ocorrencias/${params.id}/finaliza-reversao`, reversao);
-        setRefreshPageData(true);
-        addToast({
-          type: 'success',
-          title: 'Ocorrência Finalizada!',
-          description: 'Reversão de Contrato',
-        });
-      } catch (err) {
-        addToast({
-          type: 'error',
-          title: 'Erro na solicitação',
-        });
-      }
-    },
-    [addToast, params.id],
-  );
-
   const toggleCancelamentoModal = useCallback(() => {
     setModalCancelamentoOpen(!modalCancelamentoOpen);
   }, [modalCancelamentoOpen]);
 
-  const handleCancelamento = useCallback(
-    async (data: ICancelamentoDTO) => {
-      try {
-        const cancelamento = {
-          situacao: {
-            situacao_id: 2,
-          },
-          negociacao: {
-            origem_id: data.origem_id,
-            tipo_solicitacao_id: data.tipo_solicitacao_id,
-            tipo_contato_id: data.tipo_contato_id,
-            motivo_id: data.motivo_id,
-            reembolso: data.reembolso,
-            numero_pc: data.numero_pc,
-            taxas_extras: data.taxas_extras,
-            observacao: data.observacao,
-          },
-          cancelamento: {
-            multa: data.multa,
-          },
-        };
-        await api.post(
-          `/ocorrencias/${params.id}/finaliza-cancelamento`,
-          cancelamento,
-        );
-        setRefreshPageData(true);
-        addToast({
-          type: 'success',
-          title: 'Ocorrência Finalizada!',
-          description: 'Cancelamento de Contrato',
-        });
-      } catch (err) {
-        addToast({
-          type: 'error',
-          title: 'Erro na solicitação',
-        });
-      }
-    },
-    [addToast, params.id],
-  );
-
   const toggleOutrosModal = useCallback(
     (selected: any) => {
-      setOptionModalOutrosSelected(selected);
-      setModalOutrosOpen(!modalOutrosOpen);
+      if (selected.value === '16') {
+        setModalCancelamentoOpen(!modalCancelamentoOpen);
+      } else {
+        setOptionModalOutrosSelected(selected);
+        setModalOutrosOpen(!modalOutrosOpen);
+      }
     },
-    [modalOutrosOpen],
+    [modalOutrosOpen, modalCancelamentoOpen],
   );
 
   const toggleOutrosModalAbort = useCallback(() => {
     setModalOutrosOpen(!modalOutrosOpen);
   }, [modalOutrosOpen]);
 
-  const handleOutros = useCallback(
-    async (data: IOutrosDTO) => {
-      try {
-        const outros = {
-          situacao: {
-            situacao_id: data.situacao_id,
-          },
-          negociacao: {
-            origem_id: data.origem_id,
-            tipo_solicitacao_id: data.tipo_solicitacao_id,
-            tipo_contato_id: data.tipo_contato_id,
-            motivo_id: data.motivo_id,
-            observacao: data.observacao,
-          },
-        };
-        await api.post(`/ocorrencias/${params.id}/finaliza-padrao`, outros);
-        setRefreshPageData(true);
-        addToast({
-          type: 'success',
-          title: 'Ocorrência Finalizada!',
-        });
-      } catch (err) {
-        addToast({
-          type: 'error',
-          title: 'Erro na solicitação',
-        });
-      }
-    },
-    [addToast, params.id],
-  );
-
   return (
     <Container>
       <ModalRetencao
+        ocorrencia_id={params.id}
         isOpen={modalOpen}
         setIsOpen={toggleRetencaoModal}
-        handleRetencao={handleRetencao}
+        refreshPage={refreshPage}
       />
       <ModalReversao
+        ocorrencia_id={params.id}
         isOpen={modalReversaoOpen}
         setIsOpen={toggleReversaoModal}
-        handleReversao={handleReversao}
+        refreshPage={refreshPage}
       />
       <ModalCancelamento
+        ocorrencia_id={params.id}
         isOpen={modalCancelamentoOpen}
         setIsOpen={toggleCancelamentoModal}
-        handleCancelamento={handleCancelamento}
+        refreshPage={refreshPage}
       />
       <ModalOutros
+        ocorrencia_id={params.id}
         isOpen={modalOutrosOpen}
         setIsOpen={toggleOutrosModalAbort}
-        handleOutros={handleOutros}
+        refreshPage={refreshPage}
         situacaoOptions={situacaoOptions}
         defaultSituacaoOption={optionModalOutrosSelected}
       />

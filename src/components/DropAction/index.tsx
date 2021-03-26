@@ -9,6 +9,7 @@ import {
 } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import Select from 'react-select';
+import { OptionsType, OptionTypeBase } from 'react-select';
 
 import { OutSideClick } from '../../hooks/outSideClick';
 
@@ -22,13 +23,14 @@ interface OcorrenciaProps {
 interface DropActionProps {
   openModal: () => void;
   ocorrenciaProps: OcorrenciaProps;
+  situacaoOptions: OptionsType<OptionTypeBase>;
   [key: string]: any;
 }
 
 const DropAction: React.FC<DropActionProps> = ({
-  situacao,
   openModal,
   ocorrenciaProps,
+  situacaoOptions,
 }) => {
   const btnActionDropRef = useRef<HTMLButtonElement>(null);
   const [positionContent, setPositionContent] = useState(0);
@@ -83,7 +85,7 @@ const DropAction: React.FC<DropActionProps> = ({
               <span className="dropTitle">Outros:</span>
               <div className="otherOptions">
                 <Select
-                  options={situacao}
+                  options={situacaoOptions}
                   menuPlacement="auto"
                   placeholder="Situação"
                 />

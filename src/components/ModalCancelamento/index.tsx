@@ -5,6 +5,9 @@ import * as Yup from 'yup';
 import { api } from '../../services/api';
 import { Form } from './styles';
 
+import { useNegociacao } from '../../hooks/negociacao';
+import { useToast } from '../../hooks/toast';
+
 import Modal from '../Modal';
 import Input from '../Input';
 import Select from '../Select';
@@ -25,9 +28,10 @@ interface ICancelamentoDTO {
 }
 
 interface IModalProps {
+  ocorrencia_id: string;
   isOpen: boolean;
   setIsOpen: () => void;
-  handleCancelamento: (data: ICancelamentoDTO) => void;
+  refreshPage: () => void;
 }
 
 interface Motivo {
@@ -51,11 +55,15 @@ interface TipoContato {
 }
 
 const ModalCancelamento: React.FC<IModalProps> = ({
+  ocorrencia_id,
   isOpen,
   setIsOpen,
-  handleCancelamento,
+  refreshPage,
 }) => {
   const formRef = useRef<FormHandles>(null);
+  const { cancelamento } = useNegociacao();
+  const { addToast } = useToast();
+
   const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
   const [tipoSolOptions, setTipoSolOptions] = useState<TipoSol[]>([]);
   const [origemOptions, setOrigemOptions] = useState<Origem[]>([]);
@@ -121,7 +129,7 @@ const ModalCancelamento: React.FC<IModalProps> = ({
             'Tipo de contato é obrigatório',
           ),
           numero_pc: Yup.string().when('reembolso', {
-            is: value => value && value.length > 0,
+            is: (value: string) => value && value.length > 0,
             then: Yup.string().required(
               'Número do PC é obrigatório quando há reembolso',
             ),
@@ -130,17 +138,27 @@ const ModalCancelamento: React.FC<IModalProps> = ({
         });
 
         await schema.validate(data, { abortEarly: false });
+        await cancelamento(data, ocorrencia_id);
 
-        handleCancelamento(data);
         setIsOpen();
+        refreshPage();
+        addToast({
+          type: 'success',
+          title: 'Ocorrência Finalizada!',
+          description: 'Cancelamento de Contrato',
+        });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErros(err);
           formRef.current?.setErrors(errors);
         }
+        addToast({
+          type: 'error',
+          title: 'Erro na solicitação',
+        });
       }
     },
-    [handleCancelamento, setIsOpen],
+    [cancelamento, setIsOpen, refreshPage, addToast, ocorrencia_id],
   );
 
   return (

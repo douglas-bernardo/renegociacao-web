@@ -6,13 +6,16 @@ import { OptionsType, OptionTypeBase } from 'react-select';
 import { api } from '../../services/api';
 import { Form } from './styles';
 
+import { useNegociacao } from '../../hooks/negociacao';
+import { useToast } from '../../hooks/toast';
+
 import Modal from '../Modal';
 import Input from '../Input';
 import Select from '../Select';
 
 import getValidationErros from '../../utils/getValidationErros';
 
-interface IOutrosDTO {
+interface IOutrasFinalizacoesDTO {
   situacao_id: number;
   origem_id: number;
   tipo_solicitacao_id: number;
@@ -22,9 +25,10 @@ interface IOutrosDTO {
 }
 
 interface IModalProps {
+  ocorrencia_id: string;
   isOpen: boolean;
   setIsOpen: () => void;
-  handleOutros: (data: IOutrosDTO) => void;
+  refreshPage: () => void;
   situacaoOptions: OptionsType<OptionTypeBase>;
   defaultSituacaoOption: OptionsType<OptionTypeBase>;
 }
@@ -50,13 +54,17 @@ interface TipoContato {
 }
 
 const ModalOutros: React.FC<IModalProps> = ({
+  ocorrencia_id,
   isOpen,
   setIsOpen,
-  handleOutros,
+  refreshPage,
   situacaoOptions,
   defaultSituacaoOption,
 }) => {
   const formRef = useRef<FormHandles>(null);
+  const { outrasFinalizacoes } = useNegociacao();
+  const { addToast } = useToast();
+
   const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
   const [tipoSolOptions, setTipoSolOptions] = useState<TipoSol[]>([]);
   const [origemOptions, setOrigemOptions] = useState<Origem[]>([]);
@@ -108,7 +116,7 @@ const ModalOutros: React.FC<IModalProps> = ({
   }, []);
 
   const handleSubmit = useCallback(
-    async (data: IOutrosDTO) => {
+    async (data: IOutrasFinalizacoesDTO) => {
       try {
         formRef.current?.setErrors({});
 
@@ -125,17 +133,26 @@ const ModalOutros: React.FC<IModalProps> = ({
         });
 
         await schema.validate(data, { abortEarly: false });
+        await outrasFinalizacoes(data, ocorrencia_id);
 
-        handleOutros(data);
         setIsOpen();
+        refreshPage();
+        addToast({
+          type: 'success',
+          title: 'Ocorrência Finalizada!',
+        });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErros(err);
           formRef.current?.setErrors(errors);
         }
+        addToast({
+          type: 'error',
+          title: 'Erro na solicitação',
+        });
       }
     },
-    [handleOutros, setIsOpen],
+    [outrasFinalizacoes, setIsOpen, refreshPage, addToast, ocorrencia_id],
   );
 
   return (
