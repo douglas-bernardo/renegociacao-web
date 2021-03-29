@@ -11,6 +11,8 @@ import { Link } from 'react-router-dom';
 import Select from 'react-select';
 import { OptionsType, OptionTypeBase } from 'react-select';
 
+import { useNegociacao } from '../../hooks/negociacao';
+
 import { OutSideClick } from '../../hooks/outSideClick';
 
 import { Container, DropActionContent } from './styles';
@@ -21,17 +23,21 @@ interface OcorrenciaProps {
 }
 
 interface DropActionProps {
-  openModal: () => void;
   ocorrenciaProps: OcorrenciaProps;
   situacaoOptions: OptionsType<OptionTypeBase>;
-  [key: string]: any;
 }
 
 const DropAction: React.FC<DropActionProps> = ({
-  openModal,
   ocorrenciaProps,
   situacaoOptions,
 }) => {
+  const {
+    toggleModalRetencao,
+    toggleModalReversao,
+    toggleModalCancelamento,
+    toggleModalOutrosSelected,
+  } = useNegociacao();
+
   const btnActionDropRef = useRef<HTMLButtonElement>(null);
   const [positionContent, setPositionContent] = useState(0);
   const { visible, setVisible, ref } = OutSideClick(false);
@@ -40,7 +46,7 @@ const DropAction: React.FC<DropActionProps> = ({
     if (btnActionDropRef.current) {
       setPositionContent(btnActionDropRef.current.getBoundingClientRect().top);
     }
-    setVisible(prevState => !prevState);
+    setVisible((prevState: boolean) => !prevState);
   }, [setVisible]);
 
   return (
@@ -69,16 +75,24 @@ const DropAction: React.FC<DropActionProps> = ({
               <button
                 className="btnDropAction"
                 type="button"
-                onClick={openModal}
+                onClick={toggleModalRetencao}
               >
                 <FaClipboardCheck className="drop" />
                 Retenção
               </button>
-              <button className="btnDropAction" type="button">
+              <button
+                className="btnDropAction"
+                type="button"
+                onClick={toggleModalReversao}
+              >
                 <FaUndo className="drop rev" />
                 Reversão
               </button>
-              <button className="btnDropAction" type="button">
+              <button
+                className="btnDropAction"
+                type="button"
+                onClick={toggleModalCancelamento}
+              >
                 <FaTimesCircle className="drop cancel" />
                 Cancelamento
               </button>
@@ -88,6 +102,7 @@ const DropAction: React.FC<DropActionProps> = ({
                   options={situacaoOptions}
                   menuPlacement="auto"
                   placeholder="Situação"
+                  onChange={toggleModalOutrosSelected}
                 />
               </div>
             </>

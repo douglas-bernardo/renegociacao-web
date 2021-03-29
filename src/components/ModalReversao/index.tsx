@@ -32,8 +32,6 @@ interface IReversaoDTO {
 
 interface IModalProps {
   ocorrencia_id: string;
-  isOpen: boolean;
-  setIsOpen: () => void;
   refreshPage: () => void;
 }
 
@@ -64,12 +62,10 @@ interface Produto {
 
 const ModalReversao: React.FC<IModalProps> = ({
   ocorrencia_id,
-  isOpen,
-  setIsOpen,
   refreshPage,
 }) => {
   const formRef = useRef<FormHandles>(null);
-  const { reversao } = useNegociacao();
+  const { reversao, showModalReversao, toggleModalReversao } = useNegociacao();
   const { addToast } = useToast();
 
   const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
@@ -162,7 +158,7 @@ const ModalReversao: React.FC<IModalProps> = ({
         await schema.validate(data, { abortEarly: false });
         await reversao(data, ocorrencia_id);
 
-        setIsOpen();
+        toggleModalReversao();
         refreshPage();
 
         addToast({
@@ -174,6 +170,7 @@ const ModalReversao: React.FC<IModalProps> = ({
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErros(err);
           formRef.current?.setErrors(errors);
+          return;
         }
 
         addToast({
@@ -182,11 +179,15 @@ const ModalReversao: React.FC<IModalProps> = ({
         });
       }
     },
-    [reversao, setIsOpen, refreshPage, addToast, ocorrencia_id],
+    [reversao, toggleModalReversao, refreshPage, addToast, ocorrencia_id],
   );
 
   return (
-    <Modal isOpen={isOpen} setIsOpen={setIsOpen} width="912px">
+    <Modal
+      isOpen={showModalReversao}
+      setIsOpen={toggleModalReversao}
+      width="912px"
+    >
       <Form ref={formRef} onSubmit={handleSubmit}>
         <h1>Finalização de Negociação | Reversão Contrato</h1>
         <Select

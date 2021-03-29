@@ -22,6 +22,9 @@ import ModalRetencao from '../../components/ModalRetencao';
 import Tag from '../../components/Tag';
 
 import Loading from '../../components/Loading';
+import ModalReversao from '../../components/ModalReversao';
+import ModalCancelamento from '../../components/ModalCancelamento';
+import ModalOutros from '../../components/ModalOutros';
 
 const situacaoStyle = {
   '1': 'warning',
@@ -49,7 +52,6 @@ interface Ocorrencia {
 }
 
 const Ocorrencias: React.FC = () => {
-  const [showModalRetencao, setShowModalRetencao] = useState(false);
   const [situacaoOptions, setSituacaoOptions] = useState<Situacao[]>([]);
   const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([]);
   const [tableRefresh, setTableRefresh] = useState(false);
@@ -109,13 +111,9 @@ const Ocorrencias: React.FC = () => {
       });
   }, [limit, offset, tableRefresh]);
 
-  const toggleModalRetencao = useCallback(() => {
-    setShowModalRetencao(!showModalRetencao);
-  }, [showModalRetencao]);
-
   const refreshPage = useCallback(() => {
-    setTableRefresh(true);
-  }, []);
+    setTableRefresh(!tableRefresh);
+  }, [tableRefresh]);
 
   const handleOffsetAndLimit = useCallback(
     (_limit: number, _offset: number) => {
@@ -128,6 +126,23 @@ const Ocorrencias: React.FC = () => {
   return (
     <Container>
       <Sidebar />
+      <ModalRetencao
+        ocorrencia_id={String(selectedOcorrencia)}
+        refreshPage={refreshPage}
+      />
+      <ModalReversao
+        ocorrencia_id={String(selectedOcorrencia)}
+        refreshPage={refreshPage}
+      />
+      <ModalCancelamento
+        ocorrencia_id={String(selectedOcorrencia)}
+        refreshPage={refreshPage}
+      />
+      <ModalOutros
+        ocorrencia_id={String(selectedOcorrencia)}
+        refreshPage={refreshPage}
+        situacaoOptions={situacaoOptions}
+      />
       <Content>
         <Header>
           <input type="text" className="search-bar" placeholder="Pesquisar" />
@@ -140,12 +155,6 @@ const Ocorrencias: React.FC = () => {
               <MainHeader>
                 <h1>Ocorrências</h1>
               </MainHeader>
-              <ModalRetencao
-                ocorrencia_id={String(selectedOcorrencia)}
-                isOpen={showModalRetencao}
-                setIsOpen={toggleModalRetencao}
-                refreshPage={refreshPage}
-              />
               {isLoading ? (
                 <LoadingContainder>
                   <Loading />
@@ -172,7 +181,7 @@ const Ocorrencias: React.FC = () => {
                           <td>{ocorrencia.numero_ocorrencia}</td>
                           <td>{ocorrencia.nome_cliente}</td>
                           <td>
-                            {`${ocorrencia.numeroprojeto}-${ocorrencia.numero_ocorrencia}`}
+                            {`${ocorrencia.numeroprojeto}-${ocorrencia.numerocontrato}`}
                           </td>
                           <td>
                             <Tag
@@ -186,7 +195,6 @@ const Ocorrencias: React.FC = () => {
                           </td>
                           <td>
                             <DropAction
-                              openModal={toggleModalRetencao}
                               ocorrenciaProps={{
                                 id: ocorrencia.id,
                                 finalizada:

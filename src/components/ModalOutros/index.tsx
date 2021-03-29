@@ -26,11 +26,8 @@ interface IOutrasFinalizacoesDTO {
 
 interface IModalProps {
   ocorrencia_id: string;
-  isOpen: boolean;
-  setIsOpen: () => void;
   refreshPage: () => void;
   situacaoOptions: OptionsType<OptionTypeBase>;
-  defaultSituacaoOption: OptionsType<OptionTypeBase>;
 }
 
 interface Motivo {
@@ -55,14 +52,16 @@ interface TipoContato {
 
 const ModalOutros: React.FC<IModalProps> = ({
   ocorrencia_id,
-  isOpen,
-  setIsOpen,
   refreshPage,
   situacaoOptions,
-  defaultSituacaoOption,
 }) => {
   const formRef = useRef<FormHandles>(null);
-  const { outrasFinalizacoes } = useNegociacao();
+  const {
+    outrasFinalizacoes,
+    showModalOutros,
+    toggleModalOutros,
+    optionModalOutrosSelected,
+  } = useNegociacao();
   const { addToast } = useToast();
 
   const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
@@ -135,7 +134,7 @@ const ModalOutros: React.FC<IModalProps> = ({
         await schema.validate(data, { abortEarly: false });
         await outrasFinalizacoes(data, ocorrencia_id);
 
-        setIsOpen();
+        toggleModalOutros();
         refreshPage();
         addToast({
           type: 'success',
@@ -145,18 +144,26 @@ const ModalOutros: React.FC<IModalProps> = ({
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErros(err);
           formRef.current?.setErrors(errors);
+          return;
         }
+
         addToast({
           type: 'error',
           title: 'Erro na solicitação',
         });
       }
     },
-    [outrasFinalizacoes, setIsOpen, refreshPage, addToast, ocorrencia_id],
+    [
+      outrasFinalizacoes,
+      toggleModalOutros,
+      refreshPage,
+      addToast,
+      ocorrencia_id,
+    ],
   );
 
   return (
-    <Modal isOpen={isOpen} setIsOpen={setIsOpen} width="912px">
+    <Modal isOpen={showModalOutros} setIsOpen={toggleModalOutros} width="912px">
       <Form ref={formRef} onSubmit={handleSubmit}>
         <h1>Finalização de Negociação | Outros</h1>
         <Select
@@ -190,7 +197,7 @@ const ModalOutros: React.FC<IModalProps> = ({
           options={situacaoOptions}
           menuPlacement="auto"
           placeholder="Situação"
-          defaultValue={defaultSituacaoOption}
+          defaultValue={optionModalOutrosSelected}
         />
         <Input name="observacao" placeholder="Observações" />
         <button type="submit" data-testid="add-food-button">

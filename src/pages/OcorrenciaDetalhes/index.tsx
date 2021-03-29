@@ -2,15 +2,16 @@
 /* eslint-disable no-nested-ternary */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import Select from 'react-select';
+
 import format from 'date-fns/format';
 import { parseISO } from 'date-fns';
-import Select from 'react-select';
-import { OptionsType, OptionTypeBase } from 'react-select';
 
 import { BiDetail } from 'react-icons/bi';
 import { FaClipboardCheck, FaTimesCircle, FaUndo } from 'react-icons/fa';
 
-import { Link } from 'react-router-dom';
+import { useNegociacao } from '../../hooks/negociacao';
 import { Container, Content } from '../../components/Container';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
@@ -128,6 +129,13 @@ const selectCustomStyles = {
 };
 
 const OcorrenciaDetalhes: React.FC = () => {
+  const {
+    toggleModalRetencao,
+    toggleModalReversao,
+    toggleModalCancelamento,
+    toggleModalOutrosSelected,
+  } = useNegociacao();
+
   const params = useParams<OcorrenciaParams>();
   const btnActionDropRef = useRef<HTMLButtonElement>(null);
 
@@ -142,15 +150,6 @@ const OcorrenciaDetalhes: React.FC = () => {
   const { visible, setVisible, ref } = OutSideClick(false);
   const [currentAtendimento, setCurrentAtendimento] = useState('');
   const [positionContent, setPositionContent] = useState(0);
-
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalReversaoOpen, setModalReversaoOpen] = useState(false);
-  const [modalCancelamentoOpen, setModalCancelamentoOpen] = useState(false);
-  const [modalOutrosOpen, setModalOutrosOpen] = useState(false);
-
-  const [optionModalOutrosSelected, setOptionModalOutrosSelected] = useState<
-    OptionsType<OptionTypeBase>
-  >({} as OptionsType<OptionTypeBase>);
 
   const [refreshPageData, setRefreshPageData] = useState(false);
 
@@ -238,66 +237,20 @@ const OcorrenciaDetalhes: React.FC = () => {
   );
 
   const refreshPage = useCallback(() => {
-    setRefreshPageData(true);
-  }, []);
-
-  const toggleRetencaoModal = useCallback(() => {
-    setModalOpen(!modalOpen);
-  }, [modalOpen]);
-
-  const toggleReversaoModal = useCallback(() => {
-    setModalReversaoOpen(!modalReversaoOpen);
-  }, [modalReversaoOpen]);
-
-  const toggleCancelamentoModal = useCallback(() => {
-    setModalCancelamentoOpen(!modalCancelamentoOpen);
-  }, [modalCancelamentoOpen]);
-
-  const toggleOutrosModal = useCallback(
-    (selected: any) => {
-      if (selected.value === '16') {
-        setModalCancelamentoOpen(!modalCancelamentoOpen);
-      } else {
-        setOptionModalOutrosSelected(selected);
-        setModalOutrosOpen(!modalOutrosOpen);
-      }
-    },
-    [modalOutrosOpen, modalCancelamentoOpen],
-  );
-
-  const toggleOutrosModalAbort = useCallback(() => {
-    setModalOutrosOpen(!modalOutrosOpen);
-  }, [modalOutrosOpen]);
+    setRefreshPageData(!refreshPageData);
+  }, [refreshPageData]);
 
   return (
     <Container>
-      <ModalRetencao
-        ocorrencia_id={params.id}
-        isOpen={modalOpen}
-        setIsOpen={toggleRetencaoModal}
-        refreshPage={refreshPage}
-      />
-      <ModalReversao
-        ocorrencia_id={params.id}
-        isOpen={modalReversaoOpen}
-        setIsOpen={toggleReversaoModal}
-        refreshPage={refreshPage}
-      />
-      <ModalCancelamento
-        ocorrencia_id={params.id}
-        isOpen={modalCancelamentoOpen}
-        setIsOpen={toggleCancelamentoModal}
-        refreshPage={refreshPage}
-      />
+      <Sidebar />
+      <ModalRetencao ocorrencia_id={params.id} refreshPage={refreshPage} />
+      <ModalReversao ocorrencia_id={params.id} refreshPage={refreshPage} />
+      <ModalCancelamento ocorrencia_id={params.id} refreshPage={refreshPage} />
       <ModalOutros
         ocorrencia_id={params.id}
-        isOpen={modalOutrosOpen}
-        setIsOpen={toggleOutrosModalAbort}
         refreshPage={refreshPage}
         situacaoOptions={situacaoOptions}
-        defaultSituacaoOption={optionModalOutrosSelected}
       />
-      <Sidebar />
       <Content>
         <Header />
         <Main>
@@ -319,15 +272,15 @@ const OcorrenciaDetalhes: React.FC = () => {
                     <>
                       <ActionsGroup>
                         <strong>Finalizar como:</strong>
-                        <button type="button" onClick={toggleRetencaoModal}>
+                        <button type="button" onClick={toggleModalRetencao}>
                           <FaClipboardCheck className="drop" />
                           Retenção
                         </button>
-                        <button type="button" onClick={toggleReversaoModal}>
+                        <button type="button" onClick={toggleModalReversao}>
                           <FaUndo className="drop rev" />
                           Reversão
                         </button>
-                        <button type="button" onClick={toggleCancelamentoModal}>
+                        <button type="button" onClick={toggleModalCancelamento}>
                           <FaTimesCircle className="drop cancel" />
                           Cancelamento
                         </button>
@@ -338,7 +291,7 @@ const OcorrenciaDetalhes: React.FC = () => {
                           options={situacaoOptions}
                           styles={selectCustomStyles}
                           placeholder="Situação"
-                          onChange={toggleOutrosModal}
+                          onChange={toggleModalOutrosSelected}
                           value={null}
                         />
                       </ActionGroupOthers>

@@ -29,8 +29,6 @@ interface ICancelamentoDTO {
 
 interface IModalProps {
   ocorrencia_id: string;
-  isOpen: boolean;
-  setIsOpen: () => void;
   refreshPage: () => void;
 }
 
@@ -56,12 +54,14 @@ interface TipoContato {
 
 const ModalCancelamento: React.FC<IModalProps> = ({
   ocorrencia_id,
-  isOpen,
-  setIsOpen,
   refreshPage,
 }) => {
   const formRef = useRef<FormHandles>(null);
-  const { cancelamento } = useNegociacao();
+  const {
+    cancelamento,
+    showModalCancelamnto,
+    toggleModalCancelamento,
+  } = useNegociacao();
   const { addToast } = useToast();
 
   const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
@@ -140,7 +140,7 @@ const ModalCancelamento: React.FC<IModalProps> = ({
         await schema.validate(data, { abortEarly: false });
         await cancelamento(data, ocorrencia_id);
 
-        setIsOpen();
+        toggleModalCancelamento();
         refreshPage();
         addToast({
           type: 'success',
@@ -151,18 +151,30 @@ const ModalCancelamento: React.FC<IModalProps> = ({
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErros(err);
           formRef.current?.setErrors(errors);
+          return;
         }
+
         addToast({
           type: 'error',
           title: 'Erro na solicitação',
         });
       }
     },
-    [cancelamento, setIsOpen, refreshPage, addToast, ocorrencia_id],
+    [
+      cancelamento,
+      toggleModalCancelamento,
+      refreshPage,
+      addToast,
+      ocorrencia_id,
+    ],
   );
 
   return (
-    <Modal isOpen={isOpen} setIsOpen={setIsOpen} width="912px">
+    <Modal
+      isOpen={showModalCancelamnto}
+      setIsOpen={toggleModalCancelamento}
+      width="912px"
+    >
       <Form ref={formRef} onSubmit={handleSubmit}>
         <h1>Finalização de Negociação | Cancelamento Contrato</h1>
         <Select

@@ -1,4 +1,6 @@
-import React, { createContext, useCallback, useContext } from 'react';
+import React, { createContext, useCallback, useContext, useState } from 'react';
+import { OptionsType, OptionTypeBase } from 'react-select';
+
 import { api } from '../services/api';
 
 interface IRetencaoDTO {
@@ -50,6 +52,16 @@ interface IOutrasFinalizacoesDTO {
 }
 
 interface NegociacaoContextData {
+  showModalRetencao: boolean;
+  showModalReversao: boolean;
+  showModalCancelamnto: boolean;
+  showModalOutros: boolean;
+  optionModalOutrosSelected: OptionsType<OptionTypeBase>;
+  toggleModalRetencao: () => void;
+  toggleModalReversao: () => void;
+  toggleModalCancelamento: () => void;
+  toggleModalOutros: () => void;
+  toggleModalOutrosSelected: (selected: any) => void;
   retencao(data: IRetencaoDTO, id: string): Promise<void>;
   reversao(data: IReversaoDTO, id: string): Promise<void>;
   cancelamento(data: ICancelamentoDTO, id: string): Promise<void>;
@@ -61,6 +73,42 @@ export const NegociacaoContext = createContext<NegociacaoContextData>(
 );
 
 export const NegociacaoProvider: React.FC = ({ children }) => {
+  const [showModalRetencao, setShowModalRetencao] = useState(false);
+  const [showModalReversao, setShowModalReversao] = useState(false);
+  const [showModalCancelamnto, setShowModalCancelamento] = useState(false);
+  const [showModalOutros, setShowModalOutros] = useState(false);
+  const [optionModalOutrosSelected, setOptionModalOutrosSelected] = useState<
+    OptionsType<OptionTypeBase>
+  >({} as OptionsType<OptionTypeBase>);
+
+  const toggleModalRetencao = useCallback(() => {
+    setShowModalRetencao(!showModalRetencao);
+  }, [showModalRetencao]);
+
+  const toggleModalReversao = useCallback(() => {
+    setShowModalReversao(!showModalReversao);
+  }, [showModalReversao]);
+
+  const toggleModalCancelamento = useCallback(() => {
+    setShowModalCancelamento(!showModalCancelamnto);
+  }, [showModalCancelamnto]);
+
+  const toggleModalOutrosSelected = useCallback(
+    (selected: any) => {
+      if (selected.value === '16') {
+        setShowModalCancelamento(!showModalCancelamnto);
+      } else {
+        setOptionModalOutrosSelected(selected);
+        setShowModalOutros(!showModalOutros);
+      }
+    },
+    [showModalOutros, showModalCancelamnto],
+  );
+
+  const toggleModalOutros = useCallback(() => {
+    setShowModalOutros(!showModalOutros);
+  }, [showModalOutros]);
+
   const retencao = useCallback(async (data: IRetencaoDTO, id: string) => {
     const retencaoData = {
       situacao: {
@@ -156,7 +204,22 @@ export const NegociacaoProvider: React.FC = ({ children }) => {
 
   return (
     <NegociacaoContext.Provider
-      value={{ retencao, reversao, cancelamento, outrasFinalizacoes }}
+      value={{
+        showModalRetencao,
+        showModalReversao,
+        showModalCancelamnto,
+        showModalOutros,
+        optionModalOutrosSelected,
+        toggleModalRetencao,
+        toggleModalReversao,
+        toggleModalCancelamento,
+        toggleModalOutros,
+        toggleModalOutrosSelected,
+        retencao,
+        reversao,
+        cancelamento,
+        outrasFinalizacoes,
+      }}
     >
       {children}
     </NegociacaoContext.Provider>

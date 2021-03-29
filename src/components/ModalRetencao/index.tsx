@@ -28,8 +28,6 @@ interface IRetencaoDTO {
 
 interface IModalProps {
   ocorrencia_id: string;
-  isOpen: boolean;
-  setIsOpen: () => void;
   refreshPage: () => void;
 }
 
@@ -55,12 +53,10 @@ interface TipoContato {
 
 const ModalRetencao: React.FC<IModalProps> = ({
   ocorrencia_id,
-  isOpen,
-  setIsOpen,
   refreshPage,
 }) => {
   const formRef = useRef<FormHandles>(null);
-  const { retencao } = useNegociacao();
+  const { retencao, showModalRetencao, toggleModalRetencao } = useNegociacao();
   const { addToast } = useToast();
 
   const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
@@ -135,7 +131,7 @@ const ModalRetencao: React.FC<IModalProps> = ({
         await schema.validate(data, { abortEarly: false });
         await retencao(data, ocorrencia_id);
 
-        setIsOpen();
+        toggleModalRetencao();
         refreshPage();
         addToast({
           type: 'success',
@@ -146,6 +142,7 @@ const ModalRetencao: React.FC<IModalProps> = ({
         if (err instanceof Yup.ValidationError) {
           const errors = getValidationErros(err);
           formRef.current?.setErrors(errors);
+          return;
         }
         addToast({
           type: 'error',
@@ -153,11 +150,15 @@ const ModalRetencao: React.FC<IModalProps> = ({
         });
       }
     },
-    [retencao, refreshPage, setIsOpen, addToast, ocorrencia_id],
+    [retencao, refreshPage, toggleModalRetencao, addToast, ocorrencia_id],
   );
 
   return (
-    <Modal isOpen={isOpen} setIsOpen={setIsOpen} width="912px">
+    <Modal
+      isOpen={showModalRetencao}
+      setIsOpen={toggleModalRetencao}
+      width="912px"
+    >
       <Form ref={formRef} onSubmit={handleSubmit}>
         <h1>Finalização de Negociação | Retenção Contrato</h1>
         <Select
