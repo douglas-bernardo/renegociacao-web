@@ -25,9 +25,6 @@ import {
   SectionLeft,
   ActionsGroup,
   SectionRight,
-  Card,
-  CardHeader,
-  CardBody,
   LoadingContainder,
   AtendimentoContainer,
   Atendimento,
@@ -35,6 +32,8 @@ import {
   DropDetails,
   ActionGroupOthers,
 } from './styles';
+
+import { Card, CardBody, CardHeader } from '../../components/Container';
 
 import negociacaoLogo from '../../assets/money-talk.svg';
 import whatsappLogo from '../../assets/whatsapp.svg';

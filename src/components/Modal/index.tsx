@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react';
-
 import ReactModal from 'react-modal';
 
 interface IModalProps {
@@ -46,7 +44,7 @@ const Modal: React.FC<IModalProps> = ({
         },
         overlay: {
           backgroundColor: '#121214e6',
-          zIndex: '2',
+          zIndex: 2,
         },
       }}
     >

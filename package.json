@@ -63,6 +63,7 @@
   "devDependencies": {
     "@testing-library/react-hooks": "^5.0.0",
     "@types/jsonwebtoken": "^8.5.1",
+    "@types/react-modal": "^3.12.0",
     "@types/react-router-dom": "^5.1.7",
     "@types/react-select": "^4.0.13",
     "@types/styled-components": "^5.1.9",

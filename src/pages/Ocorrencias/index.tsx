@@ -113,6 +113,7 @@ const Ocorrencias: React.FC = () => {
 
   const refreshPage = useCallback(() => {
     setTableRefresh(!tableRefresh);
+    window.scrollTo(0, 0);
   }, [tableRefresh]);
 
   const handleOffsetAndLimit = useCallback(

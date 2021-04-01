@@ -114,29 +114,6 @@ export const ActionGroupOthers = styled.div`
   }
 `;
 
-export const Card = styled.div`
-  background: #fff;
-  padding: 10px;
-  font-size: 14px;
-  margin-bottom: 20px;
-
-  border: 2px solid #f0f0f0;
-  /* box-shadow: 4px 0px 4px rgba(0, 0, 0, 0.25); */
-  border-radius: 10px;
-`;
-
-export const CardHeader = styled.div``;
-export const CardBody = styled.div`
-  div.row {
-    display: flex;
-    padding: 8px 0;
-  }
-
-  span {
-    margin-right: 10px;
-  }
-`;
-
 export const SectionRight = styled.section`
   flex: 1;
   padding: 24px;
