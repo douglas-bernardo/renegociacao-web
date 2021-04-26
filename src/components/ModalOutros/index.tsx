@@ -73,7 +73,7 @@ const ModalOutros: React.FC<IModalProps> = ({
 
   useEffect(() => {
     Promise.all([
-      api.get(`/dominio/motivos`),
+      api.get(`/domain/reasons`),
       api.get(`/dominio/tipo-solicitacao`),
       api.get(`/dominio/origem`),
       api.get(`/dominio/tipo-contato`),

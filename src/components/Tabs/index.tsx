@@ -30,6 +30,7 @@ const Tabs: React.FC<TabsProps> = ({ children }) => {
       </div>
 
       <div className="tab-content">{children[tabIndex]}</div>
+      {/* <div className={tabIndex === index ? 'tab-item active-tab' : 'tab-item'}>{children}</div> */}
     </Container>
   );
 };

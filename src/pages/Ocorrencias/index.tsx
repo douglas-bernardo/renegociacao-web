@@ -1,4 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {
+  ChangeEvent,
+  FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import format from 'date-fns/format';
 import { parseISO } from 'date-fns';
 
@@ -52,6 +59,7 @@ interface Ocorrencia {
 }
 
 const Ocorrencias: React.FC = () => {
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [situacaoOptions, setSituacaoOptions] = useState<Situacao[]>([]);
   const [ocorrencias, setOcorrencias] = useState<Ocorrencia[]>([]);
   const [tableRefresh, setTableRefresh] = useState(false);
@@ -124,6 +132,48 @@ const Ocorrencias: React.FC = () => {
     [],
   );
 
+  const handleSeachBar = useCallback((e: FormEvent) => {
+    e.preventDefault();
+    if (
+      !searchInputRef.current?.value ||
+      searchInputRef.current?.value.length < 3
+    ) {
+      return;
+    }
+    api
+      .get('/ocorrencias_search', {
+        params: {
+          param: searchInputRef.current?.value,
+        },
+      })
+      .then(response => {
+        const { data } = response.data;
+        const ocorrenciaFormatted = data.map((ocorr: Ocorrencia) => {
+          return {
+            ...ocorr,
+            dateFormatted: format(parseISO(ocorr.dtocorrencia), 'dd-MM-yyyy'),
+          };
+        });
+        setOcorrencias(ocorrenciaFormatted);
+        setIsLoading(false);
+        setTotalOcorrencias(0);
+      })
+      .catch((error: Error) => {
+        setIsLoading(false);
+        setIsError(true);
+        console.log(error.message);
+      });
+  }, []);
+
+  const handleInputSearch = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      if (e.target.value.length === 0) {
+        refreshPage();
+      }
+    },
+    [refreshPage],
+  );
+
   return (
     <Container>
       <Sidebar />
@@ -146,7 +196,16 @@ const Ocorrencias: React.FC = () => {
       />
       <Content>
         <Header>
-          <input type="text" className="search-bar" placeholder="Pesquisar" />
+          <form onSubmit={handleSeachBar}>
+            <input
+              ref={searchInputRef}
+              type="text"
+              className="search-bar"
+              placeholder="Pesquisar"
+              title="Tecle enter para pesquisar..."
+              onChange={handleInputSearch}
+            />
+          </form>
         </Header>
         <Main>
           {isError ? (

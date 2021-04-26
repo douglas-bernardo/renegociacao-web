@@ -10,11 +10,9 @@ export const Container = styled.header`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: solid 2px #e5e5e5;
+  border-bottom: 1px solid #e5e5e5;
   padding: 20px;
 
-  /* max-width: 1120px; */
-  margin-right: 20px;
   height: 100px;
 
   div input {

@@ -3,9 +3,6 @@ import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { FiCheckSquare } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 
-import format from 'date-fns/format';
-import { parseISO } from 'date-fns';
-
 import * as Yup from 'yup';
 import { api } from '../../services/api';
 import { Container, Form } from './styles';
@@ -86,7 +83,7 @@ const ModalRetencao: React.FC<IModalProps> = ({
 
   useEffect(() => {
     Promise.all([
-      api.get(`/dominio/motivos`),
+      api.get(`/domain/reasons`),
       api.get(`/dominio/tipo-solicitacao`),
       api.get(`/dominio/origem`),
       api.get(`/dominio/tipo-contato`),
@@ -130,12 +127,9 @@ const ModalRetencao: React.FC<IModalProps> = ({
         );
 
         const { data: contratoResponse } = contratoDetalhe.data;
+        if (!contratoResponse) return;
         setContrato({
           ...contratoResponse,
-          dateFormatted: format(
-            parseISO(contratoResponse.dtocorrencia),
-            'dd-MM-yyyy HH:mm:ss',
-          ),
           valorVendaFormatted: numberFormat(contratoResponse.valor_venda),
         });
       })
