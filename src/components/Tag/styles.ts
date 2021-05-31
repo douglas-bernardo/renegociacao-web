@@ -21,13 +21,17 @@ const themeVariations = {
     background: #ffc7ce;
     color: #9c0006;
   `,
+  critical: css`
+    background: #e67e22;
+    color: #fff;
+  `,
 };
 
-export const Container = styled.span<ContainerProps>`
+export const Container = styled.div<ContainerProps>`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 160px;
+  max-width: 230px;
   height: 26px;
   border-radius: 16px;
 

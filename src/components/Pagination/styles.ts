@@ -9,8 +9,8 @@ export const Container = styled.div`
   padding: 12px 0;
   align-items: center;
   justify-content: space-between;
-  /* max-width: 1120px; */
   margin-right: 20px;
+  font-size: 15px;
 
   div.pageLimitToShow {
     display: flex;
@@ -58,6 +58,7 @@ export const Page = styled.button<PaginationProps>`
   margin-right: 10px;
   border: 0;
   background: transparent;
+  font-size: 15px;
 
   ${props =>
     props.isSelected &&

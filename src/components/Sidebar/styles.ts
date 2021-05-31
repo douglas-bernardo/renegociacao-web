@@ -1,12 +1,15 @@
 import styled from 'styled-components';
 
 export const Aside = styled.aside`
+  position: fixed;
   display: flex;
   flex-direction: column;
   align-items: center;
+
   width: 256px;
   max-width: 256px;
   height: 100vh;
+  background: #fff;
 
   .logo {
     width: 125px;
@@ -36,11 +39,14 @@ export const Aside = styled.aside`
         margin-top: 10px;
       }
 
+      transition-duration: 0.3s;
+
       &:hover {
         background: #003379;
         a {
           color: #fff;
         }
+        transform: scale(1.05);
       }
 
       svg {
@@ -65,6 +71,8 @@ export const Aside = styled.aside`
       background: #003379;
       color: #fff;
       cursor: default;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.25);
+      pointer-events: none;
     }
   }
 
@@ -89,9 +97,12 @@ export const Aside = styled.aside`
     border-radius: 30px;
     text-decoration: none;
 
+    transition-duration: 0.3s;
+
     &:hover {
       background: #003379;
       color: #fff;
+      transform: scale(1.05);
     }
 
     svg {

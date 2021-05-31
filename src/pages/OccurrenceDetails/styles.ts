@@ -8,11 +8,15 @@ export const Main = styled.div`
   height: 100%;
   width: 100%;
   max-width: 1120px;
-  /* max-width: 980px; */
-
-  margin: auto;
   padding: 20px;
   color: #3c3c3c;
+`;
+
+export const MainHeader = styled.div`
+  height: 90px;
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 15px;
 `;
 
 export const BoardDetails = styled.div`
@@ -51,9 +55,22 @@ export const SectionLeft = styled.section`
       }
     }
 
-    span.tagSituacao {
+    div.statusOccurrence {
       position: absolute;
       right: 0;
+
+      span {
+        margin-left: 10px;
+      }
+
+      span.occurrence-opened {
+        color: #9c0006;
+        font-weight: bold;
+      }
+    }
+
+    p.ocorrenciaInfo {
+      color: #be6464;
     }
   }
 `;
@@ -61,7 +78,8 @@ export const SectionLeft = styled.section`
 export const ActionsGroup = styled.div`
   display: flex;
   align-items: center;
-  padding: 8px 0;
+  justify-content: flex-end;
+  padding: 20px 0;
 
   strong {
     margin-right: 5px;
@@ -79,26 +97,28 @@ export const ActionsGroup = styled.div`
     cursor: pointer;
     background: transparent;
     border: none;
-    border-radius: 20px;
+    border-radius: 5px;
 
-    svg.drop {
+    svg {
       width: 16;
       height: 16;
       margin-right: 10px;
-      color: #006100;
-    }
-
-    svg.drop.rev {
-      color: #0d6efd;
-    }
-
-    svg.drop.cancel {
-      color: #9c0006;
     }
 
     &:hover {
       background: #e5e5e5;
     }
+  }
+
+  button.register {
+    border: 1px solid #006100;
+    color: #006100;
+    margin-right: 10px;
+  }
+
+  button.close {
+    border: 1px solid #9c0006;
+    color: #9c0006;
   }
 `;
 
@@ -131,7 +151,7 @@ export const SectionRight = styled.section`
   }
 `;
 
-export const LoadingContainder = styled.div`
+export const LoadingContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;

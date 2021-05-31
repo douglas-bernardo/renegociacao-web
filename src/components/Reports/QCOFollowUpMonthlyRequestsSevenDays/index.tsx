@@ -12,7 +12,6 @@ interface Report {
   profit: number;
   profitFormatted: string;
   efficiency: number;
-  finalization_date: string;
 }
 
 interface RequestReport {

@@ -8,7 +8,7 @@ import { api } from '../../services/api';
 import { Container, Form } from './styles';
 import { Card, CardBody, CardHeader } from '../Container';
 
-import { useNegociacao } from '../../hooks/negociacao';
+import { useNegotiation } from '../../hooks/negotiation';
 import { useToast } from '../../hooks/toast';
 
 import Modal from '../Modal';
@@ -19,124 +19,66 @@ import getValidationErros from '../../utils/getValidationErros';
 import Tabs from '../Tabs';
 import Tab from '../Tab';
 
-import { numberFormat } from '../../utils/numberFormat';
+interface Negotiation {
+  id: number;
+  valor_primeira_parcela: number;
+  nome_cliente: string;
+  numeroprojeto: string;
+  numerocontrato: string;
+  produto: string;
+  valor_venda: number;
+  valor_venda_formatted: string;
+}
 
 interface IRetencaoDTO {
-  origem_id: number;
-  tipo_solicitacao_id: number;
   tipo_contato_id: number;
-  motivo_id: number;
+  valor_financiado: number;
   valor_primeira_parcela: number;
   observacao: string;
-  valor_financiado: number;
 }
 
 interface IModalProps {
-  ocorrencia_id: string;
+  negotiation: Negotiation;
   refreshPage: () => void;
 }
 
-interface Motivo {
+interface ContactType {
   id: number;
   nome: string;
 }
 
-interface TipoSol {
-  id: number;
-  nome: string;
-}
-
-interface Origem {
-  id: number;
-  nome: string;
-}
-
-interface TipoContato {
-  id: number;
-  nome: string;
-}
-
-interface Contrato {
-  nome_cliente: string;
-  numeroprojeto: number;
-  numerocontrato: number;
-  valor_venda: string;
-  valorVendaFormatted: string;
-  produto: string;
-}
-
-const ModalRetencao: React.FC<IModalProps> = ({
-  ocorrencia_id,
+const ModalRetentionContract: React.FC<IModalProps> = ({
+  negotiation,
   refreshPage,
 }) => {
   const formRef = useRef<FormHandles>(null);
-  const { retencao, showModalRetencao, toggleModalRetencao } = useNegociacao();
+  const {
+    retentionContract,
+    showModalRetentionContract,
+    toggleModalRetentionContract,
+  } = useNegotiation();
   const { addToast } = useToast();
 
-  const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
-  const [tipoSolOptions, setTipoSolOptions] = useState<TipoSol[]>([]);
-  const [origemOptions, setOrigemOptions] = useState<Origem[]>([]);
-  const [tipoContatoOptions, setTipoContatoOptions] = useState<TipoContato[]>(
+  const [tipoContatoOptions, setTipoContatoOptions] = useState<ContactType[]>(
     [],
   );
-  const [contrato, setContrato] = useState<Contrato>({} as Contrato);
 
   useEffect(() => {
-    Promise.all([
-      api.get(`/domain/reasons`),
-      api.get(`/dominio/tipo-solicitacao`),
-      api.get(`/dominio/origem`),
-      api.get(`/dominio/tipo-contato`),
-      api.get(`ocorrencias/${ocorrencia_id}`),
-    ])
+    api
+      .get(`/domain/contact-type`)
       .then(response => {
-        const [
-          motivos,
-          tiposSol,
-          origem,
-          tipoContato,
-          contratoDetalhe,
-        ] = response;
+        const { data } = response.data;
 
-        const { data: motivoResponse } = motivos.data;
-        setMotivoOptions(
-          motivoResponse.map((opt: Motivo) => {
-            return { value: opt.id, label: opt.nome };
-          }),
-        );
-
-        const { data: tipoSolResponse } = tiposSol.data;
-        setTipoSolOptions(
-          tipoSolResponse.map((opt: TipoSol) => {
-            return { value: opt.id, label: opt.nome };
-          }),
-        );
-
-        const { data: origemResponse } = origem.data;
-        setOrigemOptions(
-          origemResponse.map((opt: Origem) => {
-            return { value: opt.id, label: opt.nome };
-          }),
-        );
-
-        const { data: tipoContatoResponse } = tipoContato.data;
         setTipoContatoOptions(
-          tipoContatoResponse.map((opt: TipoContato) => {
+          data.map((opt: ContactType) => {
             return { value: opt.id, label: opt.nome };
           }),
         );
-
-        const { data: contratoResponse } = contratoDetalhe.data;
-        if (!contratoResponse) return;
-        setContrato({
-          ...contratoResponse,
-          valorVendaFormatted: numberFormat(contratoResponse.valor_venda),
-        });
       })
       .catch((error: Error) => {
         console.log(error.message);
       });
-  }, [ocorrencia_id]);
+  }, []);
 
   const handleSubmit = useCallback(
     async (data: IRetencaoDTO) => {
@@ -147,25 +89,21 @@ const ModalRetencao: React.FC<IModalProps> = ({
           valor_financiado: Yup.string().required(
             'Valor financiado obrigatório',
           ),
-          motivo_id: Yup.string().required('Motivo é obrigatório'),
-          tipo_solicitacao_id: Yup.string().required(
-            'Tipo de Solicitação é obrigatório',
-          ),
-          origem_id: Yup.string().required('Origem é obrigatório'),
           tipo_contato_id: Yup.string().required(
             'Tipo de contato é obrigatório',
           ),
         });
 
         await schema.validate(data, { abortEarly: false });
-        await retencao(data, ocorrencia_id);
 
-        toggleModalRetencao();
+        await retentionContract(data, negotiation.id);
+
+        toggleModalRetentionContract();
         refreshPage();
         addToast({
           type: 'success',
-          title: 'Ocorrência Finalizada!',
-          description: 'Retenção de Contrato',
+          title: 'Negociação Finalizada!',
+          description: `Retenção de contrato`,
         });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
@@ -179,13 +117,19 @@ const ModalRetencao: React.FC<IModalProps> = ({
         });
       }
     },
-    [retencao, refreshPage, toggleModalRetencao, addToast, ocorrencia_id],
+    [
+      retentionContract,
+      refreshPage,
+      toggleModalRetentionContract,
+      addToast,
+      negotiation.id,
+    ],
   );
 
   return (
     <Modal
-      isOpen={showModalRetencao}
-      setIsOpen={toggleModalRetencao}
+      isOpen={showModalRetentionContract}
+      setIsOpen={toggleModalRetentionContract}
       width="912px"
     >
       <Container>
@@ -193,25 +137,7 @@ const ModalRetencao: React.FC<IModalProps> = ({
         <Tabs>
           <Tab title="Dados">
             <Form ref={formRef} onSubmit={handleSubmit}>
-              <Select
-                name="motivo_id"
-                options={motivoOptions}
-                menuPlacement="auto"
-                placeholder="Motivo da Solicitação de Cancelamento"
-              />
               <div className="control">
-                <Select
-                  name="tipo_solicitacao_id"
-                  options={tipoSolOptions}
-                  menuPlacement="auto"
-                  placeholder="Tipo de Solicitação"
-                />
-                <Select
-                  name="origem_id"
-                  options={origemOptions}
-                  menuPlacement="auto"
-                  placeholder="Origem"
-                />
                 <Select
                   name="tipo_contato_id"
                   options={tipoContatoOptions}
@@ -224,6 +150,7 @@ const ModalRetencao: React.FC<IModalProps> = ({
                   name="valor_financiado"
                   placeholder="Valor Financiado"
                   mask="currency"
+                  defaultValue={negotiation.valor_venda_formatted}
                 />
                 <Input
                   name="valor_primeira_parcela"
@@ -248,21 +175,21 @@ const ModalRetencao: React.FC<IModalProps> = ({
               <CardBody>
                 <div className="row">
                   <span>Cliente:</span>
-                  <div>{contrato.nome_cliente}</div>
+                  <div>{negotiation.nome_cliente}</div>
                 </div>
                 <div className="row">
                   <span>Contrato:</span>
                   <div>
-                    {`${contrato.numeroprojeto}-${contrato.numerocontrato}`}
+                    {`${negotiation.numeroprojeto}-${negotiation.numerocontrato}`}
                   </div>
                 </div>
                 <div className="row">
                   <span>Valor de Venda:</span>
-                  <div>{contrato.valorVendaFormatted}</div>
+                  <div>{negotiation.valor_venda_formatted}</div>
                 </div>
                 <div className="row">
                   <span>Produto:</span>
-                  <div>{contrato.produto}</div>
+                  <div>{negotiation.produto}</div>
                 </div>
               </CardBody>
             </Card>
@@ -273,4 +200,4 @@ const ModalRetencao: React.FC<IModalProps> = ({
   );
 };
 
-export default ModalRetencao;
+export default ModalRetentionContract;

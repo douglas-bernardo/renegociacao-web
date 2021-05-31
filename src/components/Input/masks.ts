@@ -44,3 +44,15 @@ export function cpf(
   }
   return e;
 }
+
+export function dateMask(
+  e: React.FormEvent<HTMLInputElement>,
+): React.FormEvent<HTMLInputElement> {
+  e.currentTarget.maxLength = 10;
+  let { value } = e.currentTarget;
+  value = value.replace(/^(\d\d)(\d)$/g, '$1/$2');
+  value = value.replace(/^(\d\d\/\d\d)(\d+)$/g, '$1/$2');
+  value = value.replace(/[^\d/]/g, '');
+  e.currentTarget.value = value;
+  return e;
+}

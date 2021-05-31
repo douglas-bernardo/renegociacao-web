@@ -10,9 +10,10 @@ import { Container, Error } from './styles';
 
 interface Props extends SelectProps<OptionTypeBase> {
   name: string;
+  className?: string;
 }
 
-const Select: React.FC<Props> = ({ name, ...rest }) => {
+const Select: React.FC<Props> = ({ name, className, ...rest }) => {
   const selectRef = useRef(null);
 
   const [isFocused, setIsFocused] = useState(false);
@@ -44,11 +45,15 @@ const Select: React.FC<Props> = ({ name, ...rest }) => {
         }
         return ref.state.value.value;
       },
+      setValue: (ref: any, value: any) => {
+        console.log(value);
+        ref.select.setValue(value);
+      },
     });
   }, [fieldName, registerField, rest.isMulti]);
 
   return (
-    <Container isErrored={!!error} isFocused={isFocused}>
+    <Container className={className} isErrored={!!error} isFocused={isFocused}>
       <ReactSelect
         onFocus={handleInputFocus}
         defaultValue={defaultValue}

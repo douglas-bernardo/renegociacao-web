@@ -1,12 +1,13 @@
 import styled from 'styled-components';
 
 export const Container = styled.div`
-  /* max-width: 1220px; */
+  position: relative;
   margin: 0 auto;
   display: flex;
 `;
 
 export const Content = styled.div`
+  margin-left: 256px;
   display: flex;
   flex-direction: column;
   flex: 1;

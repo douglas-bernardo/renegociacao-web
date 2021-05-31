@@ -21,8 +21,8 @@ interface Page {
 
 const pages: Array<Page> = [
   { page: '/dashboard', label: 'Dashboard', icon: <FaChartLine /> },
-  { page: '/ocorrencias', label: 'Ocorrencias', icon: <FaComments /> },
-  { page: '/negociacoes', label: 'Negociações', icon: <FaHandsHelping /> },
+  { page: '/occurrences', label: 'Ocorrências', icon: <FaComments /> },
+  { page: '/negotiations', label: 'Negociações', icon: <FaHandsHelping /> },
 ];
 
 const Sidebar: React.FC = () => {
@@ -30,7 +30,7 @@ const Sidebar: React.FC = () => {
 
   return (
     <Aside>
-      <img src={logoimg} className="logo" alt="RenegociacaoWeb" />
+      <img src={logoimg} className="logo" alt="Renegociação Web" />
       <h1>Renegociação</h1>
       <ul>
         {pages.map(({ label, page, icon }) => (
@@ -43,7 +43,7 @@ const Sidebar: React.FC = () => {
         ))}
       </ul>
       <hr />
-      <button type="button" title="Deslogar" onClick={signOut}>
+      <button type="button" title="Log out" onClick={signOut}>
         <FaSignOutAlt />
         Log out
       </button>

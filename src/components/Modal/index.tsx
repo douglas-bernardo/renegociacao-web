@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import ReactModal from 'react-modal';
+import { FaTimes } from 'react-icons/fa';
+
+import { CloseButtonContainer } from './styles';
 
 interface IModalProps {
   width?: string;
@@ -48,6 +51,11 @@ const Modal: React.FC<IModalProps> = ({
         },
       }}
     >
+      <CloseButtonContainer title="Fechar">
+        <button type="button" onClick={setIsOpen}>
+          <FaTimes size={25} />
+        </button>
+      </CloseButtonContainer>
       {children}
     </ReactModal>
   );

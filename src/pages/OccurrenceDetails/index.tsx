@@ -1,17 +1,17 @@
 /* eslint-disable react/jsx-curly-newline */
-/* eslint-disable no-nested-ternary */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import Select from 'react-select';
+import { useLocation } from 'react-router-dom';
 
 import format from 'date-fns/format';
 import { parseISO } from 'date-fns';
 
 import { BiDetail } from 'react-icons/bi';
-import { FaClipboardCheck, FaTimesCircle, FaUndo } from 'react-icons/fa';
+import { RiCustomerServiceFill } from 'react-icons/ri';
+import { FiCheckSquare } from 'react-icons/fi';
 
-import { useNegociacao } from '../../hooks/negociacao';
+import { useNegotiation } from '../../hooks/negotiation';
 import { Container, Content } from '../../components/Container';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
@@ -21,16 +21,16 @@ import { OutSideClick } from '../../hooks/outSideClick';
 
 import {
   Main,
+  MainHeader,
   BoardDetails,
   SectionLeft,
   ActionsGroup,
   SectionRight,
-  LoadingContainder,
+  LoadingContainer,
   AtendimentoContainer,
   Atendimento,
   ContainerDetails,
   DropDetails,
-  ActionGroupOthers,
 } from './styles';
 
 import { Card, CardBody, CardHeader } from '../../components/Container';
@@ -42,22 +42,20 @@ import cobrancaLogo from '../../assets/price-tag.svg';
 import alertaLogo from '../../assets/warning.svg';
 import outrosAtLogo from '../../assets/speak.svg';
 
-import Tag from '../../components/Tag';
 import { api, apiTimesharing } from '../../services/api';
-import ModalRetencao from '../../components/ModalRetencao';
-import ModalReversao from '../../components/ModalReversao';
-import ModalCancelamento from '../../components/ModalCancelamento';
+
 import Loading from '../../components/Loading';
 import { numberFormat } from '../../utils/numberFormat';
+import ModalNegotiationRegister from '../../components/ModalNegotiationRegister';
+import ModalConfirm from '../../components/ModalConfirm';
 
-import ModalOutros from '../../components/ModalOutros';
-
-interface Situacao {
+interface Product {
   id: number;
-  nome: string;
+  numeroprojeto: number;
+  nomeprojeto: string;
 }
 
-interface Ocorrencia {
+interface Occurrence {
   id: number;
   dtocorrencia: string;
   idpessoa_cliente: number;
@@ -68,13 +66,13 @@ interface Ocorrencia {
   numerocontrato: number;
   valor_venda: string;
   valorVendaFormatted: string;
-  produto: string;
+  produto: Product;
   status: string;
   motivo: string;
   nomeusuario_resp: string;
   nomeusuario_cadastro: string;
   departamento: string;
-  situacao: {
+  status_ocorrencia: {
     id: number;
     nome: string;
   };
@@ -90,8 +88,16 @@ interface Atendimento {
   dateFormatted: string;
 }
 
-interface OcorrenciaParams {
+interface OccurrenceParams {
   id: string;
+}
+
+interface LocationProps {
+  limit: number;
+  offset: number;
+  firstPageRangeDisplayed: number;
+  currentPage: number;
+  status: number;
 }
 
 const icons = {
@@ -108,41 +114,24 @@ const icons = {
   outros: outrosAtLogo,
 };
 
-const situacaoStyle = {
-  '1': 'warning',
-  '6': 'success',
-  '7': 'info',
-};
-
 const statusTimesharingTypes = {
   C: 'Canceldo',
   F: 'Finalizado',
   P: 'Pendente',
 };
 
-const selectCustomStyles = {
-  container: base => ({
-    ...base,
-    flex: 1,
-  }),
-};
+const OccurrenceDetails: React.FC = () => {
+  const { toggleModalNegotiationRegister } = useNegotiation();
 
-const OcorrenciaDetalhes: React.FC = () => {
-  const {
-    toggleModalRetencao,
-    toggleModalReversao,
-    toggleModalCancelamento,
-    toggleModalOutrosSelected,
-  } = useNegociacao();
-
-  const params = useParams<OcorrenciaParams>();
+  const params = useParams<OccurrenceParams>();
+  const location = useLocation<LocationProps>();
   const btnActionDropRef = useRef<HTMLButtonElement>(null);
 
-  const [situacaoOptions, setSituacaoOptions] = useState<Situacao[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [errorCode, setErrorCode] = useState(0);
-  const [ocorrencia, setOcorrencia] = useState<Ocorrencia>();
+
+  const [ocorrencia, setOcorrencia] = useState<Occurrence>();
   const [idPessoaCliente, setIdPessoaCliente] = useState<number | null>(null);
   const [atendimentos, setAtendimentos] = useState<Atendimento[]>([]);
 
@@ -152,12 +141,14 @@ const OcorrenciaDetalhes: React.FC = () => {
 
   const [refreshPageData, setRefreshPageData] = useState(false);
 
+  const [showModalConfirm, setShowModalConfirm] = useState(false);
+
   useEffect(() => {
     api
-      .get(`ocorrencias/${params.id}`)
+      .get(`occurrences/${params.id}`)
       .then(response => {
         const { data } = response.data;
-        const ocorrenciaFormatted: Ocorrencia = {
+        const ocorrenciaFormatted: Occurrence = {
           ...data,
           dateFormatted: format(
             parseISO(data.dtocorrencia),
@@ -180,7 +171,7 @@ const OcorrenciaDetalhes: React.FC = () => {
   useEffect(() => {
     if (!idPessoaCliente) return;
     apiTimesharing
-      .get(`atendimentos/${idPessoaCliente}`)
+      .get(`/after-sales-customer-services/${idPessoaCliente}`)
       .then(response => {
         const { data } = response.data;
         const atendimentosFormatted = data.map((atend: Atendimento) => {
@@ -203,24 +194,6 @@ const OcorrenciaDetalhes: React.FC = () => {
       });
   }, [idPessoaCliente]);
 
-  useEffect(() => {
-    api
-      .get(`/dominio/situacao`)
-      .then(response => {
-        const { data } = response.data;
-
-        const options = data.map((opt: Situacao) => {
-          return { value: opt.id, label: opt.nome };
-        });
-        setSituacaoOptions(options);
-      })
-      .catch((error: Error) => {
-        setIsLoading(false);
-        setIsError(true);
-        console.log(error.message);
-      });
-  }, []);
-
   const handleDetailsButton = useCallback(
     (protocolo: string) => {
       if (btnActionDropRef.current) {
@@ -239,64 +212,108 @@ const OcorrenciaDetalhes: React.FC = () => {
     setRefreshPageData(!refreshPageData);
   }, [refreshPageData]);
 
+  const toggleModalConfirm = useCallback(() => {
+    setShowModalConfirm(!showModalConfirm);
+  }, [showModalConfirm]);
+
+  const handleEndOccurrence = useCallback(
+    async (occurrence_id: string) => {
+      await api.post(`/occurrences/${occurrence_id}/close`);
+      refreshPage();
+    },
+    [refreshPage],
+  );
+
+  const handleModalConfirmYes = useCallback(() => {
+    toggleModalConfirm();
+    handleEndOccurrence(params.id);
+  }, [toggleModalConfirm, handleEndOccurrence, params.id]);
+
   return (
     <Container>
       <Sidebar />
-      <ModalRetencao ocorrencia_id={params.id} refreshPage={refreshPage} />
-      <ModalReversao ocorrencia_id={params.id} refreshPage={refreshPage} />
-      <ModalCancelamento ocorrencia_id={params.id} refreshPage={refreshPage} />
-      <ModalOutros
-        ocorrencia_id={params.id}
+      <ModalNegotiationRegister
+        occurrence_id={Number(params.id)}
         refreshPage={refreshPage}
-        situacaoOptions={situacaoOptions}
+      />
+      <ModalConfirm
+        title="Encerrar sem negociação?"
+        message="A Ocorrência será encerrada sem negociação. Confirma o encerramento?"
+        confirmYes="Confirmar"
+        confirmNo="Cancelar"
+        isOpen={showModalConfirm}
+        setIsOpen={toggleModalConfirm}
+        handleConfirmYes={handleModalConfirmYes}
       />
       <Content>
         <Header />
         <Main>
+          <MainHeader>
+            <h1>Ocorrência | Detalhes</h1>
+          </MainHeader>
           {isError && !ocorrencia && <Whoops errorCode={errorCode} />}
           {ocorrencia && (
             <BoardDetails>
               <SectionLeft>
                 <header>
                   <div style={{ marginBottom: '10px' }}>
-                    <Link to="/ocorrencias">Voltar</Link>
+                    <Link
+                      to={{
+                        pathname: '/occurrences',
+                        state: {
+                          limit: location.state.limit,
+                          offset: location.state.offset,
+                          firstPageRangeDisplayed:
+                            location.state.firstPageRangeDisplayed,
+                          currentPage: location.state.currentPage,
+                          status: location.state.status,
+                        },
+                      }}
+                    >
+                      Voltar
+                    </Link>
                   </div>
-                  <Tag
-                    className="tagSituacao"
-                    theme={situacaoStyle[ocorrencia.situacao.id] || 'default'}
-                  >
-                    {ocorrencia.situacao.nome}
-                  </Tag>
-                  {Number(ocorrencia.situacao.id) === 1 && (
-                    <>
-                      <ActionsGroup>
-                        <strong>Finalizar como:</strong>
-                        <button type="button" onClick={toggleModalRetencao}>
-                          <FaClipboardCheck className="drop" />
-                          Retenção
-                        </button>
-                        <button type="button" onClick={toggleModalReversao}>
-                          <FaUndo className="drop rev" />
-                          Reversão
-                        </button>
-                        <button type="button" onClick={toggleModalCancelamento}>
-                          <FaTimesCircle className="drop cancel" />
-                          Cancelamento
-                        </button>
-                      </ActionsGroup>
-                      <ActionGroupOthers>
-                        <strong>Finalizar Outros:</strong>
-                        <Select
-                          options={situacaoOptions}
-                          styles={selectCustomStyles}
-                          placeholder="Situação"
-                          onChange={toggleModalOutrosSelected}
-                          value={null}
-                        />
-                      </ActionGroupOthers>
-                    </>
+                  <div className="statusOccurrence">
+                    Status Ocorrência:
+                    <span
+                      className={
+                        Number(ocorrencia.status_ocorrencia.id) === 1
+                          ? 'occurrence-opened'
+                          : ''
+                      }
+                    >
+                      {ocorrencia.status_ocorrencia.nome}
+                    </span>
+                  </div>
+                  {Number(ocorrencia.status_ocorrencia.id) === 1 &&
+                    ocorrencia.numeroprojeto && (
+                      <>
+                        <ActionsGroup>
+                          <button
+                            className="register"
+                            type="button"
+                            onClick={toggleModalNegotiationRegister}
+                          >
+                            <RiCustomerServiceFill />
+                            Registrar Negociação
+                          </button>
+                          <button
+                            className="close"
+                            type="button"
+                            onClick={toggleModalConfirm}
+                          >
+                            <FiCheckSquare />
+                            Encerrar
+                          </button>
+                        </ActionsGroup>
+                      </>
+                    )}
+                  {!ocorrencia.numeroprojeto && (
+                    <p className="ocorrenciaInfo">
+                      Essa ocorrência não foi vinculada à nenhum contrato.
+                      Verifique no Timesharing.
+                    </p>
                   )}
-                  <h1>Ocorrência | Detalhes</h1>
                 </header>
                 <Card>
                   <CardHeader>
@@ -310,16 +327,26 @@ const OcorrenciaDetalhes: React.FC = () => {
                     <div className="row">
                       <span>Contrato:</span>
                       <div>
-                        {`${ocorrencia.numeroprojeto}-${ocorrencia.numerocontrato}`}
+                        {ocorrencia.numeroprojeto
+                          ? `${ocorrencia.numeroprojeto}-${ocorrencia.numerocontrato}`
+                          : 'Não Vinculada'}
                       </div>
                     </div>
                     <div className="row">
                       <span>Valor de Venda:</span>
-                      <div>{ocorrencia.valorVendaFormatted}</div>
+                      <div>
+                        {ocorrencia.numeroprojeto
+                          ? ocorrencia.valorVendaFormatted
+                          : 'Sem valor de contrato'}
+                      </div>
                     </div>
                     <div className="row">
                       <span>Produto:</span>
-                      <div>{ocorrencia.produto}</div>
+                      <div>
+                        {ocorrencia.produto
+                          ? ocorrencia.produto.nomeprojeto
+                          : 'Sem produto'}
+                      </div>
                     </div>
                   </CardBody>
                 </Card>
@@ -367,15 +394,15 @@ const OcorrenciaDetalhes: React.FC = () => {
                 <hr />
                 <AtendimentoContainer ref={ref}>
                   {isLoading && (
-                    <LoadingContainder>
+                    <LoadingContainer>
                       <Loading />
                       <h3>Carregando atendimentos...</h3>
-                    </LoadingContainder>
+                    </LoadingContainer>
                   )}
                   {isError && (
-                    <LoadingContainder>
+                    <LoadingContainer>
                       <Whoops errorCode={errorCode} />
-                    </LoadingContainder>
+                    </LoadingContainer>
                   )}
                   {atendimentos.map(atendimento => (
                     <Atendimento key={atendimento.protocolo}>
@@ -425,4 +452,4 @@ const OcorrenciaDetalhes: React.FC = () => {
   );
 };
 
-export default OcorrenciaDetalhes;
+export default OccurrenceDetails;

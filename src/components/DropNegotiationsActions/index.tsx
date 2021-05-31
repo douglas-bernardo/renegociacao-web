@@ -10,32 +10,49 @@ import { Link } from 'react-router-dom';
 import Select from 'react-select';
 import { OptionsType, OptionTypeBase } from 'react-select';
 
-import { useNegociacao } from '../../hooks/negociacao';
+import { useNegotiation } from '../../hooks/negotiation';
 
 import { OutSideClick } from '../../hooks/outSideClick';
 
 import { Container, DropActionContent } from './styles';
 
-interface OcorrenciaProps {
+interface NegotiationProps {
   id: number;
-  finalizada: boolean;
+  situation_id: number;
+}
+
+interface Options {
+  value: string;
+  label: string;
 }
 
 interface DropActionProps {
-  ocorrenciaProps: OcorrenciaProps;
+  negotiationProps: NegotiationProps;
   situacaoOptions: OptionsType<OptionTypeBase>;
+  limit: number;
+  offset: number;
+  firstPageRangeDisplayed?: number;
+  currentPage?: number;
+  situationFilter?: Options[];
+  requestTypeFilter?: Options[];
 }
 
-const DropAction: React.FC<DropActionProps> = ({
-  ocorrenciaProps,
+const DropNegotiationsActions: React.FC<DropActionProps> = ({
+  negotiationProps,
   situacaoOptions,
+  limit,
+  offset,
+  firstPageRangeDisplayed,
+  currentPage,
+  situationFilter,
+  requestTypeFilter,
 }) => {
   const {
-    toggleModalRetencao,
-    toggleModalReversao,
-    toggleModalCancelamento,
+    toggleModalRetentionContract,
+    toggleModalDowngradeContract,
+    toggleModalCancelContract,
     toggleModalOutrosSelected,
-  } = useNegociacao();
+  } = useNegotiation();
 
   const btnActionDropRef = useRef<HTMLButtonElement>(null);
   const [positionContent, setPositionContent] = useState(0);
@@ -57,24 +74,34 @@ const DropAction: React.FC<DropActionProps> = ({
         onClick={handleClickButton}
       >
         <FaTh />
-        <span>Ações</span>
+        <span>Gerenciar</span>
       </button>
       {visible && (
         <DropActionContent position={positionContent}>
           <Link
             className="btnDropAction"
-            to={`/ocorrencias/${ocorrenciaProps.id}/detalhes`}
+            to={{
+              pathname: `/negotiations/${negotiationProps.id}`,
+              state: {
+                limit,
+                offset,
+                firstPageRangeDisplayed,
+                currentPage,
+                situationFilter,
+                requestTypeFilter,
+              },
+            }}
           >
             <FaInfoCircle className="drop info" />
-            Detalhar
+            Detalhes
           </Link>
-          {ocorrenciaProps.finalizada && (
+          {Number(negotiationProps.situation_id) === 1 && (
             <>
               <span className="dropTitle">Finalizar Como:</span>
               <button
                 className="btnDropAction"
                 type="button"
-                onClick={toggleModalRetencao}
+                onClick={toggleModalRetentionContract}
               >
                 <FaClipboardCheck className="drop" />
                 Retenção
@@ -82,7 +109,7 @@ const DropAction: React.FC<DropActionProps> = ({
               <button
                 className="btnDropAction"
                 type="button"
-                onClick={toggleModalReversao}
+                onClick={toggleModalDowngradeContract}
               >
                 <FaUndo className="drop rev" />
                 Reversão
@@ -90,7 +117,7 @@ const DropAction: React.FC<DropActionProps> = ({
               <button
                 className="btnDropAction"
                 type="button"
-                onClick={toggleModalCancelamento}
+                onClick={toggleModalCancelContract}
               >
                 <FaTimesCircle className="drop cancel" />
                 Cancelamento
@@ -112,4 +139,4 @@ const DropAction: React.FC<DropActionProps> = ({
   );
 };
 
-export default DropAction;
+export default DropNegotiationsActions;

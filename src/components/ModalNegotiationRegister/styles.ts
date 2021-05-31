@@ -1,12 +1,8 @@
 import styled from 'styled-components';
 import { Form as Unform } from '@unform/web';
 
-export const Container = styled.div`
-  padding: 30px;
-  min-height: 625px;
-`;
-
 export const Form = styled(Unform)`
+  padding: 40px 50px;
   display: flex;
   flex-direction: column;
 

@@ -8,10 +8,11 @@ import SignUp from '../pages/SignUp';
 
 import Profile from '../pages/Profile';
 import Dashboard from '../pages/Dashboard';
-import Ocorrencias from '../pages/Ocorrencias';
-import OcorrenciaDetalhes from '../pages/OcorrenciaDetalhes';
+import Occurrences from '../pages/Occurrences';
+import OccurrenceDetails from '../pages/OccurrenceDetails';
 
-import Negociacoes from '../pages/Negociacoes';
+import Negotiations from '../pages/Negotiations';
+import NegotiationDetails from '../pages/NegotiationDetails';
 
 const Routes: React.FC = () => (
   <Switch>
@@ -20,14 +21,21 @@ const Routes: React.FC = () => (
 
     <Route path="/profile" exact component={Profile} isPrivate />
     <Route path="/dashboard" exact component={Dashboard} isPrivate />
+
+    <Route path="/occurrences" exact component={Occurrences} isPrivate />
     <Route
-      path="/ocorrencias/:id/detalhes"
+      path="/occurrences/:id"
       exact
-      component={OcorrenciaDetalhes}
+      component={OccurrenceDetails}
       isPrivate
     />
-    <Route path="/ocorrencias" exact component={Ocorrencias} isPrivate />
-    <Route path="/negociacoes" exact component={Negociacoes} isPrivate />
+    <Route path="/negotiations" exact component={Negotiations} isPrivate />
+    <Route
+      path="/negotiations/:id"
+      exact
+      component={NegotiationDetails}
+      isPrivate
+    />
   </Switch>
 );
 

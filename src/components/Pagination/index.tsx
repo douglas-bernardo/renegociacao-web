@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import Select from 'react-select';
 
 import {
@@ -24,17 +30,39 @@ interface PaginationProps {
   onChange: (limit: number, offset: number) => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({
-  count,
-  limit,
-  pageRangeDisplayed,
-  onChange,
-}) => {
+export interface PaginationHandles {
+  handleSetFirstPageRangeDisplayed: (page: number) => void;
+  firstPageRangeDisplayed: number;
+  handleSetCurrentPage: (page: number) => void;
+  currentPage: number;
+}
+
+const Pagination: React.ForwardRefRenderFunction<
+  PaginationHandles,
+  PaginationProps
+> = ({ count, limit, pageRangeDisplayed, onChange }, ref) => {
   const [firstPageRangeDisplayed, setFirstPageRangeDisplayed] = useState(0);
   const [pagesDisplayed, setPagesDisplayed] = useState<Array<Number>>([]);
   const [pages, setPages] = useState<Array<Number>>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLastPage, setIsLastPage] = useState(false);
+
+  const handleSetFirstPageRangeDisplayed = useCallback((page: number) => {
+    setFirstPageRangeDisplayed(page);
+  }, []);
+
+  const handleSetCurrentPage = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
+
+  useImperativeHandle(ref, () => {
+    return {
+      handleSetFirstPageRangeDisplayed,
+      firstPageRangeDisplayed,
+      handleSetCurrentPage,
+      currentPage,
+    };
+  });
 
   useEffect(() => {
     const totalPages = Math.ceil(count / limit);
@@ -192,4 +220,4 @@ const Pagination: React.FC<PaginationProps> = ({
   );
 };
 
-export default Pagination;
+export default forwardRef(Pagination);

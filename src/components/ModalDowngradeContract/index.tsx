@@ -3,11 +3,12 @@ import { FiCheckSquare } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 
 import * as Yup from 'yup';
-
 import { api } from '../../services/api';
-import { Container, Form } from './styles';
 
-import { useNegociacao } from '../../hooks/negociacao';
+import { Container, Form } from './styles';
+import { Card, CardBody, CardHeader } from '../Container';
+
+import { useNegotiation } from '../../hooks/negotiation';
 import { useToast } from '../../hooks/toast';
 
 import Modal from '../Modal';
@@ -15,12 +16,27 @@ import Input from '../Input';
 import Select from '../Select';
 
 import getValidationErros from '../../utils/getValidationErros';
-import { numberFormat } from '../../utils/numberFormat';
 import Tabs from '../Tabs';
 import Tab from '../Tab';
-import { Card, CardBody, CardHeader } from '../Container';
 
-interface ICancelamentoDTO {
+interface Product {
+  id: number;
+  numeroprojeto: number;
+  nomeprojeto: string;
+}
+
+interface Negotiation {
+  id: number;
+  valor_primeira_parcela: number;
+  nome_cliente: string;
+  numeroprojeto: string;
+  numerocontrato: string;
+  produto: string;
+  valor_venda: number;
+  valor_venda_formatted: string;
+}
+
+interface IReversaoDTO {
   origem_id: number;
   tipo_solicitacao_id: number;
   tipo_contato_id: number;
@@ -29,135 +45,81 @@ interface ICancelamentoDTO {
   reembolso: number;
   numero_pc: number;
   taxas_extras: number;
+  valor_primeira_parcela: number;
+  projeto_id: number;
+  numerocontrato: number;
+  valor_venda: number;
   observacao: string;
-  multa: string;
 }
 
 interface IModalProps {
-  ocorrencia_id: string;
+  negotiation: Negotiation;
   refreshPage: () => void;
 }
 
-interface Motivo {
+interface ContactType {
   id: number;
   nome: string;
 }
 
-interface TipoSol {
-  id: number;
-  nome: string;
-}
-
-interface Origem {
-  id: number;
-  nome: string;
-}
-
-interface TipoContato {
-  id: number;
-  nome: string;
-}
-
-interface Contrato {
-  nome_cliente: string;
-  numeroprojeto: number;
-  numerocontrato: number;
-  valor_venda: string;
-  valorVendaFormatted: string;
-  produto: string;
-}
-
-const ModalCancelamento: React.FC<IModalProps> = ({
-  ocorrencia_id,
+const ModalDowngradeContract: React.FC<IModalProps> = ({
+  negotiation,
   refreshPage,
 }) => {
   const formRef = useRef<FormHandles>(null);
   const {
-    cancelamento,
-    showModalCancelamnto,
-    toggleModalCancelamento,
-  } = useNegociacao();
+    downgradeContract,
+    showModalDowngradeContract,
+    toggleModalDowngradeContract,
+  } = useNegotiation();
   const { addToast } = useToast();
 
-  const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
-  const [tipoSolOptions, setTipoSolOptions] = useState<TipoSol[]>([]);
-  const [origemOptions, setOrigemOptions] = useState<Origem[]>([]);
-  const [tipoContatoOptions, setTipoContatoOptions] = useState<TipoContato[]>(
+  const [tipoContatoOptions, setTipoContatoOptions] = useState<ContactType[]>(
     [],
   );
-  const [contrato, setContrato] = useState<Contrato>({} as Contrato);
+  const [produtoOptions, setProdutoOptions] = useState<Product[]>([]);
 
   useEffect(() => {
-    Promise.all([
-      api.get(`/domain/reasons`),
-      api.get(`/dominio/tipo-solicitacao`),
-      api.get(`/dominio/origem`),
-      api.get(`/dominio/tipo-contato`),
-      api.get(`ocorrencias/${ocorrencia_id}`),
-    ])
+    Promise.all([api.get(`/domain/contact-type`), api.get(`/domain/product`)])
       .then(response => {
-        const [
-          motivos,
-          tiposSol,
-          origem,
-          tipoContato,
-          contratoDetalhe,
-        ] = response;
+        const [contactType, product] = response;
 
-        const { data: motivoResponse } = motivos.data;
-        setMotivoOptions(
-          motivoResponse.map((opt: Motivo) => {
-            return { value: opt.id, label: opt.nome };
-          }),
-        );
-
-        const { data: tipoSolResponse } = tiposSol.data;
-        setTipoSolOptions(
-          tipoSolResponse.map((opt: TipoSol) => {
-            return { value: opt.id, label: opt.nome };
-          }),
-        );
-
-        const { data: origemResponse } = origem.data;
-        setOrigemOptions(
-          origemResponse.map((opt: Origem) => {
-            return { value: opt.id, label: opt.nome };
-          }),
-        );
-
-        const { data: tipoContatoResponse } = tipoContato.data;
+        const { data: tipoContatoResponse } = contactType.data;
         setTipoContatoOptions(
-          tipoContatoResponse.map((opt: TipoContato) => {
+          tipoContatoResponse.map((opt: ContactType) => {
             return { value: opt.id, label: opt.nome };
           }),
         );
 
-        const { data: contratoResponse } = contratoDetalhe.data;
-        if (!contratoResponse) return;
-        setContrato({
-          ...contratoResponse,
-          valorVendaFormatted: numberFormat(contratoResponse.valor_venda),
-        });
+        const { data: produtoResponse } = product.data;
+        setProdutoOptions(
+          produtoResponse.map((opt: Product) => {
+            return {
+              value: opt.id,
+              label: `${opt.numeroprojeto} - ${opt.nomeprojeto}`,
+            };
+          }),
+        );
       })
       .catch((error: Error) => {
         console.log(error.message);
       });
-  }, [ocorrencia_id]);
+  }, []);
 
   const handleSubmit = useCallback(
-    async (data: ICancelamentoDTO) => {
+    async (data: IReversaoDTO) => {
       try {
         formRef.current?.setErrors({});
 
         const schema = Yup.object().shape({
-          motivo_id: Yup.string().required('Motivo é obrigatório'),
-          tipo_solicitacao_id: Yup.string().required(
-            'Tipo de Solicitação é obrigatório',
-          ),
-          origem_id: Yup.string().required('Origem é obrigatório'),
           tipo_contato_id: Yup.string().required(
             'Tipo de contato é obrigatório',
           ),
+          projeto_id: Yup.string().required('Produto é obrigatório'),
+          numerocontrato: Yup.string().required(
+            'Número Contrato é obrigatório',
+          ),
+          valor_venda: Yup.string().required('Valor de venda obrigatório'),
           numero_pc: Yup.string().when('reembolso', {
             is: (value: string) => value && value.length > 0,
             then: Yup.string().required(
@@ -168,14 +130,15 @@ const ModalCancelamento: React.FC<IModalProps> = ({
         });
 
         await schema.validate(data, { abortEarly: false });
-        await cancelamento(data, ocorrencia_id);
+        await downgradeContract(data, negotiation.id);
 
-        toggleModalCancelamento();
+        toggleModalDowngradeContract();
         refreshPage();
+
         addToast({
           type: 'success',
           title: 'Ocorrência Finalizada!',
-          description: 'Cancelamento de Contrato',
+          description: 'Reversão de Contrato',
         });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
@@ -183,53 +146,34 @@ const ModalCancelamento: React.FC<IModalProps> = ({
           formRef.current?.setErrors(errors);
           return;
         }
-        toggleModalCancelamento();
-        console.log(err);
+
         addToast({
           type: 'error',
-          title: err.message,
+          title: 'Erro na solicitação',
         });
       }
     },
     [
-      cancelamento,
-      toggleModalCancelamento,
+      downgradeContract,
+      toggleModalDowngradeContract,
       refreshPage,
       addToast,
-      ocorrencia_id,
+      negotiation.id,
     ],
   );
 
   return (
     <Modal
-      isOpen={showModalCancelamnto}
-      setIsOpen={toggleModalCancelamento}
+      isOpen={showModalDowngradeContract}
+      setIsOpen={toggleModalDowngradeContract}
       width="912px"
     >
       <Container>
-        <h1>Finalização de Negociação | Cancelamento Contrato</h1>
+        <h1>Finalização de Negociação | Reversão Contrato</h1>
         <Tabs>
           <Tab title="Dados">
             <Form ref={formRef} onSubmit={handleSubmit}>
-              <Select
-                name="motivo_id"
-                options={motivoOptions}
-                menuPlacement="auto"
-                placeholder="Motivo da Solicitação de Cancelamento"
-              />
               <div className="control">
-                <Select
-                  name="tipo_solicitacao_id"
-                  options={tipoSolOptions}
-                  menuPlacement="auto"
-                  placeholder="Tipo de Solicitação"
-                />
-                <Select
-                  name="origem_id"
-                  options={origemOptions}
-                  menuPlacement="auto"
-                  placeholder="Origem"
-                />
                 <Select
                   name="tipo_contato_id"
                   options={tipoContatoOptions}
@@ -237,10 +181,21 @@ const ModalCancelamento: React.FC<IModalProps> = ({
                   placeholder="Tipo de Contato"
                 />
               </div>
+              <Select
+                name="projeto_id"
+                options={produtoOptions}
+                menuPlacement="auto"
+                placeholder="Produto"
+              />
               <div className="row">
                 <Input
-                  name="multa"
-                  placeholder="Multa Cancelamento"
+                  name="numerocontrato"
+                  placeholder="Número Contrato Novo"
+                  mask="number"
+                />
+                <Input
+                  name="valor_venda"
+                  placeholder="Valor de Venda"
                   mask="currency"
                 />
                 <Input
@@ -248,22 +203,27 @@ const ModalCancelamento: React.FC<IModalProps> = ({
                   placeholder="Reembolso"
                   mask="currency"
                 />
+              </div>
+              <div className="row">
                 <Input
                   name="numero_pc"
                   placeholder="Número da PC"
                   mask="number"
                 />
-              </div>
-              <div className="row">
                 <Input
                   name="taxas_extras"
                   placeholder="Taxas e Multas Extras"
                   mask="currency"
                 />
+                <Input
+                  name="valor_primeira_parcela"
+                  placeholder="Valor 1ª Parcela"
+                  mask="currency"
+                />
               </div>
               <Input name="observacao" placeholder="Observações" />
               <button type="submit" data-testid="add-food-button">
-                <p className="text">Finalizar Cancelamento</p>
+                <p className="text">Finalizar Reversão</p>
                 <div className="icon">
                   <FiCheckSquare size={24} />
                 </div>
@@ -278,21 +238,21 @@ const ModalCancelamento: React.FC<IModalProps> = ({
               <CardBody>
                 <div className="row">
                   <span>Cliente:</span>
-                  <div>{contrato.nome_cliente}</div>
+                  <div>{negotiation.nome_cliente}</div>
                 </div>
                 <div className="row">
                   <span>Contrato:</span>
                   <div>
-                    {`${contrato.numeroprojeto}-${contrato.numerocontrato}`}
+                    {`${negotiation.numeroprojeto}-${negotiation.numerocontrato}`}
                   </div>
                 </div>
                 <div className="row">
                   <span>Valor de Venda:</span>
-                  <div>{contrato.valorVendaFormatted}</div>
+                  <div>{negotiation.valor_venda_formatted}</div>
                 </div>
                 <div className="row">
                   <span>Produto:</span>
-                  <div>{contrato.produto}</div>
+                  <div>{negotiation.produto}</div>
                 </div>
               </CardBody>
             </Card>
@@ -303,4 +263,4 @@ const ModalCancelamento: React.FC<IModalProps> = ({
   );
 };
 
-export default ModalCancelamento;
+export default ModalDowngradeContract;
