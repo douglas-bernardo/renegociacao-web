@@ -20,13 +20,18 @@ interface Occurrence {
   numeroprojeto?: number;
 }
 
+interface Options {
+  value: string;
+  label: string;
+}
+
 interface DropActionProps {
   occurrenceProps: Occurrence;
   limit: number;
   offset: number;
   firstPageRangeDisplayed?: number;
   currentPage?: number;
-  status?: number;
+  statusFilterSelected?: Options[];
   [key: string]: any;
 }
 
@@ -36,7 +41,7 @@ const DropOccurrenceActions: React.FC<DropActionProps> = ({
   offset,
   firstPageRangeDisplayed,
   currentPage,
-  status,
+  statusFilterSelected,
   handleEndOccurrence,
 }) => {
   const { toggleModalNegotiationRegister } = useNegotiation();
@@ -92,7 +97,7 @@ const DropOccurrenceActions: React.FC<DropActionProps> = ({
                 offset,
                 firstPageRangeDisplayed,
                 currentPage,
-                status,
+                statusFilterSelected,
               },
             }}
           >

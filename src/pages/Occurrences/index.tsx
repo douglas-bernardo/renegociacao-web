@@ -44,10 +44,18 @@ interface Occurrence {
   nome_cliente: string;
   numeroprojeto: number;
   numerocontrato: number;
+  valor_venda: number;
+  valor_venda_formatted: string;
+  nomeusuario_resp: string;
   status_ocorrencia: {
     id: number;
     nome: string;
   };
+}
+
+interface Options {
+  value: string;
+  label: string;
 }
 
 interface LocationProps {
@@ -55,27 +63,20 @@ interface LocationProps {
   offset: number | undefined;
   firstPageRangeDisplayed: number | undefined;
   currentPage: number | undefined;
-  status: number | undefined;
+  statusFilter: Options[] | undefined;
 }
 
-const statusOccurrence = [
-  { value: 0, label: 'Todas' },
-  { value: 1, label: 'Em Aberto' },
-  { value: 2, label: 'Em Negociação' },
-  { value: 3, label: 'Negociação Encerrada' },
-  { value: 4, label: 'Encerrada Sem Negociação' },
-];
+interface StatusOccurrence {
+  id: number;
+  nome: string;
+}
 
 const selectCustomStyles = {
   container: base => ({
     ...base,
-    // flex: 1,
     width: 250,
     marginLeft: 10,
   }),
-  // control: () => ({
-  //   width: 400,
-  // }),
 };
 
 const Occurrences: React.FC = () => {
@@ -85,6 +86,10 @@ const Occurrences: React.FC = () => {
   const location = useLocation<LocationProps>();
   const history = useHistory();
   const paginationRef = useRef<PaginationHandles>(null);
+
+  const [occurrenceStatusOptions, setOccurrenceStatusOptions] = useState<
+    Options[]
+  >([]);
 
   const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
   const [tableRefresh, setTableRefresh] = useState(false);
@@ -119,12 +124,14 @@ const Occurrences: React.FC = () => {
     return new Date();
   });
 
-  const [status, setStatus] = useState(() => {
-    if (location.state?.status) {
-      return location.state.status;
-    }
-    return 0;
-  });
+  const [statusFilterSelected, setStatusFilterSelected] = useState<Options[]>(
+    () => {
+      if (location.state?.statusFilter) {
+        return location.state.statusFilter;
+      }
+      return [];
+    },
+  );
 
   const handleSetCurrentPage = useCallback(() => {
     if (location.state?.currentPage) {
@@ -139,6 +146,11 @@ const Occurrences: React.FC = () => {
   }, [location.state]);
 
   useEffect(() => {
+    const statusSelected = statusFilterSelected.map(item => {
+      return item.value;
+    });
+    const ids = statusSelected.join().length > 0 ? statusSelected.join() : 0;
+
     api
       .get(`/occurrences`, {
         params: {
@@ -146,7 +158,7 @@ const Occurrences: React.FC = () => {
           limit,
           startDate: format(startDate, 'yyyy-MM-dd'),
           endDate: format(endDate, 'yyyy-MM-dd'),
-          status,
+          status: ids,
         },
       })
       .then(response => {
@@ -175,10 +187,29 @@ const Occurrences: React.FC = () => {
     offset,
     startDate,
     endDate,
-    status,
+    statusFilterSelected,
     tableRefresh,
     handleSetCurrentPage,
   ]);
+
+  useEffect(() => {
+    api
+      .get('/domain/status-occurrence')
+      .then(response => {
+        const { data } = response.data;
+
+        setOccurrenceStatusOptions(
+          data.map((opt: StatusOccurrence) => {
+            return { value: opt.id, label: opt.nome };
+          }),
+        );
+      })
+      .catch((error: Error) => {
+        setIsLoading(false);
+        setIsError(true);
+        console.log(error.message);
+      });
+  }, []);
 
   const refreshPage = useCallback(() => {
     setTableRefresh(!tableRefresh);
@@ -288,7 +319,7 @@ const Occurrences: React.FC = () => {
 
   const handleSelectStatusFilter = useCallback(
     value => {
-      setStatus(value.value);
+      setStatusFilterSelected(value);
       setOffset(0);
       paginationRef.current?.handleSetCurrentPage(1);
       paginationRef.current?.handleSetFirstPageRangeDisplayed(0);
@@ -353,10 +384,13 @@ const Occurrences: React.FC = () => {
             </div>
             <Select
               onChange={handleSelectStatusFilter}
-              options={statusOccurrence}
+              isMulti
+              options={occurrenceStatusOptions}
               placeholder="Status Ocorrência"
               defaultValue={
-                location.state?.status ? statusOccurrence[status] : undefined
+                location.state?.statusFilter
+                  ? location.state.statusFilter
+                  : undefined
               }
               styles={selectCustomStyles}
             />
@@ -364,8 +398,9 @@ const Occurrences: React.FC = () => {
           <OccurrenceTable>
             <thead>
               <tr>
-                <th>Data</th>
+                <th>Data da Ocorrência</th>
                 <th>Número</th>
+                <th>Responsável</th>
                 <th>Cliente</th>
                 <th>Projeto-Contrato</th>
                 <th>Status</th>
@@ -380,6 +415,7 @@ const Occurrences: React.FC = () => {
                 >
                   <td>{occurrence.dateFormatted}</td>
                   <td>{occurrence.numero_ocorrencia}</td>
+                  <td>{occurrence.nomeusuario_resp}</td>
                   <td>{occurrence.nome_cliente}</td>
                   <td>
                     {occurrence.numeroprojeto ? (
@@ -421,7 +457,7 @@ const Occurrences: React.FC = () => {
                         paginationRef.current?.firstPageRangeDisplayed
                       }
                       currentPage={paginationRef.current?.currentPage}
-                      status={status}
+                      statusFilterSelected={statusFilterSelected}
                       handleEndOccurrence={handleEndOccurrence}
                     />
                   </td>

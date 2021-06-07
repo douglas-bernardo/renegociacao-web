@@ -1,5 +1,7 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import { OptionsType, OptionTypeBase } from 'react-select';
+import format from 'date-fns/format';
+import { parse } from 'date-fns';
 
 import { api } from '../services/api';
 
@@ -63,6 +65,7 @@ interface INegotiationUpdateDTO {
   taxas_extras: number;
   multa: number;
   valor_primeira_parcela: number;
+  data_finalizacao: string;
 }
 
 interface NegotiationContextData {
@@ -250,9 +253,14 @@ export const NegotiationProvider: React.FC = ({ children }) => {
           taxas_extras: data.taxas_extras,
           multa: data.multa,
           valor_primeira_parcela: data.valor_primeira_parcela,
+          data_finalizacao: data.data_finalizacao
+            ? format(
+                parse(data.data_finalizacao, 'dd/MM/yyyy', new Date()),
+                'yyyy-MM-dd',
+              )
+            : undefined,
         },
       };
-      console.log(edit);
       await api.put(`/negotiations/${id}`, edit);
     },
     [],

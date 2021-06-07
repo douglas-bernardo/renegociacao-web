@@ -51,11 +51,6 @@ const ChartOption = {
   },
   yaxis: {
     show: false,
-    // labels: {
-    //   formatter: value => {
-    //     return `${value}%`;
-    //   },
-    // },
   },
   legend: {
     position: 'top',
@@ -63,11 +58,17 @@ const ChartOption = {
     offsetY: -30,
   },
   noData: {
-    text: 'Loading...',
+    text: 'Sem Dados',
   },
 };
 
-const MonthlyEfficiencyChart: React.FC = () => {
+interface MonthlyEfficiencyChartProps {
+  year: number;
+}
+
+const MonthlyEfficiencyChart: React.FC<MonthlyEfficiencyChartProps> = ({
+  year,
+}) => {
   const [series, setSeries] = useState<any[] | undefined>([]);
   const [options, setOptions] = useState({});
 
@@ -75,7 +76,7 @@ const MonthlyEfficiencyChart: React.FC = () => {
     api
       .get('/reports/monthly-efficiency', {
         params: {
-          year: 2021,
+          year,
         },
       })
       .then(response => {
@@ -111,7 +112,7 @@ const MonthlyEfficiencyChart: React.FC = () => {
       .catch((error: Error) => {
         console.log(error);
       });
-  }, []);
+  }, [year]);
 
   return (
     <Container>

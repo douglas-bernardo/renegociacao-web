@@ -7,7 +7,10 @@ import {
   FaPowerOff,
 } from 'react-icons/fa';
 
+import userDefaultImage from '../../assets/user.svg';
+
 import { OutSideClick } from '../../hooks/outSideClick';
+import { useAuth } from '../../hooks/auth';
 
 import {
   Container,
@@ -18,6 +21,7 @@ import {
 
 const Header: React.FC = ({ children }) => {
   const { visible, setVisible, ref } = OutSideClick(false);
+  const { user } = useAuth();
 
   const handleClickButton = useCallback(() => {
     setVisible(prevState => !prevState);
@@ -31,11 +35,8 @@ const Header: React.FC = ({ children }) => {
 
         <DropdownMenu ref={ref}>
           <button type="button" onClick={handleClickButton}>
-            <img
-              src="https://avatars.githubusercontent.com/u/29052049?s=400&u=ce9d2588cb52719d5c1a65217ff18c7e5c8ef804&v=4"
-              alt="Douglas Bernardo"
-            />
-            <span>Admin</span>
+            <img src={userDefaultImage} alt={user.primeiro_nome} />
+            <span>{user.primeiro_nome}</span>
             <FaAngleDown />
 
             <DropdownMenuContent isVisible={visible}>

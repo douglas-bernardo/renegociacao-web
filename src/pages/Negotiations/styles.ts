@@ -71,18 +71,23 @@ export const NegotiationsTable = styled.table`
   border-collapse: collapse;
   border-spacing: 0;
 
-  & + tr {
+  /* & + tr {
     margin-top: 20px;
-  }
+  } */
 
   th {
     text-align: left;
     height: 40px;
     line-height: 40px;
+    min-width: 100px;
   }
 
   th.centered {
     text-align: center;
+  }
+
+  th.situation {
+    min-width: 160px;
   }
 
   tbody tr:hover {
@@ -95,7 +100,7 @@ export const NegotiationsTable = styled.table`
   td {
     white-space: normal;
     text-align: left;
-    height: 55px;
+    height: 60px;
     padding: 5px;
     border-top: 1px solid #d2cfcf;
     font-size: 14px;

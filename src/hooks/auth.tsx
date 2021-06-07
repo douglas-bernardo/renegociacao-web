@@ -2,10 +2,12 @@ import React, { createContext, useCallback, useContext, useState } from 'react';
 import { api } from '../services/api';
 
 interface User {
-  id: string;
-  name: string;
+  ativo: boolean;
   email: string;
-  avatar_url: string;
+  id: number;
+  nome: string;
+  primeiro_nome: string;
+  ts_usuario_id: number;
 }
 
 interface AuthState {

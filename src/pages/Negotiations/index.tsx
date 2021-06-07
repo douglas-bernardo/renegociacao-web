@@ -121,7 +121,6 @@ const Negotiations: React.FC = () => {
   const paginationRef = useRef<PaginationHandles>(null);
 
   const [situationOptions, setSituationOptions] = useState<Options[]>([]);
-  // const [requestTypeOptions, setRequestTypeOptions] = useState<Options[]>([]);
 
   const [situationFilterOptions, setSituationFilterOptions] = useState<
     Options[]
@@ -508,8 +507,9 @@ const Negotiations: React.FC = () => {
                 <th>Data Sol.</th>
                 <th>Tipo</th>
                 <th>Cliente</th>
-                <th>Projeto-Contrato</th>
-                <th className="centered">Situação</th>
+                <th>Contrato</th>
+                <th>Valor</th>
+                <th className="centered situation">Situação</th>
                 <th className="centered">Ações</th>
               </tr>
             </thead>
@@ -527,6 +527,7 @@ const Negotiations: React.FC = () => {
                     <td>
                       {`${negotiation.numeroprojeto}-${negotiation.numerocontrato}`}
                     </td>
+                    <td>{negotiation.valor_venda_formatted}</td>
                     <td>
                       <Tag
                         theme={

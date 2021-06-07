@@ -92,12 +92,17 @@ interface OccurrenceParams {
   id: string;
 }
 
+interface Options {
+  value: string;
+  label: string;
+}
+
 interface LocationProps {
   limit: number;
   offset: number;
   firstPageRangeDisplayed: number;
   currentPage: number;
-  status: number;
+  statusFilterSelected: Options[];
 }
 
 const icons = {
@@ -266,7 +271,8 @@ const OccurrenceDetails: React.FC = () => {
                           firstPageRangeDisplayed:
                             location.state.firstPageRangeDisplayed,
                           currentPage: location.state.currentPage,
-                          status: location.state.status,
+                          statusFilterSelected:
+                            location.state.statusFilterSelected,
                         },
                       }}
                     >

@@ -11,12 +11,12 @@ import { FiAlertCircle } from 'react-icons/fi';
 import { useField } from '@unform/core';
 
 import { Container, Error } from './styles';
-import { cep, currency, cpf, number } from './masks';
+import { cep, currency, cpf, number, dateMask } from './masks';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   name: string;
   containerStyle?: object;
-  mask?: 'cep' | 'currency' | 'cpf' | 'number';
+  mask?: 'cep' | 'currency' | 'cpf' | 'number' | 'date';
   prefix?: string;
   icon?: React.ComponentType<IconBaseProps>;
 }
@@ -64,6 +64,9 @@ const Input: React.FC<InputProps> = ({
       }
       if (mask === 'number') {
         number(e);
+      }
+      if (mask === 'date') {
+        dateMask(e);
       }
     },
     [mask],

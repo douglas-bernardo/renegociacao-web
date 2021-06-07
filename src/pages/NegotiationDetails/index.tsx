@@ -53,6 +53,7 @@ interface Negotiation {
   motivo: string;
   usuario_resp_negociacao: string;
   situacao_id: number;
+  data_finalizacao: string;
   situacao: string;
   reembolso: number;
   numero_pc: number;

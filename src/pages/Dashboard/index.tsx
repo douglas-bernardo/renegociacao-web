@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Select, { components } from 'react-select';
 import { AiOutlineCalendar } from 'react-icons/ai';
 
@@ -26,13 +26,12 @@ import chartMoneyDown from '../../assets/chart-money-down.svg';
 import bagMoney from '../../assets/bag-money.svg';
 import { api } from '../../services/api';
 import { numberFormat } from '../../utils/numberFormat';
-
-const yearResultsToShow = [{ value: 2021, label: '2021' }];
+import QCOPercentageOpen from '../../components/Reports/QCOPercentageOpen';
 
 const selectCustomStyles = {
   container: base => ({
     ...base,
-    width: '100px',
+    width: 130,
     border: 'none',
     boxShadow: 'none',
   }),
@@ -78,17 +77,26 @@ interface SummaryFormatted {
   balance: string;
 }
 
+interface Options {
+  value: number;
+  label: string;
+}
+
 const Dashboard: React.FC = () => {
   const [
     monthlyRequestsSummary,
     setMonthlyRequestsSummary,
   ] = useState<SummaryFormatted>({} as SummaryFormatted);
 
+  const [yearResults, setYearResults] = useState(() => {
+    return new Date().getFullYear();
+  });
+
   useEffect(() => {
     api
       .get<RequestReport>('/reports/monthly-requests-summary', {
         params: {
-          year: 2021,
+          year: yearResults,
         },
       })
       .then(response => {
@@ -123,10 +131,19 @@ const Dashboard: React.FC = () => {
       .catch((error: Error) => {
         console.log(error);
       });
+  }, [yearResults]);
+
+  const yearsResultOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const listYears = Array.from(new Array(3), (v, idx) => currentYear - idx);
+    const options: Options[] = listYears.map(year => {
+      return { value: year, label: year.toString() };
+    });
+    return options;
   }, []);
 
-  const handleSelectResultsToShow = useCallback(() => {
-    console.log('Changing results...');
+  const handleSelectYearsResultsToShow = useCallback((selected: any) => {
+    setYearResults(selected.value);
   }, []);
 
   const DropdownIndicator = props => {
@@ -146,12 +163,12 @@ const Dashboard: React.FC = () => {
           <MainHeader>
             <p>Exibindo resultados de:</p>
             <Select
-              onChange={handleSelectResultsToShow}
               menuPlacement="auto"
-              options={yearResultsToShow}
-              defaultValue={yearResultsToShow[0]}
               styles={selectCustomStyles}
+              options={yearsResultOptions}
+              defaultValue={yearsResultOptions[0]}
               components={{ DropdownIndicator }}
+              onChange={handleSelectYearsResultsToShow}
             />
           </MainHeader>
 
@@ -187,14 +204,15 @@ const Dashboard: React.FC = () => {
           </CardsContainer>
 
           <div className="horizontalRowChart">
-            <MonthlyEfficiencyChart />
-            <AmountReceivedChart />
+            <MonthlyEfficiencyChart year={yearResults} />
+            <AmountReceivedChart year={yearResults} />
           </div>
 
           <QCOFollowUpContainer>
-            <QCOFollowUpMonthlyRequests year={2021} />
-            <QCOFollowUpMonthlyRequestsSevenDays year={2021} />
-            <QCOFollowUpAccumulatedProfit year={2021} />
+            <QCOFollowUpMonthlyRequests year={yearResults} />
+            <QCOFollowUpMonthlyRequestsSevenDays year={yearResults} />
+            <QCOFollowUpAccumulatedProfit year={yearResults} />
+            <QCOPercentageOpen year={yearResults} />
           </QCOFollowUpContainer>
         </Main>
       </Content>

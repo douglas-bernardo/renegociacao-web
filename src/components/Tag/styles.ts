@@ -34,6 +34,7 @@ export const Container = styled.div<ContainerProps>`
   max-width: 230px;
   height: 26px;
   border-radius: 16px;
+  padding: 0 8px;
 
   ${props => themeVariations[props.theme || 'default']}
 `;

@@ -140,13 +140,13 @@ const Profile: React.FC = () => {
         <Form
           ref={formRef}
           initialData={{
-            name: user.name,
+            name: user.primeiro_nome,
             email: user.email,
           }}
           onSubmit={handleSubmit}
         >
           <AvatarInput>
-            <img src={user.avatar_url} alt={user.name} />
+            {/* <img src={user.avatar_url} alt={user.name} /> */}
             <label htmlFor="avatar">
               <FiCamera />
               <input type="file" id="avatar" onChange={handleAvatarChange} />

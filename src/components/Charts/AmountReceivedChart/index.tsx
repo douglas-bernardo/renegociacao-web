@@ -28,7 +28,7 @@ const ChartOption = {
     },
   },
   noData: {
-    text: 'Loading...',
+    text: 'Sem Dados',
   },
 } as Props;
 
@@ -37,7 +37,11 @@ interface Amount {
   total: number;
 }
 
-const AmountReceivedChart: React.FC = () => {
+interface AmountReceivedChartProps {
+  year: number;
+}
+
+const AmountReceivedChart: React.FC<AmountReceivedChartProps> = ({ year }) => {
   const [series, setSeries] = useState<any[] | undefined>([]);
   const [options, setOptions] = useState({});
 
@@ -45,7 +49,7 @@ const AmountReceivedChart: React.FC = () => {
     api
       .get('/reports/amount-received', {
         params: {
-          year: 2021,
+          year,
         },
       })
       .then(response => {
@@ -71,7 +75,7 @@ const AmountReceivedChart: React.FC = () => {
       .catch((error: Error) => {
         console.log(error);
       });
-  }, []);
+  }, [year]);
 
   return (
     <Container>
