@@ -165,7 +165,7 @@ const Pagination: React.ForwardRefRenderFunction<
         <span>
           de
           {` ${count} `}
-          ocorrências
+          registros
         </span>
       </div>
       <PagesContainer>
@@ -190,6 +190,7 @@ const Pagination: React.ForwardRefRenderFunction<
         {pagesDisplayed.map(page => (
           <Page
             isSelected={page === currentPage}
+            disabled={page === currentPage}
             key={page.toString()}
             type="button"
             onClick={() => handleGotoPage(page)}

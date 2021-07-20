@@ -1,4 +1,5 @@
 import styled, { css } from 'styled-components';
+import { shade } from 'polished';
 
 interface DropDetailsContentProps {
   position?: number;
@@ -12,22 +13,20 @@ export const Main = styled.div`
   color: #3c3c3c;
 `;
 
-export const MainHeader = styled.div`
-  height: 90px;
-  display: flex;
-  align-items: flex-end;
-  margin-bottom: 15px;
-`;
-
 export const BoardDetails = styled.div`
-  display: flex;
+  /* display: flex;
   margin-right: 20px;
   max-height: 716px;
-  overflow: auto;
+  overflow: auto; */
 
   border: 1px solid #f0f0f0;
   box-shadow: 4px 0px 4px rgba(0, 0, 0, 0.25);
   border-radius: 10px;
+`;
+
+export const Sections = styled.div`
+  display: flex;
+  flex-wrap: wrap;
 `;
 
 export const SectionLeft = styled.section`
@@ -43,15 +42,27 @@ export const SectionLeft = styled.section`
     justify-content: space-between;
     margin-bottom: 20px;
 
-    a {
-      color: #182390;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: bold;
-      padding: 12px 20px;
-      border-radius: 20px;
-      &:hover {
-        background: #e5e5e5;
+    div.linkBackPage {
+      a {
+        display: flex;
+        align-items: center;
+        color: #003379;
+
+        text-decoration: none;
+        font-weight: bold;
+        transition: color 0.2s;
+
+        svg {
+          margin-right: 5px;
+        }
+
+        span {
+          margin-top: 2px;
+        }
+
+        &:hover {
+          color: ${shade(0.2, '#003379')};
+        }
       }
     }
 
@@ -138,7 +149,7 @@ export const SectionRight = styled.section`
   flex: 1;
   padding: 24px;
   width: 100%;
-  max-width: 400px;
+  /* max-width: 400px; */
 
   header {
     height: 45px;
@@ -194,7 +205,8 @@ export const Atendimento = styled.div`
   justify-content: start;
   padding: 10px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-  width: 340px;
+  width: 100%;
+  /* width: 340px; */
 
   &:hover {
     background: #f5f5f5;
@@ -227,7 +239,7 @@ export const Atendimento = styled.div`
 
 export const ContainerDetails = styled.div`
   position: absolute;
-  right: 5px;
+  right: 20px;
 
   button.atendDetails {
     background: transparent;

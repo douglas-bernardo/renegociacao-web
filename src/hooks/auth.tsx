@@ -1,6 +1,8 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
 import { api } from '../services/api';
 
+import { useToast } from './toast';
+
 interface User {
   ativo: boolean;
   email: string;
@@ -8,6 +10,7 @@ interface User {
   nome: string;
   primeiro_nome: string;
   ts_usuario_id: number;
+  roles: String[];
 }
 
 interface AuthState {
@@ -33,6 +36,8 @@ export const AuthContext = createContext<AuthContextData>(
 );
 
 export const AuthProvider: React.FC = ({ children }) => {
+  const { addToast } = useToast();
+
   const [data, setData] = useState<AuthState>(() => {
     const token = localStorage.getItem('@Renegociacao:token');
     const user = localStorage.getItem('@Renegociacao:user');
@@ -45,21 +50,31 @@ export const AuthProvider: React.FC = ({ children }) => {
     return {} as AuthState;
   });
 
-  const signIn = useCallback(async ({ email, password }) => {
-    const response = await api.post('sessions', {
-      email,
-      password,
-    });
+  const signIn = useCallback(
+    async ({ email, password }) => {
+      const response = await api.post('sessions', {
+        email,
+        password,
+      });
 
-    const { token, user } = response.data;
+      const { token, user } = response.data;
 
-    localStorage.setItem('@Renegociacao:token', token);
-    localStorage.setItem('@Renegociacao:user', JSON.stringify(user));
+      localStorage.setItem('@Renegociacao:token', token);
+      localStorage.setItem('@Renegociacao:user', JSON.stringify(user));
 
-    api.defaults.headers.authorization = `Bearer ${token}`;
+      api.defaults.headers.authorization = `Bearer ${token}`;
 
-    setData({ token, user });
-  }, []);
+      if (user) {
+        addToast({
+          type: 'success',
+          title: `Olá ${user.primeiro_nome} Bem Vindo(a)!`,
+        });
+      }
+
+      setData({ token, user });
+    },
+    [addToast],
+  );
 
   const signOut = useCallback(() => {
     localStorage.removeItem('@Renegociacao:token');

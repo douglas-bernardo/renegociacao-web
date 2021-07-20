@@ -1,10 +1,9 @@
-import React, { useRef, useCallback, useEffect, useState } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 
 import { FiCheckSquare } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 
 import * as Yup from 'yup';
-import { api } from '../../services/api';
 import { Container, Form } from './styles';
 import { Card, CardBody, CardHeader } from '../Container';
 
@@ -18,6 +17,9 @@ import Select from '../Select';
 import getValidationErros from '../../utils/getValidationErros';
 import Tabs from '../Tabs';
 import Tab from '../Tab';
+import { priceToNumber } from '../../utils/numberFormat';
+import ModalConfirm from '../ModalConfirm';
+import LoadingModal from '../LoadingModal';
 
 interface Negotiation {
   id: number;
@@ -37,18 +39,20 @@ interface IRetencaoDTO {
   observacao: string;
 }
 
-interface IModalProps {
-  negotiation: Negotiation;
-  refreshPage: () => void;
-}
-
 interface ContactType {
   id: number;
   nome: string;
 }
 
+interface IModalProps {
+  negotiation: Negotiation;
+  tipoContatoOptions: ContactType[];
+  refreshPage: () => void;
+}
+
 const ModalRetentionContract: React.FC<IModalProps> = ({
   negotiation,
+  tipoContatoOptions,
   refreshPage,
 }) => {
   const formRef = useRef<FormHandles>(null);
@@ -59,45 +63,65 @@ const ModalRetentionContract: React.FC<IModalProps> = ({
   } = useNegotiation();
   const { addToast } = useToast();
 
-  const [tipoContatoOptions, setTipoContatoOptions] = useState<ContactType[]>(
-    [],
-  );
+  const [showModalConfirm, setShowModalConfirm] = useState(false);
+  const [showLoadingModal, setLoadingModal] = useState(false);
 
-  useEffect(() => {
-    api
-      .get(`/domain/contact-type`)
-      .then(response => {
-        const { data } = response.data;
+  const toggleLoadingModal = useCallback(() => {
+    setLoadingModal(!showLoadingModal);
+  }, [showLoadingModal]);
 
-        setTipoContatoOptions(
-          data.map((opt: ContactType) => {
-            return { value: opt.id, label: opt.nome };
-          }),
-        );
-      })
-      .catch((error: Error) => {
-        console.log(error.message);
+  const toggleModalConfirm = useCallback(async () => {
+    try {
+      const data = formRef.current?.getData();
+      formRef.current?.setErrors({});
+
+      const schema = Yup.object().shape({
+        valor_financiado: Yup.string().required('Valor financiado obrigatório'),
+        tipo_contato_id: Yup.string().required('Tipo de contato é obrigatório'),
       });
-  }, []);
+
+      await schema.validate(data, { abortEarly: false });
+
+      const finValue = priceToNumber(data?.valor_financiado.toString());
+      if (finValue < Number(negotiation.valor_venda)) {
+        formRef.current?.setErrors({
+          valor_financiado: `Valor financiado não pode ser menor que o valor do contrato: ${negotiation.valor_venda_formatted}`,
+        });
+        return;
+      }
+
+      const firstPayment = priceToNumber(
+        data?.valor_primeira_parcela.toString(),
+      );
+      if (firstPayment > 0) {
+        if (firstPayment > Number(negotiation.valor_venda)) {
+          formRef.current?.setErrors({
+            valor_primeira_parcela: `1ª parcela não pode ser maior que o valor do contrato: ${negotiation.valor_venda_formatted}`,
+          });
+          return;
+        }
+      }
+      setShowModalConfirm(!showModalConfirm);
+    } catch (err) {
+      if (err instanceof Yup.ValidationError) {
+        const errors = getValidationErros(err);
+        formRef.current?.setErrors(errors);
+      }
+    }
+  }, [showModalConfirm, negotiation]);
+
+  const handleModalConfirmYes = useCallback(() => {
+    toggleModalConfirm();
+    setLoadingModal(true);
+    formRef.current?.submitForm();
+  }, [toggleModalConfirm]);
 
   const handleSubmit = useCallback(
     async (data: IRetencaoDTO) => {
       try {
-        formRef.current?.setErrors({});
-
-        const schema = Yup.object().shape({
-          valor_financiado: Yup.string().required(
-            'Valor financiado obrigatório',
-          ),
-          tipo_contato_id: Yup.string().required(
-            'Tipo de contato é obrigatório',
-          ),
-        });
-
-        await schema.validate(data, { abortEarly: false });
-
         await retentionContract(data, negotiation.id);
 
+        setLoadingModal(false);
         toggleModalRetentionContract();
         refreshPage();
         addToast({
@@ -106,14 +130,13 @@ const ModalRetentionContract: React.FC<IModalProps> = ({
           description: `Retenção de contrato`,
         });
       } catch (err) {
-        if (err instanceof Yup.ValidationError) {
-          const errors = getValidationErros(err);
-          formRef.current?.setErrors(errors);
-          return;
-        }
+        setLoadingModal(false);
         addToast({
           type: 'error',
-          title: 'Erro na solicitação',
+          title: 'Não Permitido',
+          description: err.response.data.message
+            ? err.response.data.message
+            : 'Erro na solicitação',
         });
       }
     },
@@ -132,6 +155,21 @@ const ModalRetentionContract: React.FC<IModalProps> = ({
       setIsOpen={toggleModalRetentionContract}
       width="912px"
     >
+      <ModalConfirm
+        title="Retenção de Contrato"
+        message={`Confirma RETENÇÃO do contrato ${negotiation.numeroprojeto}-${negotiation.numerocontrato}?`}
+        confirmYes="Confirmar"
+        confirmNo="Cancelar"
+        isOpen={showModalConfirm}
+        setIsOpen={toggleModalConfirm}
+        handleConfirmYes={handleModalConfirmYes}
+        buttonType={{
+          theme: {
+            confirmYes: 'success',
+          },
+        }}
+      />
+      <LoadingModal isOpen={showLoadingModal} setIsOpen={toggleLoadingModal} />
       <Container>
         <h1>Finalização de Negociação | Retenção Contrato</h1>
         <Tabs>
@@ -159,7 +197,11 @@ const ModalRetentionContract: React.FC<IModalProps> = ({
                 />
               </div>
 
-              <button type="submit" data-testid="add-food-button">
+              <button
+                type="button"
+                data-testid="add-food-button"
+                onClick={toggleModalConfirm}
+              >
                 <p className="text">Finalizar Retenção</p>
                 <div className="icon">
                   <FiCheckSquare size={24} />

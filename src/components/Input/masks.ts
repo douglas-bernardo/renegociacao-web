@@ -56,3 +56,11 @@ export function dateMask(
   e.currentTarget.value = value;
   return e;
 }
+
+export function toUpper(
+  e: React.FormEvent<HTMLInputElement>,
+): React.FormEvent<HTMLInputElement> {
+  const { value } = e.currentTarget;
+  e.currentTarget.value = value.toUpperCase();
+  return e;
+}

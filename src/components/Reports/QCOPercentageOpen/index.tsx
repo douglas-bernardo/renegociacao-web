@@ -70,8 +70,12 @@ const QCOPercentageOpen: React.FC<QCOPercentageOpenProps> = ({ year }) => {
               <tr key={report.ano_sol}>
                 <td>{report.usuario_resp}</td>
                 <td>{report.valor_solicitado_formatted}</td>
-                <td>{report.valor_em_aberto_formatted}</td>
-                <td>{`${report.percentual}%`}</td>
+                <td>
+                  {report.valor_em_aberto_formatted.length > 0
+                    ? report.valor_em_aberto_formatted
+                    : '0,00'}
+                </td>
+                <td>{`${report.percentual ? report.percentual : '0.00'}%`}</td>
               </tr>
             ))}
         </tbody>

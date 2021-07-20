@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FiMail, FiLock } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 import { Form } from '@unform/web';
 import * as Yup from 'yup';
+
 import { useHistory } from 'react-router-dom';
 
 import { useAuth } from '../../hooks/auth';
@@ -27,6 +28,8 @@ const SignIn: React.FC = () => {
   const history = useHistory();
   const { signIn } = useAuth();
   const { addToast } = useToast();
+
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const isExpired = localStorage.getItem('@Renegociacao:expired');
@@ -54,6 +57,8 @@ const SignIn: React.FC = () => {
 
         await schema.validate(data, { abortEarly: false });
 
+        setIsLoading(true);
+
         await signIn({
           email: data.email,
           password: data.password,
@@ -66,12 +71,13 @@ const SignIn: React.FC = () => {
           formRef.current?.setErrors(errors);
           return;
         }
-
+        setIsLoading(false);
         addToast({
           type: 'error',
           title: 'Erro na autenticação',
-          description:
-            'Ocorreu um erro na autenticação verifique as credenciais',
+          description: err.response.data.message
+            ? err.response.data.message
+            : 'Erro na solicitação',
         });
       }
     },
@@ -87,7 +93,12 @@ const SignIn: React.FC = () => {
           <Form ref={formRef} onSubmit={handleSubmit}>
             <h1>Faça seu login</h1>
 
-            <Input name="email" icon={FiMail} placeholder="E-mail" />
+            <Input
+              name="email"
+              icon={FiMail}
+              placeholder="E-mail"
+              autoComplete="on"
+            />
 
             <Input
               name="password"
@@ -96,15 +107,12 @@ const SignIn: React.FC = () => {
               placeholder="Senha"
             />
 
-            <Button type="submit">Entrar</Button>
+            <Button type="submit" loading={isLoading}>
+              Entrar
+            </Button>
 
             {/* <Link to="forgot-password">Esqueci minha conta</Link> */}
           </Form>
-
-          {/* <Link to="/signup">
-            <FiLogIn />
-            Criar conta
-          </Link> */}
         </AnimationContainer>
       </Content>
       <Background />

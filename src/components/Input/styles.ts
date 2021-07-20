@@ -14,7 +14,7 @@ export const Container = styled.div<ContainerProps>`
   padding: 16px;
   width: 100%;
 
-  border: 2px solid #f0f0f0;
+  border: 3px solid #f0f0f0;
   color: #666360;
 
   display: flex;
@@ -33,7 +33,7 @@ export const Container = styled.div<ContainerProps>`
   ${props =>
     props.isFocused &&
     css`
-      border: 2px solid #003379;
+      border: 3px solid #003379;
       color: #003379;
     `}
 

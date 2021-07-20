@@ -5,8 +5,9 @@ import { shade } from 'polished';
 export const Container = styled.div`
   position: relative;
 
-  header {
+  div.editControls {
     display: flex;
+    flex-direction: row;
     justify-content: flex-end;
 
     button {
@@ -49,10 +50,6 @@ export const Container = styled.div`
 `;
 
 export const ContainerDetails = styled.div`
-  /* overflow: auto;
-  overflow-x: hidden; */
-  /* height: 550px; */
-
   ::-webkit-scrollbar {
     width: 10px;
   }

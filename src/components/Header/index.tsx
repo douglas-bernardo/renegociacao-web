@@ -1,12 +1,7 @@
 import React, { useCallback } from 'react';
-import {
-  FaBell,
-  FaAngleDown,
-  FaUser,
-  FaInfoCircle,
-  FaPowerOff,
-} from 'react-icons/fa';
+import { FaBell, FaAngleDown, FaSignOutAlt } from 'react-icons/fa';
 
+import { Link } from 'react-router-dom';
 import userDefaultImage from '../../assets/user.svg';
 
 import { OutSideClick } from '../../hooks/outSideClick';
@@ -15,16 +10,16 @@ import { useAuth } from '../../hooks/auth';
 import {
   Container,
   Content,
-  DropdownMenu,
-  DropdownMenuContent,
+  ProfileDropdownMenu,
+  ProfileDropdownMenuContent,
 } from './styles';
 
 const Header: React.FC = ({ children }) => {
   const { visible, setVisible, ref } = OutSideClick(false);
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
 
   const handleClickButton = useCallback(() => {
-    setVisible(prevState => !prevState);
+    setVisible((prevState: boolean) => !prevState);
   }, [setVisible]);
 
   return (
@@ -33,28 +28,29 @@ const Header: React.FC = ({ children }) => {
       <Content>
         <FaBell title="Notificações" />
 
-        <DropdownMenu ref={ref}>
+        <ProfileDropdownMenu ref={ref}>
           <button type="button" onClick={handleClickButton}>
             <img src={userDefaultImage} alt={user.primeiro_nome} />
             <span>{user.primeiro_nome}</span>
             <FaAngleDown />
-
-            <DropdownMenuContent isVisible={visible}>
-              <a href="/">
+          </button>
+          {visible && (
+            <ProfileDropdownMenuContent>
+              {/* <a href="/">
                 <FaUser className="drop" />
-                <span>Meu Pefil</span>
+                <span>Meu Perfil</span>
               </a>
               <a href="/">
                 <FaInfoCircle className="drop" />
                 <span>Meus dados</span>
-              </a>
-              <a href="/">
-                <FaPowerOff className="drop" />
-                <span>Sair</span>
-              </a>
-            </DropdownMenuContent>
-          </button>
-        </DropdownMenu>
+              </a> */}
+              <Link to="/" className="logout" title="Log out" onClick={signOut}>
+                <FaSignOutAlt />
+                Log out
+              </Link>
+            </ProfileDropdownMenuContent>
+          )}
+        </ProfileDropdownMenu>
       </Content>
     </Container>
   );

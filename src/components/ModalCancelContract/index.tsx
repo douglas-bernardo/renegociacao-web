@@ -1,10 +1,9 @@
-import React, { useRef, useCallback, useEffect, useState } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import { FiCheckSquare } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 
 import * as Yup from 'yup';
 
-import { api } from '../../services/api';
 import { Container, Form } from './styles';
 
 import { useNegotiation } from '../../hooks/negotiation';
@@ -18,6 +17,8 @@ import getValidationErros from '../../utils/getValidationErros';
 import Tabs from '../Tabs';
 import Tab from '../Tab';
 import { Card, CardBody, CardHeader } from '../Container';
+import ModalConfirm from '../ModalConfirm';
+import LoadingModal from '../LoadingModal';
 
 interface Negotiation {
   id: number;
@@ -43,18 +44,20 @@ interface ICancelamentoDTO {
   multa: string;
 }
 
-interface IModalProps {
-  negotiation: Negotiation;
-  refreshPage: () => void;
-}
-
 interface ContactType {
   id: number;
   nome: string;
 }
 
+interface IModalProps {
+  negotiation: Negotiation;
+  tipoContatoOptions: ContactType[];
+  refreshPage: () => void;
+}
+
 const ModalCancelContract: React.FC<IModalProps> = ({
   negotiation,
+  tipoContatoOptions,
   refreshPage,
 }) => {
   const formRef = useRef<FormHandles>(null);
@@ -65,48 +68,51 @@ const ModalCancelContract: React.FC<IModalProps> = ({
   } = useNegotiation();
   const { addToast } = useToast();
 
-  const [tipoContatoOptions, setTipoContatoOptions] = useState<ContactType[]>(
-    [],
-  );
+  const [showModalConfirm, setShowModalConfirm] = useState(false);
+  const [showLoadingModal, setLoadingModal] = useState(false);
 
-  useEffect(() => {
-    api
-      .get(`/domain/contact-type`)
-      .then(response => {
-        const { data } = response.data;
+  const toggleLoadingModal = useCallback(() => {
+    setLoadingModal(!showLoadingModal);
+  }, [showLoadingModal]);
 
-        setTipoContatoOptions(
-          data.map((opt: ContactType) => {
-            return { value: opt.id, label: opt.nome };
-          }),
-        );
-      })
-      .catch((error: Error) => {
-        console.log(error.message);
+  const toggleModalConfirm = useCallback(async () => {
+    try {
+      const data = formRef.current?.getData();
+      formRef.current?.setErrors({});
+
+      const schema = Yup.object().shape({
+        tipo_contato_id: Yup.string().required('Tipo de contato é obrigatório'),
+        numero_pc: Yup.string().when('reembolso', {
+          is: (value: string) => value && value.length > 0,
+          then: Yup.string().required(
+            'Número do PC é obrigatório quando há reembolso',
+          ),
+          otherwise: Yup.string(),
+        }),
       });
-  }, []);
+
+      await schema.validate(data, { abortEarly: false });
+      setShowModalConfirm(!showModalConfirm);
+    } catch (err) {
+      if (err instanceof Yup.ValidationError) {
+        const errors = getValidationErros(err);
+        formRef.current?.setErrors(errors);
+      }
+    }
+  }, [showModalConfirm]);
+
+  const handleModalConfirmYes = useCallback(() => {
+    toggleModalConfirm();
+    setLoadingModal(true);
+    formRef.current?.submitForm();
+  }, [toggleModalConfirm]);
 
   const handleSubmit = useCallback(
     async (data: ICancelamentoDTO) => {
       try {
-        formRef.current?.setErrors({});
-
-        const schema = Yup.object().shape({
-          tipo_contato_id: Yup.string().required(
-            'Tipo de contato é obrigatório',
-          ),
-          numero_pc: Yup.string().when('reembolso', {
-            is: (value: string) => value && value.length > 0,
-            then: Yup.string().required(
-              'Número do PC é obrigatório quando há reembolso',
-            ),
-            otherwise: Yup.string(),
-          }),
-        });
-
-        await schema.validate(data, { abortEarly: false });
         await cancelContract(data, negotiation.id);
 
+        setLoadingModal(false);
         toggleModalCancelContract();
         refreshPage();
         addToast({
@@ -115,16 +121,13 @@ const ModalCancelContract: React.FC<IModalProps> = ({
           description: 'Cancelamento de Contrato',
         });
       } catch (err) {
-        if (err instanceof Yup.ValidationError) {
-          const errors = getValidationErros(err);
-          formRef.current?.setErrors(errors);
-          return;
-        }
-        toggleModalCancelContract();
-        console.log(err);
+        setLoadingModal(false);
         addToast({
           type: 'error',
-          title: err.message,
+          title: 'Não Permitido',
+          description: err.response.data.message
+            ? err.response.data.message
+            : 'Erro na solicitação',
         });
       }
     },
@@ -143,6 +146,21 @@ const ModalCancelContract: React.FC<IModalProps> = ({
       setIsOpen={toggleModalCancelContract}
       width="912px"
     >
+      <ModalConfirm
+        title="Cancelamento de Contrato"
+        message={`Confirma o CANCELAMENTO do contrato ${negotiation.numeroprojeto}-${negotiation.numerocontrato}?`}
+        confirmYes="Confirmar"
+        confirmNo="Cancelar"
+        isOpen={showModalConfirm}
+        setIsOpen={toggleModalConfirm}
+        handleConfirmYes={handleModalConfirmYes}
+        buttonType={{
+          theme: {
+            confirmYes: 'success',
+          },
+        }}
+      />
+      <LoadingModal isOpen={showLoadingModal} setIsOpen={toggleLoadingModal} />
       <Container>
         <h1>Finalização de Negociação | Cancelamento Contrato</h1>
         <Tabs>
@@ -176,12 +194,16 @@ const ModalCancelContract: React.FC<IModalProps> = ({
               <div className="row">
                 <Input
                   name="taxas_extras"
-                  placeholder="Taxas e Multas Extras"
+                  placeholder="Taxas Extras"
                   mask="currency"
                 />
               </div>
               <Input name="observacao" placeholder="Observações" />
-              <button type="submit" data-testid="add-food-button">
+              <button
+                type="button"
+                data-testid="add-food-button"
+                onClick={toggleModalConfirm}
+              >
                 <p className="text">Finalizar Cancelamento</p>
                 <div className="icon">
                   <FiCheckSquare size={24} />

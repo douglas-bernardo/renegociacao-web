@@ -6,6 +6,40 @@ export const Container = styled.div`
   display: flex;
 `;
 
+export const MainHeader = styled.div`
+  position: relative;
+  height: 90px;
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 15px;
+
+  button.refreshPage {
+    position: absolute;
+    display: flex;
+    align-items: center;
+
+    top: 0;
+    right: 0;
+
+    background: #caf0f8;
+    color: #003379;
+    border: 0;
+    font-size: 15px;
+    height: 30px;
+    padding: 5px;
+    border-radius: 5px;
+    transition: 0.3s;
+
+    &:hover {
+      background: #98c1d8;
+    }
+
+    svg {
+      margin-right: 5px;
+    }
+  }
+`;
+
 export const Content = styled.div`
   margin-left: 256px;
   display: flex;

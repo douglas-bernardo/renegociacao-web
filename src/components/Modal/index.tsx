@@ -8,6 +8,7 @@ interface IModalProps {
   width?: string;
   children: any;
   isOpen: boolean;
+  shouldCloseOnOverlayClick?: boolean;
   setIsOpen: () => void;
 }
 
@@ -15,6 +16,7 @@ const Modal: React.FC<IModalProps> = ({
   width,
   children,
   isOpen,
+  shouldCloseOnOverlayClick,
   setIsOpen,
 }) => {
   const [modalStatus, setModalStatus] = useState(isOpen);
@@ -25,7 +27,7 @@ const Modal: React.FC<IModalProps> = ({
 
   return (
     <ReactModal
-      shouldCloseOnOverlayClick={!false}
+      shouldCloseOnOverlayClick={shouldCloseOnOverlayClick}
       onRequestClose={setIsOpen}
       isOpen={modalStatus}
       ariaHideApp={false}

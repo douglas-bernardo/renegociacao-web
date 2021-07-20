@@ -1,18 +1,19 @@
 /* eslint-disable react/jsx-curly-newline */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useHistory } from 'react-router-dom';
 
 import format from 'date-fns/format';
 import { parseISO } from 'date-fns';
 
-import { BiDetail } from 'react-icons/bi';
+import { FcViewDetails } from 'react-icons/fc';
+
 import { RiCustomerServiceFill } from 'react-icons/ri';
 import { FiCheckSquare } from 'react-icons/fi';
+import { TiArrowLeftThick } from 'react-icons/ti';
 
 import { useNegotiation } from '../../hooks/negotiation';
-import { Container, Content } from '../../components/Container';
+import { Container, Content, MainHeader } from '../../components/Container';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import Whoops from '../../components/Whoops';
@@ -21,8 +22,8 @@ import { OutSideClick } from '../../hooks/outSideClick';
 
 import {
   Main,
-  MainHeader,
   BoardDetails,
+  Sections,
   SectionLeft,
   ActionsGroup,
   SectionRight,
@@ -88,21 +89,19 @@ interface Atendimento {
   dateFormatted: string;
 }
 
-interface OccurrenceParams {
-  id: string;
-}
-
 interface Options {
   value: string;
   label: string;
 }
 
 interface LocationProps {
-  limit: number;
-  offset: number;
-  firstPageRangeDisplayed: number;
-  currentPage: number;
-  statusFilterSelected: Options[];
+  occurrenceId?: number | undefined;
+  limit?: number;
+  offset?: number;
+  firstPageRangeDisplayed?: number;
+  currentPage?: number;
+  statusFilterSelected?: Options[];
+  userRespFilterSelected: Options | undefined;
 }
 
 const icons = {
@@ -127,8 +126,7 @@ const statusTimesharingTypes = {
 
 const OccurrenceDetails: React.FC = () => {
   const { toggleModalNegotiationRegister } = useNegotiation();
-
-  const params = useParams<OccurrenceParams>();
+  const history = useHistory();
   const location = useLocation<LocationProps>();
   const btnActionDropRef = useRef<HTMLButtonElement>(null);
 
@@ -149,11 +147,14 @@ const OccurrenceDetails: React.FC = () => {
   const [showModalConfirm, setShowModalConfirm] = useState(false);
 
   useEffect(() => {
+    if (!location.state?.occurrenceId) {
+      history.push('/');
+    }
     api
-      .get(`occurrences/${params.id}`)
+      .get(`occurrences/${location.state?.occurrenceId}`)
       .then(response => {
         const { data } = response.data;
-        const ocorrenciaFormatted: Occurrence = {
+        const occurrenceFormatted: Occurrence = {
           ...data,
           dateFormatted: format(
             parseISO(data.dtocorrencia),
@@ -161,8 +162,8 @@ const OccurrenceDetails: React.FC = () => {
           ),
           valorVendaFormatted: numberFormat(data.valor_venda),
         };
-        setOcorrencia(ocorrenciaFormatted);
-        setIdPessoaCliente(ocorrenciaFormatted.idpessoa_cliente);
+        setOcorrencia(occurrenceFormatted);
+        setIdPessoaCliente(occurrenceFormatted.idpessoa_cliente);
       })
       .catch(error => {
         setIsLoading(false);
@@ -171,7 +172,7 @@ const OccurrenceDetails: React.FC = () => {
           setErrorCode(error.response.status);
         }
       });
-  }, [params.id, refreshPageData]);
+  }, [history, location.state?.occurrenceId, refreshPageData]);
 
   useEffect(() => {
     if (!idPessoaCliente) return;
@@ -192,9 +193,7 @@ const OccurrenceDetails: React.FC = () => {
         setIsLoading(false);
         setIsError(true);
         if (error.response) {
-          // console.log(error.response.data);
           setErrorCode(error.response.status);
-          // console.log(error.response.headers);
         }
       });
   }, [idPessoaCliente]);
@@ -222,8 +221,9 @@ const OccurrenceDetails: React.FC = () => {
   }, [showModalConfirm]);
 
   const handleEndOccurrence = useCallback(
-    async (occurrence_id: string) => {
-      await api.post(`/occurrences/${occurrence_id}/close`);
+    async (occurrence_id: number | undefined) => {
+      if (!occurrence_id) return;
+      await api.put(`/occurrences/${occurrence_id}`);
       refreshPage();
     },
     [refreshPage],
@@ -231,14 +231,14 @@ const OccurrenceDetails: React.FC = () => {
 
   const handleModalConfirmYes = useCallback(() => {
     toggleModalConfirm();
-    handleEndOccurrence(params.id);
-  }, [toggleModalConfirm, handleEndOccurrence, params.id]);
+    handleEndOccurrence(location.state.occurrenceId);
+  }, [toggleModalConfirm, handleEndOccurrence, location]);
 
   return (
     <Container>
       <Sidebar />
       <ModalNegotiationRegister
-        occurrence_id={Number(params.id)}
+        occurrence_id={location.state?.occurrenceId}
         refreshPage={refreshPage}
       />
       <ModalConfirm
@@ -259,197 +259,214 @@ const OccurrenceDetails: React.FC = () => {
           {isError && !ocorrencia && <Whoops errorCode={errorCode} />}
           {ocorrencia && (
             <BoardDetails>
-              <SectionLeft>
-                <header>
-                  <div style={{ marginBottom: '10px' }}>
-                    <Link
-                      to={{
-                        pathname: '/occurrences',
-                        state: {
-                          limit: location.state.limit,
-                          offset: location.state.offset,
-                          firstPageRangeDisplayed:
-                            location.state.firstPageRangeDisplayed,
-                          currentPage: location.state.currentPage,
-                          statusFilterSelected:
-                            location.state.statusFilterSelected,
-                        },
-                      }}
-                    >
-                      Voltar
-                    </Link>
-                  </div>
-                  <div className="statusOccurrence">
-                    Status Ocorrência:
-                    <span
-                      className={
-                        Number(ocorrencia.status_ocorrencia.id) === 1
-                          ? 'occurrence-opened'
-                          : ''
-                      }
-                    >
-                      {ocorrencia.status_ocorrencia.nome}
-                    </span>
-                  </div>
-                  {Number(ocorrencia.status_ocorrencia.id) === 1 &&
-                    ocorrencia.numeroprojeto && (
-                      <>
-                        <ActionsGroup>
-                          <button
-                            className="register"
-                            type="button"
-                            onClick={toggleModalNegotiationRegister}
-                          >
-                            <RiCustomerServiceFill />
-                            Registrar Negociação
-                          </button>
-                          <button
-                            className="close"
-                            type="button"
-                            onClick={toggleModalConfirm}
-                          >
-                            <FiCheckSquare />
-                            Encerrar
-                          </button>
-                        </ActionsGroup>
-                      </>
+              <Sections>
+                <SectionLeft>
+                  <header>
+                    <div className="linkBackPage">
+                      <Link
+                        to={{
+                          pathname: '/occurrences',
+                          state: {
+                            limit: location.state?.limit
+                              ? location.state?.limit
+                              : 10,
+                            offset: location.state?.offset
+                              ? location.state?.offset
+                              : 0,
+                            firstPageRangeDisplayed: location.state
+                              ?.firstPageRangeDisplayed
+                              ? location.state?.firstPageRangeDisplayed
+                              : 0,
+                            currentPage: location.state?.currentPage
+                              ? location.state?.currentPage
+                              : 1,
+                            statusFilterSelected: location.state
+                              ?.statusFilterSelected
+                              ? location.state?.statusFilterSelected
+                              : [],
+                            userRespFilterSelected: location.state
+                              ?.userRespFilterSelected
+                              ? location.state?.userRespFilterSelected
+                              : undefined,
+                          },
+                        }}
+                      >
+                        <TiArrowLeftThick size={25} />
+                        <span>Voltar</span>
+                      </Link>
+                    </div>
+                    <div className="statusOccurrence">
+                      Status Ocorrência:
+                      <span
+                        className={
+                          Number(ocorrencia.status_ocorrencia.id) === 1
+                            ? 'occurrence-opened'
+                            : ''
+                        }
+                      >
+                        {ocorrencia.status_ocorrencia.nome}
+                      </span>
+                    </div>
+                    {Number(ocorrencia.status_ocorrencia.id) === 1 &&
+                      ocorrencia.numeroprojeto && (
+                        <>
+                          <ActionsGroup>
+                            <button
+                              className="register"
+                              type="button"
+                              onClick={toggleModalNegotiationRegister}
+                            >
+                              <RiCustomerServiceFill />
+                              Registrar Negociação
+                            </button>
+                            <button
+                              className="close"
+                              type="button"
+                              onClick={toggleModalConfirm}
+                            >
+                              <FiCheckSquare />
+                              Encerrar
+                            </button>
+                          </ActionsGroup>
+                        </>
+                      )}
+                    {!ocorrencia.numeroprojeto && (
+                      <p className="ocorrenciaInfo">
+                        Essa ocorrência não foi vinculada à nenhum contrato.
+                        Verifique no Timesharing.
+                      </p>
                     )}
-                  {!ocorrencia.numeroprojeto && (
-                    <p className="ocorrenciaInfo">
-                      Essa ocorrência não foi vinculada à nenhum contrato.
-                      Verifique no Timesharing.
-                    </p>
-                  )}
-                </header>
-                <Card>
-                  <CardHeader>
-                    <h3>Contrato</h3>
-                  </CardHeader>
-                  <CardBody>
-                    <div className="row">
-                      <span>Cliente:</span>
-                      <div>{ocorrencia.nome_cliente}</div>
-                    </div>
-                    <div className="row">
-                      <span>Contrato:</span>
-                      <div>
-                        {ocorrencia.numeroprojeto
-                          ? `${ocorrencia.numeroprojeto}-${ocorrencia.numerocontrato}`
-                          : 'Não Vinculada'}
+                  </header>
+                  <Card>
+                    <CardHeader>
+                      <h3>Contrato</h3>
+                    </CardHeader>
+                    <CardBody>
+                      <div className="row">
+                        <span>Cliente:</span>
+                        <div>{ocorrencia.nome_cliente}</div>
                       </div>
-                    </div>
-                    <div className="row">
-                      <span>Valor de Venda:</span>
-                      <div>
-                        {ocorrencia.numeroprojeto
-                          ? ocorrencia.valorVendaFormatted
-                          : 'Sem valor de contrato'}
+                      <div className="row">
+                        <span>Contrato:</span>
+                        <div>
+                          {ocorrencia.numeroprojeto
+                            ? `${ocorrencia.numeroprojeto}-${ocorrencia.numerocontrato}`
+                            : 'Não Vinculada'}
+                        </div>
                       </div>
-                    </div>
-                    <div className="row">
-                      <span>Produto:</span>
-                      <div>
-                        {ocorrencia.produto
-                          ? ocorrencia.produto.nomeprojeto
-                          : 'Sem produto'}
+                      <div className="row">
+                        <span>Valor de Venda:</span>
+                        <div>
+                          {ocorrencia.numeroprojeto
+                            ? ocorrencia.valorVendaFormatted
+                            : 'Sem valor de contrato'}
+                        </div>
                       </div>
-                    </div>
-                  </CardBody>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <h3>Ocorrencia</h3>
-                  </CardHeader>
-                  <CardBody>
-                    <div className="row">
-                      <span>Número:</span>
-                      <div>{ocorrencia.numero_ocorrencia}</div>
-                    </div>
-                    <div className="row">
-                      <span>Data:</span>
-                      <div>{ocorrencia.dateFormatted}</div>
-                    </div>
-                    <div className="row">
-                      <span>Status Timesharing:</span>
-                      <div>{statusTimesharingTypes[ocorrencia.status]}</div>
-                    </div>
-                    <div className="row">
-                      <span>Motivo:</span>
-                      <div>{ocorrencia.motivo}</div>
-                    </div>
-                    <div className="row">
-                      <span>Responsável:</span>
-                      <div>{ocorrencia.nomeusuario_resp}</div>
-                    </div>
-                    <div className="row">
-                      <span>Usuário Cadastro:</span>
-                      <div>{ocorrencia.nomeusuario_cadastro}</div>
-                    </div>
-                    <div className="row">
-                      <span>Departamento:</span>
-                      <div>{ocorrencia.departamento}</div>
-                    </div>
-                  </CardBody>
-                </Card>
-              </SectionLeft>
+                      <div className="row">
+                        <span>Produto:</span>
+                        <div>
+                          {ocorrencia.produto
+                            ? ocorrencia.produto.nomeprojeto
+                            : 'Sem produto'}
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                  <Card>
+                    <CardHeader>
+                      <h3>Ocorrencia</h3>
+                    </CardHeader>
+                    <CardBody>
+                      <div className="row">
+                        <span>Número:</span>
+                        <div>{ocorrencia.numero_ocorrencia}</div>
+                      </div>
+                      <div className="row">
+                        <span>Data:</span>
+                        <div>{ocorrencia.dateFormatted}</div>
+                      </div>
+                      <div className="row">
+                        <span>Status Timesharing:</span>
+                        <div>{statusTimesharingTypes[ocorrencia.status]}</div>
+                      </div>
+                      <div className="row">
+                        <span>Motivo:</span>
+                        <div>{ocorrencia.motivo}</div>
+                      </div>
+                      <div className="row">
+                        <span>Responsável:</span>
+                        <div>{ocorrencia.nomeusuario_resp}</div>
+                      </div>
+                      <div className="row">
+                        <span>Usuário Cadastro:</span>
+                        <div>{ocorrencia.nomeusuario_cadastro}</div>
+                      </div>
+                      <div className="row">
+                        <span>Departamento:</span>
+                        <div>{ocorrencia.departamento}</div>
+                      </div>
+                    </CardBody>
+                  </Card>
+                </SectionLeft>
 
-              <SectionRight>
-                <header>
-                  <h3>Atendimentos</h3>
-                </header>
-                <hr />
-                <AtendimentoContainer ref={ref}>
-                  {isLoading && (
-                    <LoadingContainer>
-                      <Loading />
-                      <h3>Carregando atendimentos...</h3>
-                    </LoadingContainer>
-                  )}
-                  {isError && (
-                    <LoadingContainer>
-                      <Whoops errorCode={errorCode} />
-                    </LoadingContainer>
-                  )}
-                  {atendimentos.map(atendimento => (
-                    <Atendimento key={atendimento.protocolo}>
-                      <ContainerDetails>
-                        <button
-                          ref={btnActionDropRef}
-                          className="atendDetails"
-                          type="button"
-                          title="Detalhes"
-                          onClick={() =>
-                            handleDetailsButton(atendimento.protocolo)
-                          }
-                        >
-                          <BiDetail />
-                        </button>
-                        {visible &&
-                          currentAtendimento === atendimento.protocolo && (
-                            <DropDetails position={positionContent}>
-                              {atendimento.observacao}
-                            </DropDetails>
-                          )}
-                      </ContainerDetails>
-                      <header>
-                        <img
-                          src={
-                            icons[atendimento.idmotivots]
-                              ? icons[atendimento.idmotivots]
-                              : icons.outros
-                          }
-                          alt="icon-atend-logo"
-                        />
-                      </header>
-                      <aside>
-                        <h5>{atendimento.descricao}</h5>
-                        <p>{atendimento.nomeusuario}</p>
-                        <small>{atendimento.dateFormatted}</small>
-                      </aside>
-                    </Atendimento>
-                  ))}
-                </AtendimentoContainer>
-              </SectionRight>
+                <SectionRight>
+                  <header>
+                    <h3>Atendimentos</h3>
+                  </header>
+                  <hr />
+                  <AtendimentoContainer ref={ref}>
+                    {isLoading && ocorrencia.numeroprojeto && (
+                      <LoadingContainer>
+                        <Loading />
+                        <h3>Carregando atendimentos do timesharing...</h3>
+                      </LoadingContainer>
+                    )}
+                    {isError && (
+                      <LoadingContainer>
+                        <Whoops errorCode={errorCode} />
+                      </LoadingContainer>
+                    )}
+                    {atendimentos.map(atendimento => (
+                      <Atendimento key={atendimento.protocolo}>
+                        <ContainerDetails>
+                          <button
+                            ref={btnActionDropRef}
+                            className="atendDetails"
+                            type="button"
+                            title="Detalhes"
+                            onClick={() =>
+                              handleDetailsButton(atendimento.protocolo)
+                            }
+                          >
+                            <FcViewDetails size={28} />
+                          </button>
+                          {visible &&
+                            currentAtendimento === atendimento.protocolo && (
+                              <DropDetails position={positionContent}>
+                                {atendimento.observacao}
+                              </DropDetails>
+                            )}
+                        </ContainerDetails>
+                        <header>
+                          <img
+                            src={
+                              icons[atendimento.idmotivots]
+                                ? icons[atendimento.idmotivots]
+                                : icons.outros
+                            }
+                            alt="icon-atend-logo"
+                          />
+                        </header>
+                        <aside>
+                          <h5>{atendimento.descricao}</h5>
+                          <p>{atendimento.nomeusuario}</p>
+                          <small>{atendimento.dateFormatted}</small>
+                        </aside>
+                      </Atendimento>
+                    ))}
+                  </AtendimentoContainer>
+                </SectionRight>
+              </Sections>
             </BoardDetails>
           )}
         </Main>

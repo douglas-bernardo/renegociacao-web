@@ -2,16 +2,10 @@ import styled from 'styled-components';
 
 export const Main = styled.div`
   height: 100%;
+  min-height: 600px;
   margin-right: 20px;
   padding: 20px;
   color: #3c3c3c;
-`;
-
-export const MainHeader = styled.div`
-  height: 90px;
-  display: flex;
-  align-items: flex-end;
-  margin-bottom: 15px;
 `;
 
 export const FilterBar = styled.div`

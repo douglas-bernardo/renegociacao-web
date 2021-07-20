@@ -1,23 +1,29 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
+import { useLocation, useHistory } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import format from 'date-fns/format';
 import { parseISO } from 'date-fns';
-import { OptionTypeBase } from 'react-select';
 
 import Select from 'react-select';
 
-import { FaClipboardCheck, FaTimesCircle, FaUndo } from 'react-icons/fa';
+import {
+  FaClipboardCheck,
+  FaTimesCircle,
+  FaUndo,
+  FaInfoCircle,
+} from 'react-icons/fa';
+import ReactTooltip from 'react-tooltip';
+
+import { TiArrowLeftThick } from 'react-icons/ti';
 
 import { useNegotiation } from '../../hooks/negotiation';
-import { Container, Content } from '../../components/Container';
+import { Container, Content, MainHeader } from '../../components/Container';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import Whoops from '../../components/Whoops';
 
 import {
   Main,
-  MainHeader,
   BoardDetails,
   Sections,
   SectionLeft,
@@ -50,6 +56,7 @@ interface Negotiation {
   origem: string;
   tipo_solicitacao_id: number;
   tipo_solicitacao: string;
+  motivo_id: number;
   motivo: string;
   usuario_resp_negociacao: string;
   situacao_id: number;
@@ -61,10 +68,12 @@ interface Negotiation {
   valor_primeira_parcela: number;
   multa: number;
   observacao: string;
+  transferida: boolean;
   numero_ocorrencia: number;
   data_ocorrencia: string;
   data_ocorrencia_formatted: string;
   nomeusuario_cadastro: string;
+  usuario_resp_ts: string;
   departamento: string;
   nome_cliente: string;
   numeroprojeto: string;
@@ -80,22 +89,20 @@ interface Request {
   data: Negotiation;
 }
 
-interface NegotiationParams {
-  id: string;
-}
-
 interface Options {
   value: string;
   label: string;
 }
 
 interface LocationProps {
-  limit: number;
-  offset: number;
-  firstPageRangeDisplayed: number;
-  currentPage: number;
-  situationFilter: Options[];
-  requestTypeFilter: Options[];
+  negotiationId?: number | undefined;
+  limit?: number;
+  offset?: number;
+  firstPageRangeDisplayed?: number;
+  currentPage?: number;
+  situationFilter?: Options[];
+  requestTypeFilter?: Options[];
+  userRespFilterSelected: Options | undefined;
 }
 
 const situationStyle = {
@@ -117,6 +124,17 @@ const selectCustomStyles = {
   }),
 };
 
+interface ContactType {
+  id: number;
+  nome: string;
+}
+
+interface Product {
+  id: number;
+  numeroprojeto: number;
+  nomeprojeto: string;
+}
+
 const NegotiationDetails: React.FC = () => {
   const {
     toggleModalRetentionContract,
@@ -124,23 +142,29 @@ const NegotiationDetails: React.FC = () => {
     toggleModalCancelContract,
     toggleModalOutrosSelected,
   } = useNegotiation();
-  const params = useParams<NegotiationParams>();
+  const history = useHistory();
   const location = useLocation<LocationProps>();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [errorCode, setErrorCode] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
   const [refreshPageData, setRefreshPageData] = useState(false);
 
-  const [situationOptions, setSituationOptions] = useState<OptionTypeBase[]>(
+  const [negotiation, setNegotiation] = useState<Negotiation>();
+
+  const [situationOptions, setSituationOptions] = useState<Situation[]>([]);
+  const [tipoContatoOptions, setTipoContatoOptions] = useState<ContactType[]>(
     [],
   );
-
-  const [negotiation, setNegotiation] = useState<Negotiation | null>(null);
+  const [produtoOptions, setProdutoOptions] = useState<Product[]>([]);
 
   useEffect(() => {
+    if (!location.state?.negotiationId) {
+      history.push('/');
+    }
     api
-      .get<Request>(`/negotiations/${params.id}`)
+      .get<Request>(`/negotiations/${location.state?.negotiationId}`)
       .then(response => {
         const { data } = response.data;
         const negotiationFormatted: Negotiation = {
@@ -151,6 +175,7 @@ const NegotiationDetails: React.FC = () => {
             'dd-MM-yyyy HH:mm:ss',
           ),
         };
+
         setNegotiation(negotiationFormatted);
         setIsLoading(false);
       })
@@ -159,24 +184,51 @@ const NegotiationDetails: React.FC = () => {
         setIsError(true);
         if (error.response) {
           setErrorCode(error.response.status);
+          setErrorMessage(error.response.data.message);
         }
       });
-  }, [params.id, refreshPageData]);
+  }, [history, location.state?.negotiationId, refreshPageData]);
 
   useEffect(() => {
-    api
-      .get(`/domain/situation`)
+    Promise.all([
+      api.get(`/domain/situation`),
+      api.get(`/domain/contact-type`),
+      api.get(`/domain/product`),
+    ])
       .then(response => {
-        const { data } = response.data;
+        const [situations, contactType, product] = response;
 
-        const options = data.map((opt: Situation) => {
-          return { value: opt.id, label: opt.nome };
-        });
-        setSituationOptions(options);
+        const situationsToExclude = ['1', '2', '6', '7'];
+        const { data: situationResponse } = situations.data;
+        const finalizationOptions = situationResponse.filter(
+          (opt: Situation) => {
+            return situationsToExclude.indexOf(opt.id.toString()) === -1;
+          },
+        );
+        setSituationOptions(
+          finalizationOptions.map((opt: ContactType) => {
+            return { value: opt.id, label: opt.nome };
+          }),
+        );
+
+        const { data: tipoContatoResponse } = contactType.data;
+        setTipoContatoOptions(
+          tipoContatoResponse.map((opt: ContactType) => {
+            return { value: opt.id, label: opt.nome };
+          }),
+        );
+
+        const { data: produtoResponse } = product.data;
+        setProdutoOptions(
+          produtoResponse.map((opt: Product) => {
+            return {
+              value: opt.id,
+              label: `${opt.numeroprojeto} - ${opt.nomeprojeto}`,
+            };
+          }),
+        );
       })
       .catch((error: Error) => {
-        setIsLoading(false);
-        setIsError(true);
         console.log(error.message);
       });
   }, []);
@@ -192,20 +244,25 @@ const NegotiationDetails: React.FC = () => {
         <>
           <ModalRetentionContract
             negotiation={negotiation}
+            tipoContatoOptions={tipoContatoOptions}
             refreshPage={refreshPage}
           />
           <ModalDowngradeContract
             negotiation={negotiation}
+            tipoContatoOptions={tipoContatoOptions}
+            produtoOptions={produtoOptions}
             refreshPage={refreshPage}
           />
           <ModalCancelContract
             negotiation={negotiation}
+            tipoContatoOptions={tipoContatoOptions}
             refreshPage={refreshPage}
           />
           <ModalDefaultNegotiationClose
             negotiation={negotiation}
-            refreshPage={refreshPage}
+            tipoContatoOptions={tipoContatoOptions}
             situacaoOptions={situationOptions}
+            refreshPage={refreshPage}
           />
         </>
       )}
@@ -216,30 +273,47 @@ const NegotiationDetails: React.FC = () => {
             <h1>Negociação | Detalhes</h1>
           </MainHeader>
           <BoardDetails>
-            {isLoading && <Loading />}
             {isError && (
-              <Whoops errorMessage="Algo errado" errorCode={errorCode} />
+              <Whoops errorMessage={errorMessage} errorCode={errorCode} />
             )}
+            {isLoading && <Loading />}
             {negotiation && (
               <Sections>
-                <SectionLeft>
+                <SectionLeft situacao_id={negotiation.situacao_id}>
                   <header>
-                    <div style={{ marginBottom: '10px' }}>
+                    <div className="linkBackPage">
                       <Link
                         to={{
                           pathname: '/negotiations',
                           state: {
-                            limit: location.state.limit,
-                            offset: location.state.offset,
-                            firstPageRangeDisplayed:
-                              location.state.firstPageRangeDisplayed,
-                            currentPage: location.state.currentPage,
-                            situationFilter: location.state.situationFilter,
-                            requestTypeFilter: location.state.requestTypeFilter,
+                            limit: location.state?.limit
+                              ? location.state?.limit
+                              : 10,
+                            offset: location.state?.offset
+                              ? location.state?.offset
+                              : 0,
+                            firstPageRangeDisplayed: location.state
+                              ?.firstPageRangeDisplayed
+                              ? location.state?.firstPageRangeDisplayed
+                              : 0,
+                            currentPage: location.state?.currentPage
+                              ? location.state?.currentPage
+                              : 1,
+                            situationFilter: location.state?.situationFilter
+                              ? location.state?.situationFilter
+                              : [],
+                            requestTypeFilter: location.state?.requestTypeFilter
+                              ? location.state?.requestTypeFilter
+                              : [],
+                            userRespFilterSelected: location.state
+                              ?.userRespFilterSelected
+                              ? location.state?.userRespFilterSelected
+                              : undefined,
                           },
                         }}
                       >
-                        Voltar
+                        <TiArrowLeftThick size={25} />
+                        <span>Voltar</span>
                       </Link>
                     </div>
                     <Tag
@@ -289,6 +363,33 @@ const NegotiationDetails: React.FC = () => {
                       </>
                     )}
                   </header>
+                  <NegotiationContainerDetails
+                    negotiation={negotiation}
+                    refreshPage={refreshPage}
+                  />
+                </SectionLeft>
+                <SectionRight>
+                  <header>
+                    Dados da Ocorrência
+                    {Number(negotiation.transferida) ? (
+                      <div className="negotiationInfo">
+                        <span data-tip data-for="negotiationInfo">
+                          <FaInfoCircle />
+                        </span>
+                        <ReactTooltip
+                          id="negotiationInfo"
+                          type="error"
+                          effect="solid"
+                          delayShow={1000}
+                        >
+                          <span>Negociação Transferida</span>
+                        </ReactTooltip>
+                      </div>
+                    ) : (
+                      ''
+                    )}
+                  </header>
+                  <hr />
                   <Card>
                     <CardHeader>
                       <h3>Contrato</h3>
@@ -338,8 +439,8 @@ const NegotiationDetails: React.FC = () => {
                         <div>{negotiation.motivo}</div>
                       </div>
                       <div className="row">
-                        <span>Responsável:</span>
-                        <div>{negotiation.usuario_resp_negociacao}</div>
+                        <span>Responsável TS:</span>
+                        <div>{negotiation.usuario_resp_ts}</div>
                       </div>
                       <div className="row">
                         <span>Usuário Cadastro:</span>
@@ -351,14 +452,6 @@ const NegotiationDetails: React.FC = () => {
                       </div>
                     </CardBody>
                   </Card>
-                </SectionLeft>
-                <SectionRight>
-                  <header>Dados da Negociação</header>
-                  <hr />
-                  <NegotiationContainerDetails
-                    negotiation={negotiation}
-                    refreshPage={refreshPage}
-                  />
                 </SectionRight>
               </Sections>
             )}

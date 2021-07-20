@@ -5,13 +5,15 @@ import {
   FaComments,
   FaHandsHelping,
   FaSignOutAlt,
+  FaCog,
 } from 'react-icons/fa';
 
-import logoimg from '../../assets/logo_vacation.svg';
+import logo from '../../assets/logo_vacation.svg';
 
 import { Aside } from './styles';
 
 import { useAuth } from '../../hooks/auth';
+import PermissionComponent from '../PermissionComponent';
 
 interface Page {
   page: string;
@@ -30,7 +32,7 @@ const Sidebar: React.FC = () => {
 
   return (
     <Aside>
-      <img src={logoimg} className="logo" alt="Renegociação Web" />
+      <img src={logo} className="logo" alt="Renegociação Web" />
       <h1>Renegociação</h1>
       <ul>
         {pages.map(({ label, page, icon }) => (
@@ -43,6 +45,16 @@ const Sidebar: React.FC = () => {
         ))}
       </ul>
       <hr />
+      <PermissionComponent roles={['ROLE_ADMIN']}>
+        <ul className="adminLinks">
+          <li>
+            <NavLink to="/settings" activeClassName="active">
+              <FaCog />
+              Configurações
+            </NavLink>
+          </li>
+        </ul>
+      </PermissionComponent>
       <button type="button" title="Log out" onClick={signOut}>
         <FaSignOutAlt />
         Log out

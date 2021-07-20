@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/control-has-associated-label */
 import React, {
   ChangeEvent,
   FormEvent,
@@ -10,11 +11,15 @@ import { useHistory, useLocation } from 'react-router-dom';
 import Select from 'react-select';
 import * as Yup from 'yup';
 
+import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
+import Loader from 'react-loader-spinner';
+
 import { FaFilter } from 'react-icons/fa';
+import { HiOutlineRefresh } from 'react-icons/hi';
 import format from 'date-fns/format';
 import { parseISO } from 'date-fns';
 
-import { Container, Content } from '../../components/Container';
+import { Container, Content, MainHeader } from '../../components/Container';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import DropNegotiationsActions from '../../components/DropNegotiationsActions';
@@ -22,7 +27,7 @@ import Whoops from '../../components/Whoops';
 
 import Pagination, { PaginationHandles } from '../../components/Pagination';
 
-import { Main, MainHeader, FilterBar, NegotiationsTable } from './styles';
+import { Main, FilterBar, NegotiationsTable } from './styles';
 
 import { api } from '../../services/api';
 import { numberFormat } from '../../utils/numberFormat';
@@ -50,9 +55,25 @@ interface Situation {
   nome: string;
 }
 
+interface ContactType {
+  id: number;
+  nome: string;
+}
+
+interface Product {
+  id: number;
+  numeroprojeto: number;
+  nomeprojeto: string;
+}
+
 interface RequestType {
   id: number;
   nome: string;
+}
+
+interface Options {
+  value: string;
+  label: string;
 }
 
 interface Negotiation {
@@ -85,11 +106,6 @@ interface Negotiation {
   status_ts: string;
 }
 
-interface Options {
-  value: string;
-  label: string;
-}
-
 interface LocationProps {
   limit: number | undefined;
   offset: number | undefined;
@@ -107,7 +123,7 @@ interface Request {
 const selectCustomStyles = {
   container: base => ({
     ...base,
-    width: 300,
+    width: 200,
     marginLeft: 10,
   }),
 };
@@ -121,7 +137,10 @@ const Negotiations: React.FC = () => {
   const paginationRef = useRef<PaginationHandles>(null);
 
   const [situationOptions, setSituationOptions] = useState<Options[]>([]);
-
+  const [tipoContatoOptions, setTipoContatoOptions] = useState<ContactType[]>(
+    [],
+  );
+  const [produtoOptions, setProdutoOptions] = useState<Product[]>([]);
   const [situationFilterOptions, setSituationFilterOptions] = useState<
     Options[]
   >([]);
@@ -138,6 +157,7 @@ const Negotiations: React.FC = () => {
   ] = useState<Negotiation | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
+  const [btnLoading, setBtnLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [dateError, setDateError] = useState<String | undefined>('');
 
@@ -228,6 +248,7 @@ const Negotiations: React.FC = () => {
         });
         setNegotiations(negotiationsFormatted);
         setIsLoading(false);
+        setBtnLoading(false);
         handleSetCurrentPage();
       })
       .catch((error: Error) => {
@@ -247,9 +268,14 @@ const Negotiations: React.FC = () => {
   ]);
 
   useEffect(() => {
-    Promise.all([api.get('/domain/situation'), api.get(`/domain/request-type`)])
+    Promise.all([
+      api.get(`/domain/situation`),
+      api.get(`/domain/contact-type`),
+      api.get(`/domain/product`),
+      api.get(`/domain/request-type`),
+    ])
       .then(response => {
-        const [situationsRes, requestTypeRes] = response;
+        const [situationsRes, contactType, product, requestTypeRes] = response;
 
         const { data: situationsResponse } = situationsRes.data;
         const options: Options[] = situationsResponse.map((opt: Situation) => {
@@ -263,6 +289,23 @@ const Negotiations: React.FC = () => {
         });
         setSituationOptions(finalizationOptions);
 
+        const { data: tipoContatoResponse } = contactType.data;
+        setTipoContatoOptions(
+          tipoContatoResponse.map((opt: ContactType) => {
+            return { value: opt.id, label: opt.nome };
+          }),
+        );
+
+        const { data: produtoResponse } = product.data;
+        setProdutoOptions(
+          produtoResponse.map((opt: Product) => {
+            return {
+              value: opt.id,
+              label: `${opt.numeroprojeto} - ${opt.nomeprojeto}`,
+            };
+          }),
+        );
+
         const { data: requestTypeResponse } = requestTypeRes.data;
         setRequestTypeFilterOptions(
           requestTypeResponse.map((opt: RequestType) => {
@@ -271,8 +314,6 @@ const Negotiations: React.FC = () => {
         );
       })
       .catch((error: Error) => {
-        setIsLoading(false);
-        setIsError(true);
         console.log(error.message);
       });
   }, []);
@@ -284,6 +325,8 @@ const Negotiations: React.FC = () => {
 
   const handleOffsetAndLimit = useCallback(
     (_limit: number, _offset: number) => {
+      setIsLoading(true);
+
       setLimit(_limit);
       setOffset(_offset);
       if (location.state) {
@@ -322,11 +365,6 @@ const Negotiations: React.FC = () => {
         setNegotiations(negotiationsFormatted);
         setIsLoading(false);
         setTotalNegotiations(0);
-      })
-      .catch((error: Error) => {
-        setIsLoading(false);
-        setIsError(true);
-        console.log(error.message);
       });
   }, []);
 
@@ -378,6 +416,8 @@ const Negotiations: React.FC = () => {
 
   const handleSelectSituationFilter = useCallback(
     (selected: any) => {
+      setIsLoading(true);
+
       setSituationFilter(selected);
       setOffset(0);
 
@@ -392,6 +432,10 @@ const Negotiations: React.FC = () => {
 
   const handleSelectRequestTypeFilter = useCallback(
     (selected: any) => {
+      setTotalNegotiations(0);
+      setNegotiations([]);
+      setIsLoading(true);
+
       setRequestTypeFilter(selected);
       setOffset(0);
 
@@ -404,6 +448,12 @@ const Negotiations: React.FC = () => {
     [location, history],
   );
 
+  const handleButtonRefreshPage = useCallback(() => {
+    setIsLoading(true);
+    setBtnLoading(true);
+    refreshPage();
+  }, [refreshPage]);
+
   return (
     <Container>
       <Sidebar />
@@ -411,20 +461,25 @@ const Negotiations: React.FC = () => {
         <>
           <ModalRetentionContract
             negotiation={selectedNegotiation}
+            tipoContatoOptions={tipoContatoOptions}
             refreshPage={refreshPage}
           />
           <ModalDowngradeContract
             negotiation={selectedNegotiation}
+            tipoContatoOptions={tipoContatoOptions}
+            produtoOptions={produtoOptions}
             refreshPage={refreshPage}
           />
           <ModalCancelContract
             negotiation={selectedNegotiation}
+            tipoContatoOptions={tipoContatoOptions}
             refreshPage={refreshPage}
           />
           <ModalDefaultNegotiationClose
             negotiation={selectedNegotiation}
-            refreshPage={refreshPage}
+            tipoContatoOptions={tipoContatoOptions}
             situacaoOptions={situationOptions}
+            refreshPage={refreshPage}
           />
         </>
       )}
@@ -444,6 +499,18 @@ const Negotiations: React.FC = () => {
         <Main>
           <MainHeader>
             <h1>Negociações</h1>
+            <button
+              className="refreshPage"
+              type="button"
+              onClick={handleButtonRefreshPage}
+            >
+              {btnLoading ? (
+                <Loader type="Oval" color="#003379" height={20} width={20} />
+              ) : (
+                <HiOutlineRefresh size={20} />
+              )}
+              Atualizar
+            </button>
           </MainHeader>
           <FilterBar>
             <div className="dateFilter">
@@ -500,64 +567,70 @@ const Negotiations: React.FC = () => {
               />
             </div>
           </FilterBar>
-          <NegotiationsTable>
-            <thead>
-              <tr>
-                <th>Ocorrência</th>
-                <th>Data Sol.</th>
-                <th>Tipo</th>
-                <th>Cliente</th>
-                <th>Contrato</th>
-                <th>Valor</th>
-                <th className="centered situation">Situação</th>
-                <th className="centered">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {negotiations &&
-                negotiations.map(negotiation => (
-                  <tr
-                    key={negotiation.id}
-                    onClick={() => setSelectedNegotiation(negotiation)}
-                  >
-                    <td>{negotiation.numero_ocorrencia}</td>
-                    <td>{negotiation.data_ocorrencia_formatted}</td>
-                    <td>{negotiation.tipo_solicitacao}</td>
-                    <td>{negotiation.nome_cliente}</td>
-                    <td>
-                      {`${negotiation.numeroprojeto}-${negotiation.numerocontrato}`}
-                    </td>
-                    <td>{negotiation.valor_venda_formatted}</td>
-                    <td>
-                      <Tag
-                        theme={
-                          situationStyles[negotiation.situacao_id] || 'default'
-                        }
-                      >
-                        {negotiation.situacao}
-                      </Tag>
-                    </td>
-                    <td className="centered">
-                      <DropNegotiationsActions
-                        negotiationProps={{
-                          id: negotiation.id,
-                          situation_id: negotiation.situacao_id,
-                        }}
-                        situacaoOptions={situationOptions}
-                        limit={limit}
-                        offset={offset}
-                        firstPageRangeDisplayed={
-                          paginationRef.current?.firstPageRangeDisplayed
-                        }
-                        currentPage={paginationRef.current?.currentPage}
-                        situationFilter={situationFilter}
-                        requestTypeFilter={requestTypeFilter}
-                      />
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </NegotiationsTable>
+          {isLoading ? (
+            <Loading />
+          ) : (
+            <NegotiationsTable>
+              <thead>
+                <tr>
+                  <th>Ocorrência</th>
+                  <th>Data Sol.</th>
+                  <th>Tipo</th>
+                  <th>Cliente</th>
+                  <th>Contrato</th>
+                  <th>Valor</th>
+                  <th className="centered situation">Situação</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {negotiations &&
+                  negotiations.map(negotiation => (
+                    <tr
+                      key={negotiation.id}
+                      onClick={() => setSelectedNegotiation(negotiation)}
+                    >
+                      <td>{negotiation.numero_ocorrencia}</td>
+                      <td>{negotiation.data_ocorrencia_formatted}</td>
+                      <td>{negotiation.tipo_solicitacao}</td>
+                      <td>{negotiation.nome_cliente}</td>
+                      <td>
+                        {`${negotiation.numeroprojeto}-${negotiation.numerocontrato}`}
+                      </td>
+                      <td>{negotiation.valor_venda_formatted}</td>
+                      <td>
+                        <Tag
+                          theme={
+                            situationStyles[negotiation.situacao_id] ||
+                            'default'
+                          }
+                        >
+                          {negotiation.situacao}
+                        </Tag>
+                      </td>
+                      <td className="centered">
+                        <DropNegotiationsActions
+                          negotiationProps={{
+                            id: negotiation.id,
+                            situation_id: negotiation.situacao_id,
+                          }}
+                          situacaoOptions={situationOptions}
+                          limit={limit}
+                          offset={offset}
+                          firstPageRangeDisplayed={
+                            paginationRef.current?.firstPageRangeDisplayed
+                          }
+                          currentPage={paginationRef.current?.currentPage}
+                          situationFilter={situationFilter}
+                          requestTypeFilter={requestTypeFilter}
+                          userRespFilterSelected={{} as Options}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </NegotiationsTable>
+          )}
           {totalNegotiations > 0 && (
             <Pagination
               ref={paginationRef}
@@ -567,7 +640,6 @@ const Negotiations: React.FC = () => {
               onChange={handleOffsetAndLimit}
             />
           )}
-          {isLoading && <Loading />}
           {isError && <Whoops />}
         </Main>
       </Content>

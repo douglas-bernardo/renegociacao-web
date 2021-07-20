@@ -1,4 +1,7 @@
 import React, { useRef, useCallback, useEffect, useState } from 'react';
+import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
+import Loader from 'react-loader-spinner';
+
 import { FiCheckSquare } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 import * as Yup from 'yup';
@@ -23,7 +26,7 @@ interface IOutrasFinalizacoesDTO {
 }
 
 interface IModalProps {
-  occurrence_id: number;
+  occurrence_id?: number;
   refreshPage: () => void;
 }
 
@@ -54,6 +57,7 @@ const ModalNegotiationRegister: React.FC<IModalProps> = ({
   } = useNegotiation();
   const { addToast } = useToast();
 
+  const [isLoading, setIsLoading] = useState(false);
   const [motivoOptions, setMotivoOptions] = useState<Motivo[]>([]);
   const [tipoSolOptions, setTipoSolOptions] = useState<TipoSol[]>([]);
   const [origemOptions, setOrigemOptions] = useState<Origem[]>([]);
@@ -95,7 +99,9 @@ const ModalNegotiationRegister: React.FC<IModalProps> = ({
 
   const handleSubmit = useCallback(
     async (data: IOutrasFinalizacoesDTO) => {
+      if (!occurrence_id) return;
       try {
+        setIsLoading(true);
         formRef.current?.setErrors({});
 
         const schema = Yup.object().shape({
@@ -109,11 +115,13 @@ const ModalNegotiationRegister: React.FC<IModalProps> = ({
         await schema.validate(data, { abortEarly: false });
         await negotiationRegister(data, occurrence_id);
 
+        setIsLoading(false);
         toggleModalNegotiationRegister();
         refreshPage();
         addToast({
           type: 'success',
-          title: "Negociação registrada. Acesse 'Negociações' para gerenciar",
+          title:
+            "Negociação registrada para a ocorrência selecionada. Acesse 'Negociações' para gerenciar",
         });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
@@ -122,9 +130,13 @@ const ModalNegotiationRegister: React.FC<IModalProps> = ({
           return;
         }
 
+        setIsLoading(false);
         addToast({
           type: 'error',
-          title: 'Erro na solicitação',
+          title: 'Não Permitido',
+          description: err.response.data.message
+            ? err.response.data.message
+            : 'Erro na solicitação',
         });
       }
     },
@@ -168,7 +180,11 @@ const ModalNegotiationRegister: React.FC<IModalProps> = ({
         <button type="submit" data-testid="add-food-button">
           <p className="text">Registar Negociação</p>
           <div className="icon">
-            <FiCheckSquare size={24} />
+            {isLoading ? (
+              <Loader type="Oval" color="#FFF" height={24} width={24} />
+            ) : (
+              <FiCheckSquare size={25} />
+            )}
           </div>
         </button>
       </Form>

@@ -13,3 +13,12 @@ export const numberFormatAsCurrency = (value: number | bigint): string =>
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
   }).format(value);
+
+export const priceToNumber = (value: string | undefined): number => {
+  if (value) {
+    return Number(
+      value.replace(/(,|\.)([0-9]{3})/g, '$2').replace(/(,|\.)/, '.'),
+    );
+  }
+  return 0;
+};

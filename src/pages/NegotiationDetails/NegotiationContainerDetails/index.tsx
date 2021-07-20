@@ -27,6 +27,7 @@ import {
 import getValidationErros from '../../../utils/getValidationErros';
 import { useNegotiation } from '../../../hooks/negotiation';
 import { numberFormat } from '../../../utils/numberFormat';
+import LoadingModal from '../../../components/LoadingModal';
 
 interface RequestSource {
   id: number;
@@ -49,6 +50,7 @@ interface Negotiation {
   origem: string;
   tipo_solicitacao_id: number;
   tipo_solicitacao: string;
+  motivo_id: number;
   motivo: string;
   situacao_id: number;
   situacao: string;
@@ -83,6 +85,7 @@ const NegotiationContainerDetails: React.FC<NegotiationContainerDetailsProps> = 
 }) => {
   const formRef = useRef<FormHandles>(null);
   const [negotiationEditMode, setNegotiationEditMode] = useState(false);
+  const [showLoadingModal, setLoadingModal] = useState(false);
 
   const { addToast } = useToast();
   const { negotiationUpdate } = useNegotiation();
@@ -145,7 +148,7 @@ const NegotiationContainerDetails: React.FC<NegotiationContainerDetailsProps> = 
     setNegotiationEditMode(true);
 
     const currentMotivoForEdit = reasonOptions.find(opt => {
-      return opt.value === negotiation?.id;
+      return opt.value === negotiation?.motivo_id;
     });
 
     const currentRequestTypeForEdit = requestTypeOptions.find(opt => {
@@ -180,6 +183,11 @@ const NegotiationContainerDetails: React.FC<NegotiationContainerDetailsProps> = 
   const isDateAfterToday = useCallback((date: string): boolean => {
     return isAfter(parse(date, 'dd/MM/yyyy', new Date()), new Date());
   }, []);
+
+  const toggleLoadingModal = useCallback(() => {
+    setLoadingModal(!showLoadingModal);
+    console.log(`state modal ${showLoadingModal}`);
+  }, [showLoadingModal]);
 
   const handleSubmit = useCallback(
     async (data: INegotiationUpdateDTO) => {
@@ -221,8 +229,12 @@ const NegotiationContainerDetails: React.FC<NegotiationContainerDetailsProps> = 
             dataFinalizacaoExist: !!negotiation.data_finalizacao,
           },
         });
+
+        setLoadingModal(true);
+
         await negotiationUpdate(data, negotiation.id);
 
+        setLoadingModal(false);
         setNegotiationEditMode(false);
         refreshPage();
         addToast({
@@ -236,10 +248,13 @@ const NegotiationContainerDetails: React.FC<NegotiationContainerDetailsProps> = 
           formRef.current?.setErrors(errors);
           return;
         }
-        console.log(err);
+        setLoadingModal(false);
         addToast({
           type: 'error',
-          title: 'Erro na solicitação',
+          title: 'Não Permitido',
+          description: err.response.data.message
+            ? err.response.data.message
+            : 'Erro na solicitação',
         });
       }
     },
@@ -249,13 +264,15 @@ const NegotiationContainerDetails: React.FC<NegotiationContainerDetailsProps> = 
       isDateAfterToday,
       negotiation.id,
       negotiation.data_finalizacao,
+      setLoadingModal,
       refreshPage,
     ],
   );
 
   return (
     <Container>
-      <header>
+      <LoadingModal isOpen={showLoadingModal} setIsOpen={toggleLoadingModal} />
+      <div className="editControls">
         {negotiationEditMode ? (
           <>
             <button
@@ -285,7 +302,7 @@ const NegotiationContainerDetails: React.FC<NegotiationContainerDetailsProps> = 
             <FaPencilAlt size={25} />
           </button>
         )}
-      </header>
+      </div>
       <ContainerDetails>
         {negotiationEditMode ? (
           <FormEditNegotiation ref={formRef} onSubmit={handleSubmit}>

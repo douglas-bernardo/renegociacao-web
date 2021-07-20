@@ -1,9 +1,8 @@
-import React, { useRef, useCallback, useEffect, useState } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import { FiCheckSquare } from 'react-icons/fi';
 import { FormHandles } from '@unform/core';
 import * as Yup from 'yup';
 import { OptionsType, OptionTypeBase } from 'react-select';
-import { api } from '../../services/api';
 import { Form } from './styles';
 
 import { useNegotiation } from '../../hooks/negotiation';
@@ -14,6 +13,8 @@ import Input from '../Input';
 import Select from '../Select';
 
 import getValidationErros from '../../utils/getValidationErros';
+import ModalConfirm from '../ModalConfirm';
+import LoadingModal from '../LoadingModal';
 
 interface Negotiation {
   id: number;
@@ -28,21 +29,23 @@ interface IOutrasFinalizacoesDTO {
   observacao: string;
 }
 
-interface IModalProps {
-  negotiation: Negotiation;
-  refreshPage: () => void;
-  situacaoOptions: OptionsType<OptionTypeBase>;
-}
-
 interface ContactType {
   id: number;
   nome: string;
 }
 
+interface IModalProps {
+  negotiation: Negotiation;
+  tipoContatoOptions: ContactType[];
+  situacaoOptions: OptionsType<OptionTypeBase>;
+  refreshPage: () => void;
+}
+
 const ModalDefaultNegotiationClose: React.FC<IModalProps> = ({
   negotiation,
-  refreshPage,
+  tipoContatoOptions,
   situacaoOptions,
+  refreshPage,
 }) => {
   const formRef = useRef<FormHandles>(null);
   const {
@@ -53,47 +56,51 @@ const ModalDefaultNegotiationClose: React.FC<IModalProps> = ({
   } = useNegotiation();
   const { addToast } = useToast();
 
-  const [tipoContatoOptions, setTipoContatoOptions] = useState<ContactType[]>(
-    [],
-  );
+  const [showModalConfirm, setShowModalConfirm] = useState(false);
+  const [showLoadingModal, setLoadingModal] = useState(false);
 
-  useEffect(() => {
-    api
-      .get(`/domain/contact-type`)
-      .then(response => {
-        const { data } = response.data;
+  const toggleLoadingModal = useCallback(() => {
+    setLoadingModal(!showLoadingModal);
+  }, [showLoadingModal]);
 
-        setTipoContatoOptions(
-          data.map((opt: ContactType) => {
-            return { value: opt.id, label: opt.nome };
-          }),
-        );
-      })
-      .catch((error: Error) => {
-        console.log(error.message);
+  const toggleModalConfirm = useCallback(async () => {
+    try {
+      const data = formRef.current?.getData();
+      formRef.current?.setErrors({});
+
+      const schema = Yup.object().shape({
+        tipo_contato_id: Yup.string().required('Tipo de contato é obrigatório'),
+        situacao_id: Yup.string().required('Situação é obrigatório'),
       });
-  }, []);
+
+      await schema.validate(data, { abortEarly: false });
+
+      setShowModalConfirm(!showModalConfirm);
+    } catch (err) {
+      if (err instanceof Yup.ValidationError) {
+        const errors = getValidationErros(err);
+        formRef.current?.setErrors(errors);
+      }
+    }
+  }, [showModalConfirm]);
+
+  const handleModalConfirmYes = useCallback(() => {
+    toggleModalConfirm();
+    setLoadingModal(true);
+    formRef.current?.submitForm();
+  }, [toggleModalConfirm]);
 
   const handleSubmit = useCallback(
     async (data: IOutrasFinalizacoesDTO) => {
       try {
-        formRef.current?.setErrors({});
-
-        const schema = Yup.object().shape({
-          tipo_contato_id: Yup.string().required(
-            'Tipo de contato é obrigatório',
-          ),
-          situacao_id: Yup.string().required('Situação é obrigatório'),
-        });
-
-        await schema.validate(data, { abortEarly: false });
         await defaultNegotiationClose(data, negotiation.id);
 
+        setLoadingModal(false);
         toggleModalDefaultNegotiationClose();
         refreshPage();
         addToast({
           type: 'success',
-          title: 'Ocorrência Finalizada!',
+          title: 'Negociação Finalizada!',
         });
       } catch (err) {
         if (err instanceof Yup.ValidationError) {
@@ -102,9 +109,13 @@ const ModalDefaultNegotiationClose: React.FC<IModalProps> = ({
           return;
         }
 
+        setLoadingModal(false);
         addToast({
           type: 'error',
-          title: 'Erro na solicitação',
+          title: 'Não Permitido',
+          description: err.response.data.message
+            ? err.response.data.message
+            : 'Erro na solicitação',
         });
       }
     },
@@ -123,6 +134,21 @@ const ModalDefaultNegotiationClose: React.FC<IModalProps> = ({
       setIsOpen={toggleModalDefaultNegotiationClose}
       width="912px"
     >
+      <ModalConfirm
+        title="Finalização de negociação"
+        message={`Confirma finalização da negociação como: ${optionModalOutrosSelected.label}?`}
+        confirmYes="Confirmar"
+        confirmNo="Cancelar"
+        isOpen={showModalConfirm}
+        setIsOpen={toggleModalConfirm}
+        handleConfirmYes={handleModalConfirmYes}
+        buttonType={{
+          theme: {
+            confirmYes: 'success',
+          },
+        }}
+      />
+      <LoadingModal isOpen={showLoadingModal} setIsOpen={toggleLoadingModal} />
       <Form ref={formRef} onSubmit={handleSubmit}>
         <h1>Finalização de Negociação | Outros</h1>
         <div className="control">
@@ -141,7 +167,11 @@ const ModalDefaultNegotiationClose: React.FC<IModalProps> = ({
           defaultValue={optionModalOutrosSelected}
         />
         <Input name="observacao" placeholder="Observações" />
-        <button type="submit" data-testid="add-food-button">
+        <button
+          type="button"
+          data-testid="add-food-button"
+          onClick={toggleModalConfirm}
+        >
           <p className="text">Finalizar Negociação</p>
           <div className="icon">
             <FiCheckSquare size={24} />

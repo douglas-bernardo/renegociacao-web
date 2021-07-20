@@ -1,10 +1,6 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 
 import searchIcon from '../../assets/search.svg';
-
-interface DropdownMenuProps {
-  isVisible?: boolean;
-}
 
 export const Container = styled.header`
   display: flex;
@@ -38,7 +34,6 @@ export const Content = styled.div`
   }
 
   button {
-    position: relative;
     display: flex;
     height: 56px;
     width: 200px;
@@ -58,11 +53,12 @@ export const Content = styled.div`
   }
 `;
 
-export const DropdownMenu = styled.div`
+export const ProfileDropdownMenu = styled.div`
+  position: relative;
   z-index: 1;
 `;
 
-export const DropdownMenuContent = styled.div<DropdownMenuProps>`
+export const ProfileDropdownMenuContent = styled.div`
   position: absolute;
   right: 0px;
   top: calc(100% + 24px);
@@ -73,15 +69,6 @@ export const DropdownMenuContent = styled.div<DropdownMenuProps>`
   box-shadow: rgb(0 0 0 / 40%) 0px 5px 10px;
   transition: opacity 0.2s ease 0s, visibility 0.2s ease 0s;
   opacity: 1;
-
-  ${props =>
-    props.isVisible
-      ? css`
-          visibility: visible;
-        `
-      : css`
-          visibility: hidden;
-        `}
 
   a {
     display: flex;
@@ -122,5 +109,35 @@ export const DropdownMenuContent = styled.div<DropdownMenuProps>`
     border-style: solid;
     border-width: 0px 8px 8px;
     border-color: transparent transparent #fff;
+  }
+
+  button.logout {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    font-size: 16px;
+    color: #a3a3a3;
+    padding: 12px 24px;
+    transition: background 0.2s ease 0s;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-decoration: none;
+    border-radius: 0px;
+
+    svg.drop {
+      width: 16;
+      height: 16;
+      margin-right: 0;
+    }
+
+    span {
+      margin-left: 24px;
+    }
+
+    &:hover {
+      background: #e5e5e5;
+    }
   }
 `;

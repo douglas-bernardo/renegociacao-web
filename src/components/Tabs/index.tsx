@@ -1,19 +1,27 @@
 /* eslint-disable react/no-array-index-key */
 import React, { ReactElement, useCallback, useState } from 'react';
+import { useEffect } from 'react';
 import TabTitle from '../TabTitle';
 
 import { Container } from './styles';
 
 interface TabsProps {
   children: ReactElement[];
+  onChangeTab?: () => void;
 }
 
-const Tabs: React.FC<TabsProps> = ({ children }) => {
+const Tabs: React.FC<TabsProps> = ({ children, onChangeTab }) => {
   const [tabIndex, setTabIndex] = useState(0);
 
   const toggleTabIndex = useCallback((index: number) => {
     setTabIndex(index);
   }, []);
+
+  useEffect(() => {
+    if (typeof onChangeTab === 'function') {
+      onChangeTab();
+    }
+  }, [onChangeTab]);
 
   return (
     <Container>

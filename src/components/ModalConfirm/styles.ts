@@ -1,11 +1,53 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
-export const Container = styled.div`
+export interface ButtonsProps {
+  theme: {
+    confirmYes?: 'info' | 'success' | 'danger';
+    confirmNo?: 'info' | 'success' | 'danger';
+  };
+}
+
+interface ContainerProps {
+  buttonType?: ButtonsProps;
+}
+
+const buttonTypeVariations = {
+  info: css`
+    background: #f5f8fa;
+    color: #3c3c3c;
+  `,
+  success: css`
+    background: #02c697;
+    color: #fff;
+  `,
+  danger: css`
+    background: #ff365f;
+    color: #fff;
+  `,
+};
+
+export const Container = styled.div<ContainerProps>`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 260px;
   padding: 30px;
+
+  header {
+    margin-bottom: 20px;
+  }
+
+  main {
+    margin-bottom: 20px;
+
+    p {
+      white-space: pre-line;
+      margin-bottom: 10px;
+    }
+
+    small {
+      color: #c53030;
+    }
+  }
 
   footer {
     display: flex;
@@ -40,7 +82,8 @@ export const Container = styled.div`
     }
 
     button.confirmYes {
-      background: #02c697;
+      ${props =>
+        buttonTypeVariations[props.buttonType?.theme.confirmYes || 'info']}
     }
 
     button.confirmNo {

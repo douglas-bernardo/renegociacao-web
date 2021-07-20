@@ -1,4 +1,9 @@
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
+import { shade } from 'polished';
+
+interface SectionLeftProps {
+  situacao_id: number;
+}
 
 export const Main = styled.div`
   height: 100%;
@@ -8,46 +13,63 @@ export const Main = styled.div`
   color: #3c3c3c;
 `;
 
-export const MainHeader = styled.div`
-  height: 90px;
-  display: flex;
-  align-items: flex-end;
-  margin-bottom: 15px;
-`;
-
 export const BoardDetails = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   border: 1px solid #f0f0f0;
   box-shadow: 4px 0px 4px rgba(0, 0, 0, 0.25);
   border-radius: 10px;
+  min-height: 590px;
 `;
 
 export const Sections = styled.div`
   display: flex;
-  margin-right: 20px;
+  flex: 1;
+  flex-wrap: wrap;
 `;
 
-export const SectionLeft = styled.section`
+export const SectionLeft = styled.section<SectionLeftProps>`
   flex: 1;
   padding: 24px;
-  background: #f2f5f8;
+  background: #fff;
 
   header {
     position: relative;
-    min-height: 90px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    margin-bottom: 20px;
 
-    a {
-      color: #182390;
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: bold;
-      padding: 12px 20px;
-      border-radius: 20px;
-      &:hover {
-        background: #e5e5e5;
+    ${props =>
+      props.situacao_id === 1 &&
+      css`
+        min-height: 90px;
+      `}
+
+    div.linkBackPage {
+      margin-bottom: 5px;
+
+      a {
+        display: flex;
+        align-items: center;
+        color: #003379;
+
+        text-decoration: none;
+        font-weight: bold;
+        transition: color 0.2s;
+
+        svg {
+          margin-right: 5px;
+        }
+
+        span {
+          margin-top: 2px;
+        }
+
+        &:hover {
+          color: ${shade(0.2, '#003379')};
+        }
       }
     }
 
@@ -55,6 +77,10 @@ export const SectionLeft = styled.section`
       position: absolute;
       padding: 15px;
       right: 0;
+    }
+
+    div.negotiationDetailsAdmin {
+      margin-top: 25px;
     }
   }
 `;
@@ -107,7 +133,6 @@ export const ActionGroupOthers = styled.div`
   display: flex;
   align-items: center;
   padding: 8px 0;
-  margin-bottom: 20px;
 
   strong {
     margin-right: 5px;
@@ -119,15 +144,25 @@ export const SectionRight = styled.section`
   flex: 1;
   padding: 24px;
   width: 100%;
-  max-width: 400px;
+  /* max-width: 400px; */
+  background: #f2f5f8;
 
   header {
+    display: flex;
     height: 45px;
+
+    div.negotiationInfo {
+      display: flex;
+      svg {
+        cursor: pointer;
+        margin-left: 10px;
+        color: #be6464;
+      }
+    }
   }
 
   hr {
-    border: 1px solid #f0f0f0;
-    margin: 0 -24px 0 -24px;
-    /* margin-bottom: 30px; */
+    border: 1px solid #d2cfcf;
+    margin: 0 -24px 10px -24px;
   }
 `;

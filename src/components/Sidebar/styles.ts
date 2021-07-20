@@ -10,6 +10,7 @@ export const Aside = styled.aside`
   max-width: 256px;
   height: 100vh;
   background: #fff;
+  z-index: 1;
 
   .logo {
     width: 125px;
@@ -76,13 +77,16 @@ export const Aside = styled.aside`
     }
   }
 
+  ul.adminLinks {
+    margin-top: 20px;
+  }
+
   hr {
     background: #d2cfcf;
     height: 2px;
     border: 0;
     width: 256px;
     margin-top: 20px;
-    margin-bottom: 20px;
   }
 
   button {
@@ -96,6 +100,7 @@ export const Aside = styled.aside`
     border: 0;
     border-radius: 30px;
     text-decoration: none;
+    margin-top: 20px;
 
     transition-duration: 0.3s;
 

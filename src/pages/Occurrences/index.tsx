@@ -8,6 +8,10 @@ import React, {
 } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
 import { FaFilter, FaInfoCircle } from 'react-icons/fa';
+import { HiOutlineRefresh } from 'react-icons/hi';
+
+import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
+import Loader from 'react-loader-spinner';
 
 import Select from 'react-select';
 import * as Yup from 'yup';
@@ -16,7 +20,7 @@ import format from 'date-fns/format';
 import { parseISO } from 'date-fns';
 
 import ReactTooltip from 'react-tooltip';
-import { Container, Content } from '../../components/Container';
+import { Container, Content, MainHeader } from '../../components/Container';
 
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
@@ -24,7 +28,7 @@ import Whoops from '../../components/Whoops';
 
 import Pagination, { PaginationHandles } from '../../components/Pagination';
 
-import { Main, MainHeader, FilterBar, OccurrenceTable } from './styles';
+import { Main, FilterBar, OccurrenceTable } from './styles';
 
 import { api } from '../../services/api';
 
@@ -35,6 +39,27 @@ import DropOccurrenceActions from '../../components/DropOccurrenceActions';
 import InputDatePickerProps, {
   InputDatePickerHandles,
 } from '../../components/InputDatePicker';
+import { useToast } from '../../hooks/toast';
+import ModalConfirm from '../../components/ModalConfirm';
+import LoadingModal from '../../components/LoadingModal';
+
+interface Options {
+  value: string;
+  label: string;
+}
+
+interface LocationProps {
+  limit: number | undefined;
+  offset: number | undefined;
+  firstPageRangeDisplayed: number | undefined;
+  currentPage: number | undefined;
+  statusFilterSelected: Options[] | undefined;
+}
+
+interface StatusOccurrence {
+  id: number;
+  nome: string;
+}
 
 interface Occurrence {
   id: number;
@@ -53,24 +78,6 @@ interface Occurrence {
   };
 }
 
-interface Options {
-  value: string;
-  label: string;
-}
-
-interface LocationProps {
-  limit: number | undefined;
-  offset: number | undefined;
-  firstPageRangeDisplayed: number | undefined;
-  currentPage: number | undefined;
-  statusFilter: Options[] | undefined;
-}
-
-interface StatusOccurrence {
-  id: number;
-  nome: string;
-}
-
 const selectCustomStyles = {
   container: base => ({
     ...base,
@@ -80,28 +87,36 @@ const selectCustomStyles = {
 };
 
 const Occurrences: React.FC = () => {
+  /** Page Behavior */
+  const { addToast } = useToast();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const inputStartDateRef = useRef<InputDatePickerHandles>(null);
   const inputEndDateRef = useRef<InputDatePickerHandles>(null);
   const location = useLocation<LocationProps>();
   const history = useHistory();
   const paginationRef = useRef<PaginationHandles>(null);
-
+  const [isLoading, setIsLoading] = useState(true);
+  const [btnLoading, setBtnLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [dateError, setDateError] = useState<String | undefined>('');
+  const [tableRefresh, setTableRefresh] = useState(false);
+  const [showModalConfirm, setShowModalConfirm] = useState(false);
   const [occurrenceStatusOptions, setOccurrenceStatusOptions] = useState<
     Options[]
   >([]);
 
+  /** Modal states and options */
+  const [showLoadingModal, setLoadingModal] = useState(false);
+
+  /** Domain */
   const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
-  const [tableRefresh, setTableRefresh] = useState(false);
   const [totalOccurrences, setTotalOccurrences] = useState(0);
-  const [selectedOccurrence, setSelectedOccurrence] = useState<number | null>(
-    null,
-  );
+  const [
+    selectedOccurrence,
+    setSelectedOccurrence,
+  ] = useState<Occurrence | null>(null);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
-  const [dateError, setDateError] = useState<String | undefined>('');
-
+  /** Query Params States */
   const [limit, setLimit] = useState(() => {
     if (location.state?.limit) {
       return location.state.limit;
@@ -126,8 +141,8 @@ const Occurrences: React.FC = () => {
 
   const [statusFilterSelected, setStatusFilterSelected] = useState<Options[]>(
     () => {
-      if (location.state?.statusFilter) {
-        return location.state.statusFilter;
+      if (location.state?.statusFilterSelected) {
+        return location.state.statusFilterSelected;
       }
       return [];
     },
@@ -145,6 +160,7 @@ const Occurrences: React.FC = () => {
     }
   }, [location.state]);
 
+  /** Api Requests */
   useEffect(() => {
     const statusSelected = statusFilterSelected.map(item => {
       return item.value;
@@ -175,6 +191,7 @@ const Occurrences: React.FC = () => {
         });
         setOccurrences(occurrenceFormatted);
         setIsLoading(false);
+        setBtnLoading(false);
         handleSetCurrentPage();
       })
       .catch((error: Error) => {
@@ -211,13 +228,16 @@ const Occurrences: React.FC = () => {
       });
   }, []);
 
-  const refreshPage = useCallback(() => {
+  /** Handles */
+  const handleRefreshPage = useCallback(() => {
     setTableRefresh(!tableRefresh);
     window.scrollTo(0, 0);
   }, [tableRefresh]);
 
   const handleOffsetAndLimit = useCallback(
     (_limit: number, _offset: number) => {
+      setIsLoading(true);
+
       setLimit(_limit);
       setOffset(_offset);
       if (location.state) {
@@ -236,7 +256,7 @@ const Occurrences: React.FC = () => {
       return;
     }
     api
-      .get('/occurrences-search', {
+      .get('/occurrences/search', {
         params: {
           param: searchInputRef.current?.value,
         },
@@ -255,29 +275,38 @@ const Occurrences: React.FC = () => {
         setOccurrences(occurrenceFormatted);
         setIsLoading(false);
         setTotalOccurrences(0);
-      })
-      .catch((error: Error) => {
-        setIsLoading(false);
-        setIsError(true);
-        console.log(error.message);
       });
   }, []);
 
   const handleInputSearch = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       if (e.target.value.length === 0) {
-        refreshPage();
+        handleRefreshPage();
       }
     },
-    [refreshPage],
+    [handleRefreshPage],
   );
 
-  const handleEndOccurrence = useCallback(
-    async (occurrence_id: number) => {
-      await api.post(`/occurrences/${occurrence_id}/close`);
-      refreshPage();
+  const handleCloseOccurrenceWithoutNegotiation = useCallback(
+    (occurrence_id: number) => {
+      setLoadingModal(true);
+      api
+        .put(`/occurrences/${occurrence_id}`)
+        .then(() => {
+          handleRefreshPage();
+          setLoadingModal(false);
+        })
+        .catch(error => {
+          addToast({
+            type: 'error',
+            title: 'Não Permitido',
+            description: error.response.data.message
+              ? error.response.data.message
+              : 'Erro na solicitação',
+          });
+        });
     },
-    [refreshPage],
+    [handleRefreshPage, addToast],
   );
 
   const handleDatePicker = useCallback(() => {
@@ -318,9 +347,12 @@ const Occurrences: React.FC = () => {
   }, []);
 
   const handleSelectStatusFilter = useCallback(
-    value => {
-      setStatusFilterSelected(value);
+    (selected: any) => {
+      setIsLoading(true);
+
+      setStatusFilterSelected(selected);
       setOffset(0);
+
       paginationRef.current?.handleSetCurrentPage(1);
       paginationRef.current?.handleSetFirstPageRangeDisplayed(0);
       if (location.state) {
@@ -330,12 +362,45 @@ const Occurrences: React.FC = () => {
     [location, history],
   );
 
+  const toggleModalConfirm = useCallback(() => {
+    setShowModalConfirm(!showModalConfirm);
+  }, [showModalConfirm]);
+
+  const handleModalConfirmYes = useCallback(() => {
+    toggleModalConfirm();
+    if (selectedOccurrence) {
+      handleCloseOccurrenceWithoutNegotiation(selectedOccurrence?.id);
+    }
+  }, [
+    toggleModalConfirm,
+    handleCloseOccurrenceWithoutNegotiation,
+    selectedOccurrence,
+  ]);
+
+  const handleButtonRefreshPage = useCallback(() => {
+    setIsLoading(true);
+    setBtnLoading(true);
+    handleRefreshPage();
+  }, [handleRefreshPage]);
+
   return (
     <Container>
       <Sidebar />
-      <ModalNegotiationRegister
-        occurrence_id={Number(selectedOccurrence)}
-        refreshPage={refreshPage}
+      <LoadingModal isOpen={showLoadingModal} />
+      {selectedOccurrence && (
+        <ModalNegotiationRegister
+          occurrence_id={selectedOccurrence?.id}
+          refreshPage={handleRefreshPage}
+        />
+      )}
+      <ModalConfirm
+        title="Encerrar sem negociação?"
+        message="A Ocorrência será encerrada sem negociação. Confirma o encerramento?"
+        confirmYes="Confirmar"
+        confirmNo="Cancelar"
+        isOpen={showModalConfirm}
+        setIsOpen={toggleModalConfirm}
+        handleConfirmYes={handleModalConfirmYes}
       />
       <Content>
         <Header>
@@ -353,6 +418,18 @@ const Occurrences: React.FC = () => {
         <Main>
           <MainHeader>
             <h1>Ocorrências</h1>
+            <button
+              className="refreshPage"
+              type="button"
+              onClick={handleButtonRefreshPage}
+            >
+              {btnLoading ? (
+                <Loader type="Oval" color="#003379" height={20} width={20} />
+              ) : (
+                <HiOutlineRefresh size={20} />
+              )}
+              Atualizar
+            </button>
           </MainHeader>
           <FilterBar>
             <div className="dateFilter">
@@ -388,83 +465,92 @@ const Occurrences: React.FC = () => {
               options={occurrenceStatusOptions}
               placeholder="Status Ocorrência"
               defaultValue={
-                location.state?.statusFilter
-                  ? location.state.statusFilter
+                location.state?.statusFilterSelected
+                  ? location.state.statusFilterSelected
                   : undefined
               }
               styles={selectCustomStyles}
             />
           </FilterBar>
-          <OccurrenceTable>
-            <thead>
-              <tr>
-                <th>Data da Ocorrência</th>
-                <th>Número</th>
-                <th>Responsável</th>
-                <th>Cliente</th>
-                <th>Projeto-Contrato</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {occurrences.map(occurrence => (
-                <tr
-                  key={occurrence.id}
-                  onClick={() => setSelectedOccurrence(occurrence.id)}
-                >
-                  <td>{occurrence.dateFormatted}</td>
-                  <td>{occurrence.numero_ocorrencia}</td>
-                  <td>{occurrence.nomeusuario_resp}</td>
-                  <td>{occurrence.nome_cliente}</td>
-                  <td>
-                    {occurrence.numeroprojeto ? (
-                      `${occurrence.numeroprojeto}-${occurrence.numerocontrato}`
-                    ) : (
-                      <div className="occurrenceInfo">
-                        <p>Não vinculada</p>
-                        <span data-tip data-for="occurrenceInfo">
-                          <FaInfoCircle />
-                        </span>
-                        <ReactTooltip id="occurrenceInfo" type="error">
-                          <span>
-                            Essa ocorrência não foi vinculada a nenhum contrato.
-                            Verifique no Timesharing.
-                          </span>
-                        </ReactTooltip>
-                      </div>
-                    )}
-                  </td>
-                  <td
-                    className={
-                      Number(occurrence.status_ocorrencia.id) === 1
-                        ? 'occurrence-opened'
-                        : ''
-                    }
-                  >
-                    {occurrence.status_ocorrencia.nome}
-                  </td>
-                  <td>
-                    <DropOccurrenceActions
-                      occurrenceProps={{
-                        id: occurrence.id,
-                        status_ocorrencia_id: occurrence.status_ocorrencia.id,
-                        numeroprojeto: occurrence.numeroprojeto,
-                      }}
-                      limit={limit}
-                      offset={offset}
-                      firstPageRangeDisplayed={
-                        paginationRef.current?.firstPageRangeDisplayed
-                      }
-                      currentPage={paginationRef.current?.currentPage}
-                      statusFilterSelected={statusFilterSelected}
-                      handleEndOccurrence={handleEndOccurrence}
-                    />
-                  </td>
+          {isLoading ? (
+            <Loading />
+          ) : (
+            <OccurrenceTable>
+              <thead>
+                <tr>
+                  <th>Data da Ocorrência</th>
+                  <th>Número</th>
+                  <th>Responsável</th>
+                  <th>Cliente</th>
+                  <th>Projeto-Contrato</th>
+                  <th>Status</th>
+                  <th>Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </OccurrenceTable>
+              </thead>
+              <tbody>
+                {occurrences.map(occurrence => (
+                  <tr
+                    key={occurrence.id}
+                    onClick={() => setSelectedOccurrence(occurrence)}
+                  >
+                    <td>{occurrence.dateFormatted}</td>
+                    <td>{occurrence.numero_ocorrencia}</td>
+                    <td>{occurrence.nomeusuario_resp}</td>
+                    <td>{occurrence.nome_cliente}</td>
+                    <td>
+                      {occurrence.numeroprojeto ? (
+                        `${occurrence.numeroprojeto}-${occurrence.numerocontrato}`
+                      ) : (
+                        <div className="occurrenceInfo">
+                          <p>Não vinculada</p>
+                          <span data-tip data-for="occurrenceInfo">
+                            <FaInfoCircle />
+                          </span>
+                          <ReactTooltip
+                            id="occurrenceInfo"
+                            type="error"
+                            effect="solid"
+                            delayShow={1000}
+                          >
+                            <span>
+                              Essa ocorrência não foi vinculada a nenhum
+                              contrato. Verifique no Timesharing.
+                            </span>
+                          </ReactTooltip>
+                        </div>
+                      )}
+                    </td>
+                    <td
+                      className={
+                        Number(occurrence.status_ocorrencia.id) === 1
+                          ? 'occurrence-opened'
+                          : ''
+                      }
+                    >
+                      {occurrence.status_ocorrencia.nome}
+                    </td>
+                    <td>
+                      <DropOccurrenceActions
+                        occurrenceProps={{
+                          id: occurrence.id,
+                          status_ocorrencia_id: occurrence.status_ocorrencia.id,
+                          numeroprojeto: occurrence.numeroprojeto,
+                        }}
+                        limit={limit}
+                        offset={offset}
+                        firstPageRangeDisplayed={
+                          paginationRef.current?.firstPageRangeDisplayed
+                        }
+                        currentPage={paginationRef.current?.currentPage}
+                        statusFilterSelected={statusFilterSelected}
+                        toggleModalConfirm={toggleModalConfirm}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </OccurrenceTable>
+          )}
           {totalOccurrences > 0 && (
             <Pagination
               ref={paginationRef}
@@ -474,7 +560,6 @@ const Occurrences: React.FC = () => {
               onChange={handleOffsetAndLimit}
             />
           )}
-          {isLoading && <Loading />}
           {isError && <Whoops />}
         </Main>
       </Content>

@@ -10,7 +10,7 @@ import { useToast } from '../../hooks/toast';
 
 import getValidationErros from '../../utils/getValidationErros';
 
-import logoimg from '../../assets/logo.svg';
+import logoimg from '../../assets/logo_vacation.svg';
 
 import Input from '../../components/Input';
 import Button from '../../components/Button';

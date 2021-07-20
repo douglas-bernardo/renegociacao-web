@@ -7,13 +7,6 @@ export const Main = styled.div`
   color: #3c3c3c;
 `;
 
-export const MainHeader = styled.div`
-  height: 90px;
-  display: flex;
-  align-items: flex-end;
-  margin-bottom: 15px;
-`;
-
 export const FilterBar = styled.div`
   position: relative;
   display: flex;
@@ -60,6 +53,10 @@ export const FilterBar = styled.div`
       }
     }
   }
+
+  div.typesFilters {
+    display: flex;
+  }
 `;
 
 export const OccurrenceTable = styled.table`
@@ -84,6 +81,7 @@ export const OccurrenceTable = styled.table`
   div.occurrenceInfo {
     display: flex;
     svg {
+      cursor: pointer;
       margin-left: 10px;
       color: #be6464;
     }

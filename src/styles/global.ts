@@ -34,6 +34,7 @@ export default createGlobalStyle`
   body, input, button {
     font-family: 'Roboto', sans-serif;
     font-size: 16px;
+    font-size-adjust: 0.5;
     outline: 0;
   }
 
@@ -44,5 +45,4 @@ export default createGlobalStyle`
   button {
     cursor: pointer;
   }
-
 `;

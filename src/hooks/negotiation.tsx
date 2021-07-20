@@ -1,5 +1,4 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
-import { OptionsType, OptionTypeBase } from 'react-select';
 import format from 'date-fns/format';
 import { parse } from 'date-fns';
 
@@ -22,7 +21,7 @@ interface IDowngradeContractDTO {
   numero_pc: number;
   taxas_extras: number;
   valor_primeira_parcela: number;
-  projeto_id: number;
+  produto_id: number;
   numerocontrato: number;
   valor_venda: number;
   observacao: string;
@@ -68,13 +67,18 @@ interface INegotiationUpdateDTO {
   data_finalizacao: string;
 }
 
+interface Options {
+  value: string;
+  label: string;
+}
+
 interface NegotiationContextData {
   showModalRetentionContract: boolean;
   showModalDowngradeContract: boolean;
   showModalCancelContract: boolean;
   showModalDefaultNegotiationClose: boolean;
   showModalNegotiationRegister: boolean;
-  optionModalOutrosSelected: OptionsType<OptionTypeBase>;
+  optionModalOutrosSelected: Options;
   toggleModalRetentionContract: () => void;
   toggleModalDowngradeContract: () => void;
   toggleModalCancelContract: () => void;
@@ -117,9 +121,10 @@ export const NegotiationProvider: React.FC = ({ children }) => {
     setShowModalNegotiationRegister,
   ] = useState(false);
 
-  const [optionModalOutrosSelected, setOptionModalOutrosSelected] = useState<
-    OptionsType<OptionTypeBase>
-  >({} as OptionsType<OptionTypeBase>);
+  const [
+    optionModalOutrosSelected,
+    setOptionModalOutrosSelected,
+  ] = useState<Options>({} as Options);
 
   const toggleModalRetentionContract = useCallback(() => {
     setShowModalRetentionContract(!showModalRetentionContract);
@@ -166,7 +171,6 @@ export const NegotiationProvider: React.FC = ({ children }) => {
           valor_financiado: data.valor_financiado,
         },
       };
-
       await api.post(`/negotiations/${id}/retention`, retentionData);
     },
     [],
@@ -185,7 +189,7 @@ export const NegotiationProvider: React.FC = ({ children }) => {
           observacao: data.observacao,
         },
         downgrade: {
-          projeto_id: data.projeto_id,
+          produto_id: data.produto_id,
           numerocontrato: data.numerocontrato,
           valor_venda: data.valor_venda,
         },
@@ -224,7 +228,7 @@ export const NegotiationProvider: React.FC = ({ children }) => {
           observacao: data.observacao,
         },
       };
-      await api.post(`/negotiations/${id}/default-close`, defaultCloseData);
+      await api.post(`/negotiations/${id}/default`, defaultCloseData);
     },
     [],
   );

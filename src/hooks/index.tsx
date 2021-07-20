@@ -5,11 +5,11 @@ import { ToastProvider } from './toast';
 import { NegotiationProvider } from './negotiation';
 
 const AppProvider: React.FC = ({ children }) => (
-  <AuthProvider>
-    <ToastProvider>
+  <ToastProvider>
+    <AuthProvider>
       <NegotiationProvider>{children}</NegotiationProvider>
-    </ToastProvider>
-  </AuthProvider>
+    </AuthProvider>
+  </ToastProvider>
 );
 
 export default AppProvider;

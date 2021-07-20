@@ -4,6 +4,8 @@ import React, {
   useRef,
   useState,
   useCallback,
+  forwardRef,
+  useImperativeHandle,
 } from 'react';
 
 import { IconBaseProps } from 'react-icons';
@@ -11,28 +13,34 @@ import { FiAlertCircle } from 'react-icons/fi';
 import { useField } from '@unform/core';
 
 import { Container, Error } from './styles';
-import { cep, currency, cpf, number, dateMask } from './masks';
+import { cep, currency, cpf, number, dateMask, toUpper } from './masks';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   name: string;
   containerStyle?: object;
-  mask?: 'cep' | 'currency' | 'cpf' | 'number' | 'date';
+  mask?: 'cep' | 'currency' | 'cpf' | 'number' | 'date' | 'toUpper';
   prefix?: string;
+  autoComplete?: 'on' | 'off' | undefined;
   icon?: React.ComponentType<IconBaseProps>;
 }
 
-const Input: React.FC<InputProps> = ({
-  name,
-  containerStyle = {},
-  mask,
-  icon: Icon,
-  ...rest
-}) => {
+export interface InputHandles {
+  inputValue: string | undefined;
+}
+
+const Input: React.ForwardRefRenderFunction<InputHandles, InputProps> = (
+  { name, containerStyle = {}, mask, autoComplete, icon: Icon, ...rest },
+  refInput,
+) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isFilled, setIsFilled] = useState(false);
 
   const { fieldName, defaultValue, error, registerField } = useField(name);
+
+  useImperativeHandle(refInput, () => {
+    return { inputValue: inputRef.current?.value };
+  });
 
   const handleInputFocus = useCallback(() => {
     setIsFocused(true);
@@ -68,6 +76,9 @@ const Input: React.FC<InputProps> = ({
       if (mask === 'date') {
         dateMask(e);
       }
+      if (mask === 'toUpper') {
+        toUpper(e);
+      }
     },
     [mask],
   );
@@ -87,6 +98,7 @@ const Input: React.FC<InputProps> = ({
         defaultValue={defaultValue}
         ref={inputRef}
         onKeyUp={handleKeyUp}
+        autoComplete={autoComplete}
         {...rest}
       />
       {error && (
@@ -98,4 +110,4 @@ const Input: React.FC<InputProps> = ({
   );
 };
 
-export default Input;
+export default forwardRef(Input);

@@ -1,16 +1,18 @@
 import React, { useCallback } from 'react';
 import Modal from '../Modal';
 
-import { Container } from './styles';
+import { Container, ButtonsProps } from './styles';
 
 interface ConfirmModalProps {
   title?: string;
   message?: string;
+  note?: string;
   confirmYes?: string;
   confirmNo?: string;
   isOpen: boolean;
   setIsOpen: () => void;
   handleConfirmYes: () => void;
+  buttonType?: ButtonsProps;
 }
 
 const ModalConfirm: React.FC<ConfirmModalProps> = ({
@@ -18,9 +20,11 @@ const ModalConfirm: React.FC<ConfirmModalProps> = ({
   setIsOpen,
   title,
   message,
+  note,
   confirmYes,
   confirmNo,
   handleConfirmYes,
+  buttonType,
 }) => {
   const handleConfimYes = useCallback(() => {
     handleConfirmYes();
@@ -31,13 +35,19 @@ const ModalConfirm: React.FC<ConfirmModalProps> = ({
   }, [setIsOpen]);
 
   return (
-    <Modal isOpen={isOpen} setIsOpen={setIsOpen} width="500px">
-      <Container>
+    <Modal
+      isOpen={isOpen}
+      setIsOpen={setIsOpen}
+      shouldCloseOnOverlayClick={false}
+      width="500px"
+    >
+      <Container buttonType={buttonType}>
         <header>
-          <h3>{title || 'Action'}</h3>
+          <h2>{title || 'Action'}</h2>
         </header>
         <main>
           <p>{message || 'Confirm action?'}</p>
+          <small>{note || ''}</small>
         </main>
         <footer>
           <button
