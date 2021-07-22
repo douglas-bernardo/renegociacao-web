@@ -1,52 +1,73 @@
 /* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { ChangeEvent, useRef, useCallback } from 'react';
-import { useHistory, useLocation } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 import { FormHandles } from '@unform/core';
 import { FaSearch } from 'react-icons/fa';
+import { TiArrowLeftThick } from 'react-icons/ti';
 import * as Yup from 'yup';
+
+import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
+import Loader from 'react-loader-spinner';
 
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { useToast } from '../../hooks/toast';
 
+import Loading from '../../components/Loading';
 import { Container, Content, MainHeader } from '../../components/Container';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 
-import { Main, ContainerRegister, Form } from './styles';
+import { Main, ContainerRegister, Form, RoleBoard } from './styles';
 import getValidationErros from '../../utils/getValidationErros';
-import Tabs from '../../components/Tabs';
-import Tab from '../../components/Tab';
 import Input from '../../components/Input';
 import LoadingModal from '../../components/LoadingModal';
 import { api, apiTimesharing } from '../../services/api';
 import { OutSideClick } from '../../hooks/outSideClick';
+import ToggleButton from '../../components/ToggleButton';
 
 interface LocationProps {
   id?: number | undefined;
 }
 
-interface UserSystem {
+interface Role {
+  id: number;
+  name: string;
+}
+
+interface RolesResponse {
+  status: string;
+  data: Role[];
+}
+
+interface UserSystemTS {
   idpessoa: number;
   nome: string;
-  email: string;
   idusuario: number;
   usuariots: string;
 }
 
-interface User {
-  user_timesharing: string;
-  primeiro_nome: string;
-  nome: string;
-  email: string;
-  password: string;
-  ts_usuario_id: number;
+interface UserSystemResponse {
+  status: string;
+  data: UserSystemTS[];
 }
 
-interface Response {
+interface User {
+  id: number;
+  nome: string;
+  primeiro_nome: string;
+  email: string;
+  password: string;
+  ativo: boolean;
+  ts_usuario_id: number;
+  usuariots: string;
+  roles: Role[];
+}
+
+interface UserResponse {
   status: string;
-  data: UserSystem[];
+  data: User;
 }
 
 const UserForm: React.FC = () => {
@@ -56,26 +77,48 @@ const UserForm: React.FC = () => {
   const [showLoadingModal, setLoadingModal] = useState(false);
   const formRef = useRef<FormHandles>(null);
   const location = useLocation<LocationProps>();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<UserSystem[]>([]);
-  const [
-    selectedUserResult,
-    setSelectedUserResult,
-  ] = useState<UserSystem | null>(null);
+  const [roles, setRoles] = useState<Role[] | null>(null);
 
-  const [userEmail, setUserEmail] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [userSystemTSResults, setUserSystemTSResults] = useState<
+    UserSystemTS[]
+  >([]);
+  const [userRoles, setUserRoles] = useState<number[]>([]);
+  const [user, setUser] = useState<User>({} as User);
+
+  useEffect(() => {
+    api.get<RolesResponse>('/domain/role').then(response => {
+      const { data } = response.data;
+      setRoles(data);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (location.state?.id) {
+      api.get<UserResponse>(`/users/${location.state?.id}`).then(response => {
+        const { data: userData } = response.data;
+        const currentUserEditRoles = userData.roles?.map(role => {
+          return role.id;
+        });
+        setUserRoles(currentUserEditRoles ?? []);
+        setUser(userData);
+      });
+    }
+  }, [location.state?.id]);
 
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 3) return;
     apiTimesharing
-      .get<Response>(`user-system`, {
+      .get<UserSystemResponse>(`user-system`, {
         params: {
           query: searchTerm,
         },
       })
       .then(response => {
         const { data } = response.data;
-        setSearchResults(data);
+        setUserSystemTSResults(data);
+        setSearchLoading(false);
       });
   }, [searchTerm]);
 
@@ -83,27 +126,32 @@ const UserForm: React.FC = () => {
     (e: ChangeEvent<HTMLInputElement>) => {
       if (!e.target.value || e.target.value.length < 3) {
         setVisible(false);
+        setSearchLoading(false);
         setSearchTerm('');
-        setSearchResults([]);
+        setUserSystemTSResults([]);
         return;
       }
       setSearchTerm(e.target.value.toUpperCase());
       setVisible(true);
+      setSearchLoading(true);
     },
     [setVisible],
   );
 
-  const handleSelectItem = useCallback(
-    (item: UserSystem) => {
-      setSelectedUserResult(item);
+  const handleSelectUserSystemTS = useCallback(
+    (selected: UserSystemTS) => {
+      setUser({
+        ...user,
+        ts_usuario_id: selected.idusuario,
+      });
       formRef.current?.setData({
-        user_timesharing: item.usuariots,
-        name: item.nome,
-        display_name: item.nome.split(' ')[0],
+        usuariots: selected.usuariots,
+        nome: selected.nome,
+        primeiro_nome: selected.nome.split(' ')[0],
       });
       setVisible(false);
     },
-    [setVisible],
+    [setVisible, user],
   );
 
   const handleButtonSubmit = useCallback(() => {
@@ -116,7 +164,7 @@ const UserForm: React.FC = () => {
         formRef.current?.setErrors({});
 
         const schema = Yup.object().shape({
-          user_timesharing: Yup.string().required('Usuário TS é obrigatório'),
+          usuariots: Yup.string().required('Usuário TS é obrigatório'),
           nome: Yup.string().required('Nome é obrigatório'),
           primeiro_nome: Yup.string().required('Nome exibição é obrigatório'),
           email: Yup.string().required('E-mail é obrigatório'),
@@ -124,20 +172,31 @@ const UserForm: React.FC = () => {
 
         await schema.validate(data, { abortEarly: false });
 
-        const user = {
+        setLoadingModal(true);
+
+        const userData = {
+          ...user,
           ...data,
-          ts_usuario_id: selectedUserResult?.idusuario,
-          password: '123456',
+          roles: userRoles,
         };
 
-        setLoadingModal(true);
-        await api.post('/users', user);
+        if (location.state?.id) {
+          await api.put(`/users/${location.state.id}`, userData);
+        } else {
+          const newUser = {
+            ...userData,
+            password: '123456',
+          };
+          await api.post('/users', newUser);
+        }
 
         setLoadingModal(false);
         addToast({
           type: 'success',
           title: 'Cadastro Usuário',
-          description: 'Usuário cadastrado com sucesso',
+          description: location.state?.id
+            ? 'Dados alterados com sucesso'
+            : 'Usuário cadastrado com sucesso',
         });
 
         history.push('/settings/users');
@@ -157,8 +216,28 @@ const UserForm: React.FC = () => {
         });
       }
     },
-    [addToast, selectedUserResult?.idusuario, history],
+    [addToast, user, location.state?.id, userRoles, history],
   );
+
+  const handleAddRolesUser = useCallback(
+    (selected: any) => {
+      if (userRoles.includes(selected.option.role_id)) {
+        setUserRoles(
+          userRoles.filter(item => item !== selected.option.role_id),
+        );
+        return;
+      }
+      setUserRoles(prevRoleIds => [...prevRoleIds, selected.option.role_id]);
+    },
+    [userRoles],
+  );
+
+  const handleActivateDeActivateUser = useCallback(() => {
+    setUser({
+      ...user,
+      ativo: !Number(user.ativo),
+    });
+  }, [user]);
 
   return (
     <Container>
@@ -174,80 +253,116 @@ const UserForm: React.FC = () => {
               }`}
             </h1>
           </MainHeader>
-          <ContainerRegister>
-            <Tabs>
-              <Tab title="Dados de Cadastro">
-                <Form ref={formRef} onSubmit={handleSubmit}>
-                  <div className="row userTimesharing">
-                    <div className="label">Usuário Timesharing:</div>
-                    <div className="searchUserTimesharing">
-                      <Input
-                        mask="toUpper"
-                        name="user_timesharing"
-                        onChange={handleInputSearchUser}
-                        defaultValue={selectedUserResult?.usuariots}
-                      />
-                      <FaSearch size={35} />
-                      <div ref={ref}>
-                        {visible > 0 && (
-                          <div className="containerResults">
+          <div className="linkBackPage">
+            <Link to="/settings/users/">
+              <TiArrowLeftThick size={25} />
+              <span>Voltar</span>
+            </Link>
+          </div>
+          {!roles ? (
+            <Loading />
+          ) : (
+            <ContainerRegister>
+              <Form ref={formRef} onSubmit={handleSubmit}>
+                <div className="row userTimesharing">
+                  <div className="label">Usuário Timesharing:</div>
+                  <div className="searchUserTimesharing">
+                    <Input
+                      mask="toUpper"
+                      name="usuariots"
+                      onChange={handleInputSearchUser}
+                      defaultValue={user.usuariots}
+                    />
+                    <FaSearch size={35} />
+                    <div ref={ref}>
+                      {visible > 0 && (
+                        <div className="containerResults">
+                          {searchLoading ? (
+                            <Loader
+                              type="ThreeDots"
+                              color="#003379"
+                              height={30}
+                              width={30}
+                            />
+                          ) : (
                             <ul>
-                              {searchResults.map(item => (
+                              {userSystemTSResults.map(item => (
                                 <li
                                   key={item.idusuario}
                                   className="listItem"
-                                  onClick={() => handleSelectItem(item)}
+                                  onClick={() => {
+                                    handleSelectUserSystemTS(item);
+                                  }}
                                 >
                                   {item.usuariots}
                                 </li>
                               ))}
                             </ul>
-                          </div>
-                        )}
-                      </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
+                </div>
 
+                <div className="row">
+                  <div className="label">Nome Completo:</div>
+                  <Input name="nome" defaultValue={user.nome} />
+                </div>
+
+                <div className="row">
+                  <div className="label">Nome Exibição:</div>
+                  <Input
+                    name="primeiro_nome"
+                    defaultValue={user.primeiro_nome}
+                  />
+                </div>
+
+                <div className="row">
+                  <div className="label">E-mail Beach Park:</div>
+                  <Input
+                    name="email"
+                    placeholder="@beachpark.com.br"
+                    defaultValue={user.email}
+                  />
+                </div>
+                {location.state?.id && (
                   <div className="row">
-                    <div className="label">Nome Completo:</div>
-                    <Input
-                      name="nome"
-                      defaultValue={selectedUserResult?.nome}
+                    <div className="label">Ativo:</div>
+                    <ToggleButton
+                      selected={!!Number(user.ativo)}
+                      onChange={handleActivateDeActivateUser}
                     />
                   </div>
-
-                  <div className="row">
-                    <div className="label">Nome Exibição:</div>
-                    <Input
-                      name="primeiro_nome"
-                      defaultValue={selectedUserResult?.nome.split(' ')[0]}
-                    />
-                  </div>
-
-                  <div className="row">
-                    <div className="label">E-mail Beach Park:</div>
-                    <Input
-                      name="email"
-                      placeholder="@beachpark.com.br"
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                        setUserEmail(e.target.value);
-                      }}
-                      defaultValue={userEmail}
-                    />
-                  </div>
-                </Form>
-              </Tab>
-              <Tab title="Funções/Permissões" />
-            </Tabs>
-            <button
-              type="button"
-              className="userSubmit"
-              data-test-id="add-waiter-button"
-              onClick={handleButtonSubmit}
-            >
-              <p className="text">Salvar</p>
-            </button>
-          </ContainerRegister>
+                )}
+              </Form>
+              <RoleBoard>
+                <header>
+                  <p>Selecione as funções que deseja atribuir ao usuário:</p>
+                </header>
+                <main>
+                  {roles.map(role => (
+                    <div key={role.id} className="roleItem">
+                      <ToggleButton
+                        option={{ role_id: role.id }}
+                        selected={userRoles.includes(role.id)}
+                        onChange={handleAddRolesUser}
+                      />
+                      <p>{role.name}</p>
+                    </div>
+                  ))}
+                </main>
+              </RoleBoard>
+              <button
+                type="button"
+                className="userSubmit"
+                data-test-id="add-waiter-button"
+                onClick={handleButtonSubmit}
+              >
+                <p className="text">Salvar</p>
+              </button>
+            </ContainerRegister>
+          )}
         </Main>
       </Content>
     </Container>

@@ -28,13 +28,19 @@ interface Options {
   label: string;
 }
 
-interface User {
+interface Role {
   id: number;
+  name: string;
+}
+
+interface User {
   ativo: boolean;
+  email: string;
+  id: number;
+  nome: string;
   primeiro_nome: string;
   ts_usuario_id: number;
-  tipo_usuario_id: number;
-  roles: String[];
+  roles: Role[];
 }
 
 interface IModalProps {
@@ -70,7 +76,7 @@ const ModalTransferNegotiation: React.FC<IModalProps> = ({
           Number(user.ativo) &&
           user.id !== currentUserResp &&
           user.roles.every(element => {
-            return element === 'ROLE_CONSULTOR';
+            return element.name === 'ROLE_CONSULTOR';
           })
         );
       })

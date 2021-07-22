@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { shade } from 'polished';
 import { Form as Unform } from '@unform/web';
 
 export const Main = styled.div`
@@ -6,20 +7,46 @@ export const Main = styled.div`
   margin-right: 20px;
   padding: 20px;
   color: #3c3c3c;
+
+  div.linkBackPage {
+    display: flex;
+    margin: 30px 0px;
+    height: 40px;
+    a {
+      display: flex;
+      align-items: center;
+      color: #003379;
+
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.2s;
+
+      svg {
+        margin-right: 5px;
+      }
+
+      span {
+        margin-top: 2px;
+      }
+
+      &:hover {
+        color: ${shade(0.2, '#003379')};
+      }
+    }
+  }
 `;
 
 export const ContainerRegister = styled.div`
   position: relative;
-  padding: 50px;
   background: #fff;
   border-radius: 10px;
-
+  max-width: 900px;
   min-height: 520px;
 
   button.userSubmit {
     position: absolute;
     bottom: 0;
-    right: 60px;
+    right: 0;
 
     display: flex;
     height: 40px;
@@ -27,7 +54,7 @@ export const ContainerRegister = styled.div`
     align-items: center;
     justify-content: center;
     color: #fff;
-    background: #02c697;
+    background: #46d8d5;
     border: 0;
     border-radius: 8px;
     text-decoration: none;
@@ -78,6 +105,9 @@ export const Form = styled(Unform)`
 
   div.containerResults {
     position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     top: 70px;
     left: 0;
     overflow: auto;
@@ -85,7 +115,7 @@ export const Form = styled(Unform)`
     background: #fff;
     padding: 10px;
     min-width: 300px;
-    min-height: 250px;
+    /* min-height: 250px; */
     max-height: 400px;
     border-radius: 5px;
     box-shadow: rgb(0 0 0 / 40%) 0px 5px 10px;
@@ -96,12 +126,6 @@ export const Form = styled(Unform)`
     ::-webkit-scrollbar {
       width: 10px;
     }
-
-    /* Track */
-    /* ::-webkit-scrollbar-track {
-      box-shadow: inset 0 0 5px grey;
-      border-radius: 10px;
-    } */
 
     /* Handle */
     ::-webkit-scrollbar-thumb {
@@ -115,7 +139,11 @@ export const Form = styled(Unform)`
     }
 
     ul {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
       list-style: none;
+      width: 100%;
     }
 
     li.listItem {
@@ -146,5 +174,35 @@ export const Form = styled(Unform)`
 
   .logoErrorInput {
     margin-left: 5px;
+  }
+`;
+
+export const RoleBoard = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  margin-top: 30px;
+  font-weight: bold;
+
+  header {
+    margin-bottom: 20px;
+  }
+
+  main {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 25px;
+    padding: 10px;
+
+    div.roleItem {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+
+      p {
+        margin-left: 10px;
+      }
+    }
   }
 `;

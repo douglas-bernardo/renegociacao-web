@@ -14,13 +14,19 @@ import { Main, UsersTable } from './styles';
 import { api } from '../../services/api';
 import Loading from '../../components/Loading';
 
-interface User {
+interface Role {
   id: number;
+  name: string;
+}
+
+interface User {
   ativo: boolean;
-  primeiro_nome: string;
-  nome: string;
   email: string;
-  roles: String[];
+  id: number;
+  nome: string;
+  primeiro_nome: string;
+  ts_usuario_id: number;
+  roles: Role[];
 }
 
 interface Response {
@@ -70,6 +76,7 @@ const Users: React.FC = () => {
                 <th>Nome</th>
                 <th>Nome Completo</th>
                 <th>E-mail</th>
+                <th>Status</th>
                 <th>Funções</th>
                 <th>Ações</th>
               </tr>
@@ -81,17 +88,16 @@ const Users: React.FC = () => {
                     <td>{user.primeiro_nome}</td>
                     <td>{user.nome}</td>
                     <td>{user.email}</td>
+                    <td>{Number(user.ativo) ? 'Ativo' : 'Inativo'}</td>
                     <td>
                       <div className="roles">
                         {user.roles &&
                           user.roles.map(role => (
                             <TagRoles
-                              key={role.toString()}
-                              theme={
-                                rolesStyles[role.toString()] || 'ROLE_CONSULTOR'
-                              }
+                              key={role.id}
+                              theme={rolesStyles[role.name] || 'ROLE_CONSULTOR'}
                             >
-                              {role.replace('ROLE_', '')}
+                              {role.name.replace('ROLE_', '')}
                             </TagRoles>
                           ))}
                       </div>

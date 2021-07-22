@@ -62,13 +62,19 @@ interface StatusOccurrence {
   nome: string;
 }
 
-interface User {
+interface Role {
   id: number;
-  ativo: number;
+  name: string;
+}
+
+interface User {
+  ativo: boolean;
+  email: string;
+  id: number;
+  nome: string;
   primeiro_nome: string;
   ts_usuario_id: number;
-  tipo_usuario_id: number;
-  roles: String[];
+  roles: Role[];
 }
 
 interface Occurrence {
@@ -246,9 +252,12 @@ const Occurrences: React.FC = () => {
         const { data: usersResponse } = users.data;
         const usersFilterOptions = usersResponse
           .filter((opt: User) => {
-            return opt.roles.every(element => {
-              return element === 'ROLE_CONSULTOR';
-            });
+            return (
+              opt.roles &&
+              opt.roles.every(element => {
+                return element.name === 'ROLE_CONSULTOR';
+              })
+            );
           })
           .map((opt: User) => {
             return { value: opt.ts_usuario_id, label: opt.primeiro_nome };

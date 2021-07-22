@@ -18,15 +18,18 @@ const PermissionComponent: React.FC<PermissionComponentProps> = ({
 
   useEffect(() => {
     if (isExactlyRoles) {
+      const userRoles = user.roles.map(role => {
+        return role.name;
+      });
       const isSame =
-        roles.length === user.roles.length &&
-        roles.every((element, index) => {
-          return element === user.roles[index];
-        });
+        Array.isArray(roles) &&
+        Array.isArray(userRoles) &&
+        roles.length === userRoles.length &&
+        roles.every((val, index) => val === userRoles[index]);
       setHasPermissions(isSame);
     } else {
       const findRole = user.roles.some(role => {
-        return roles.includes(role.toString());
+        return roles.includes(role.name);
       });
       setHasPermissions(findRole);
     }

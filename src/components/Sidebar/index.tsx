@@ -45,7 +45,7 @@ const Sidebar: React.FC = () => {
         ))}
       </ul>
       <hr />
-      <PermissionComponent roles={['ROLE_ADMIN']}>
+      <PermissionComponent roles={['ROLE_ADMIN', 'ROLE_GERENTE']}>
         <ul className="adminLinks">
           <li>
             <NavLink to="/settings" activeClassName="active">

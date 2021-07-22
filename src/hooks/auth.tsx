@@ -3,6 +3,11 @@ import { api } from '../services/api';
 
 import { useToast } from './toast';
 
+interface Role {
+  id: number;
+  name: string;
+}
+
 interface User {
   ativo: boolean;
   email: string;
@@ -10,7 +15,7 @@ interface User {
   nome: string;
   primeiro_nome: string;
   ts_usuario_id: number;
-  roles: String[];
+  roles: Role[];
 }
 
 interface AuthState {
