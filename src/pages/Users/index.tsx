@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useEffect } from 'react';
 import { useState } from 'react';
 
 import { Link } from 'react-router-dom';
 import { FaRegEdit } from 'react-icons/fa';
+import { BiReset } from 'react-icons/bi';
 
+import ReactTooltip from 'react-tooltip';
 import { Container, Content, MainHeader } from '../../components/Container';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
@@ -13,6 +15,8 @@ import TagRoles from '../../components/TagRoles';
 import { Main, UsersTable } from './styles';
 import { api } from '../../services/api';
 import Loading from '../../components/Loading';
+import ModalConfirm from '../../components/ModalConfirm';
+import { useToast } from '../../hooks/toast';
 
 interface Role {
   id: number;
@@ -43,8 +47,12 @@ const rolesStyles = {
 };
 
 const Users: React.FC = () => {
+  const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
+  const [tableRefresh, setTableRefresh] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [showModalConfirm, setShowModalConfirm] = useState(false);
 
   useEffect(() => {
     api
@@ -57,10 +65,56 @@ const Users: React.FC = () => {
       .catch(err => {
         console.log(err.message);
       });
-  }, []);
+  }, [tableRefresh]);
+
+  const handleRefreshPage = useCallback(() => {
+    setTableRefresh(!tableRefresh);
+    window.scrollTo(0, 0);
+  }, [tableRefresh]);
+
+  const toggleModalConfirm = useCallback(() => {
+    setShowModalConfirm(!showModalConfirm);
+  }, [showModalConfirm]);
+
+  const handleResetPassword = useCallback(() => {
+    toggleModalConfirm();
+  }, [toggleModalConfirm]);
+
+  const handleModalConfirmYes = useCallback(() => {
+    toggleModalConfirm();
+    api
+      .put(`/users/${selectedUser?.id}/reset-password`)
+      .then(() => {
+        handleRefreshPage();
+      })
+      .catch(error => {
+        addToast({
+          type: 'error',
+          title: 'Não Permitido',
+          description: error.response.data.message
+            ? error.response.data.message
+            : 'Erro na solicitação',
+        });
+      });
+  }, [toggleModalConfirm, addToast, handleRefreshPage, selectedUser?.id]);
+
   return (
     <Container>
       <Sidebar />
+      <ModalConfirm
+        title="Reset de Senha | Usuário"
+        message={`O usuário precisará deslogar e logar novamente no sistema. Confirma o reset da senha do usuário ${selectedUser?.primeiro_nome}?`}
+        confirmYes="Confirmar"
+        confirmNo="Cancelar"
+        isOpen={showModalConfirm}
+        setIsOpen={toggleModalConfirm}
+        handleConfirmYes={handleModalConfirmYes}
+        buttonType={{
+          theme: {
+            confirmYes: 'success',
+          },
+        }}
+      />
       <Content>
         <Header />
         <Main>
@@ -84,7 +138,7 @@ const Users: React.FC = () => {
             <tbody>
               {users &&
                 users.map(user => (
-                  <tr key={user.id}>
+                  <tr key={user.id} onClick={() => setSelectedUser(user)}>
                     <td>{user.primeiro_nome}</td>
                     <td>{user.nome}</td>
                     <td>{user.email}</td>
@@ -103,7 +157,25 @@ const Users: React.FC = () => {
                       </div>
                     </td>
                     <td>
+                      <button
+                        data-tip
+                        data-for="resetPasswordButton"
+                        type="button"
+                        onClick={handleResetPassword}
+                      >
+                        <BiReset size={28} />
+                      </button>
+                      <ReactTooltip
+                        id="resetPasswordButton"
+                        type="info"
+                        effect="solid"
+                        delayShow={1000}
+                      >
+                        <span>Reset de Senha</span>
+                      </ReactTooltip>
                       <Link
+                        data-tip
+                        data-for="editButton"
                         to={{
                           pathname: `/settings/users/edit`,
                           state: {
@@ -113,6 +185,14 @@ const Users: React.FC = () => {
                       >
                         <FaRegEdit size={28} />
                       </Link>
+                      <ReactTooltip
+                        id="editButton"
+                        type="info"
+                        effect="solid"
+                        delayShow={1000}
+                      >
+                        <span>Editar</span>
+                      </ReactTooltip>
                     </td>
                   </tr>
                 ))}

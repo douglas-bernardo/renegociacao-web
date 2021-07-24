@@ -1,7 +1,7 @@
 import styled, { keyframes } from 'styled-components';
 import { shade } from 'polished';
 
-import signInBackgroundImg from '../../assets/beachpark.png';
+import signUpBackgroundImg from '../../assets/beachpark.png';
 
 export const Container = styled.div`
   height: 100vh;
@@ -19,10 +19,10 @@ export const Content = styled.div`
   max-width: 700px;
 `;
 
-const appearFromLeft = keyframes`
+const appearFromRight = keyframes`
   from{
     opacity: 0;
-    transform: translateX(-50px);
+    transform: translateX(50px);
   }
   to{
     opacity: 1;
@@ -37,7 +37,7 @@ export const AnimationContainer = styled.div`
   align-items: center;
   justify-content: center;
 
-  animation: ${appearFromLeft} 1s;
+  animation: ${appearFromRight} 1s;
 
   form {
     margin: 80px 0;
@@ -46,6 +46,16 @@ export const AnimationContainer = styled.div`
 
     h1 {
       margin-bottom: 24px;
+      color: #182390;
+    }
+
+    p {
+      padding: 10px;
+      margin-bottom: 24px;
+      background: #ffc7ce;
+      color: #ff365f;
+      border: 3px solid #ff365f;
+      border-radius: 8px;
     }
 
     a {
@@ -62,7 +72,7 @@ export const AnimationContainer = styled.div`
   }
 
   > a {
-    color: #ff9000;
+    color: #003379;
     display: block;
     margin-top: 24px;
     text-decoration: none;
@@ -72,17 +82,38 @@ export const AnimationContainer = styled.div`
     align-items: center;
 
     &:hover {
-      color: ${shade(0.2, '#ff9000')};
+      color: ${shade(0.2, '#003379')};
     }
 
     svg {
       margin-right: 16px;
     }
   }
+
+  button.backLogon {
+    display: flex;
+    align-items: center;
+
+    color: #003379;
+    background: transparent;
+    border: 0;
+    padding: 8px;
+    border-radius: 10px;
+    transition: 0.2s;
+
+    &:hover {
+      background-color: #98c1d8;
+      transform: scale(1.05);
+    }
+
+    svg {
+      margin-right: 10px;
+    }
+  }
 `;
 
 export const Background = styled.div`
   flex: 1;
-  background: url(${signInBackgroundImg}) no-repeat center;
+  background: url(${signUpBackgroundImg}) no-repeat center;
   background-size: cover;
 `;

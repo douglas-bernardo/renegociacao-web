@@ -75,7 +75,7 @@ const SignIn: React.FC = () => {
         addToast({
           type: 'error',
           title: 'Erro na autenticação',
-          description: err.response.data.message
+          description: err.response?.data.message
             ? err.response.data.message
             : 'Erro na solicitação',
         });

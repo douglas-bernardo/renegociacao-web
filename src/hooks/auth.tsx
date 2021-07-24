@@ -15,6 +15,7 @@ interface User {
   nome: string;
   primeiro_nome: string;
   ts_usuario_id: number;
+  reset_password: boolean;
   roles: Role[];
 }
 
@@ -34,6 +35,12 @@ interface AuthContextData {
   signIn(credentials: SignInCredentials): Promise<void>;
   signOut(): void;
   updateUser(user: User): void;
+}
+
+interface AuthResponse {
+  status: string;
+  user: User;
+  token: string;
 }
 
 export const AuthContext = createContext<AuthContextData>(
@@ -57,7 +64,7 @@ export const AuthProvider: React.FC = ({ children }) => {
 
   const signIn = useCallback(
     async ({ email, password }) => {
-      const response = await api.post('sessions', {
+      const response = await api.post<AuthResponse>('sessions', {
         email,
         password,
       });
@@ -69,7 +76,7 @@ export const AuthProvider: React.FC = ({ children }) => {
 
       api.defaults.headers.authorization = `Bearer ${token}`;
 
-      if (user) {
+      if (user && !Number(user.reset_password)) {
         addToast({
           type: 'success',
           title: `Olá ${user.primeiro_nome} Bem Vindo(a)!`,

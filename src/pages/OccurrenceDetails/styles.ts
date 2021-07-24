@@ -14,11 +14,6 @@ export const Main = styled.div`
 `;
 
 export const BoardDetails = styled.div`
-  /* display: flex;
-  margin-right: 20px;
-  max-height: 716px;
-  overflow: auto; */
-
   border: 1px solid #f0f0f0;
   box-shadow: 4px 0px 4px rgba(0, 0, 0, 0.25);
   border-radius: 10px;

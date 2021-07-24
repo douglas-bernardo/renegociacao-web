@@ -183,11 +183,11 @@ const UserForm: React.FC = () => {
         if (location.state?.id) {
           await api.put(`/users/${location.state.id}`, userData);
         } else {
-          const newUser = {
-            ...userData,
-            password: '123456',
-          };
-          await api.post('/users', newUser);
+          // const newUser = {
+          //   ...userData,
+          //   password: '123456',
+          // };
+          await api.post('/users', userData);
         }
 
         setLoadingModal(false);

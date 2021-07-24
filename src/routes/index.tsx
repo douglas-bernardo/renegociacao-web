@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
+import { Redirect, Switch } from 'react-router-dom';
 
 import { useEffect } from 'react';
 import AdminRoutes from './AdminRoutes';
 import CommonUsersRoutes from './CommonUsersRoutes';
+
+import Route from './Route';
+import SignIn from '../pages/SignIn';
+import NewPasswordForm from '../pages/NewPasswordForm';
+import Profile from '../pages/Profile';
 
 import { useAuth } from '../hooks/auth';
 
@@ -25,7 +31,27 @@ const Routes: React.FC = () => {
     setHasAdminRoutesPermissions(hasRoles);
   }, [user?.roles]);
 
-  return hasAdminRoutesPermissions ? <AdminRoutes /> : <CommonUsersRoutes />;
+  return (
+    <Switch>
+      <Route path="/" exact component={SignIn} />
+      <Route path="/profile" exact component={Profile} isPrivate />
+      {Number(user?.reset_password) && (
+        <Route
+          render={() => (
+            <Redirect
+              to={{
+                pathname: '/new-password',
+              }}
+            />
+          )}
+          exact
+          component={NewPasswordForm}
+          isPrivate
+        />
+      )}
+      {hasAdminRoutesPermissions ? <AdminRoutes /> : <CommonUsersRoutes />}
+    </Switch>
+  );
 };
 
 export default Routes;

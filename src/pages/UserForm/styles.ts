@@ -41,7 +41,7 @@ export const ContainerRegister = styled.div`
   background: #fff;
   border-radius: 10px;
   max-width: 900px;
-  min-height: 520px;
+  min-height: 600px;
 
   button.userSubmit {
     position: absolute;
@@ -69,6 +69,7 @@ export const ContainerRegister = styled.div`
 export const Form = styled(Unform)`
   display: flex;
   flex-direction: column;
+  margin-bottom: 30px;
 
   h1 {
     font-weight: 600;
@@ -181,7 +182,7 @@ export const RoleBoard = styled.div`
   display: flex;
   flex-direction: column;
   padding: 10px;
-  margin-top: 30px;
+  margin-bottom: 30px;
   font-weight: bold;
 
   header {

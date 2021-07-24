@@ -78,4 +78,11 @@ export const UsersTable = styled.table`
     text-decoration: none;
     color: #3c3c3c;
   }
+
+  button {
+    background: transparent;
+    border: 0;
+    margin-right: 15px;
+    color: #3c3c3c;
+  }
 `;
