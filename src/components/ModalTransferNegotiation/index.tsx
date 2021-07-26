@@ -75,8 +75,8 @@ const ModalTransferNegotiation: React.FC<IModalProps> = ({
         return (
           Number(user.ativo) &&
           user.id !== currentUserResp &&
-          user.roles.every(element => {
-            return element.name === 'ROLE_CONSULTOR';
+          user.roles.every(role => {
+            return role.name === 'ROLE_CONSULTOR';
           })
         );
       })

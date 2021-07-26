@@ -114,9 +114,8 @@ export const Form = styled(Unform)`
     overflow: auto;
 
     background: #fff;
-    padding: 10px;
+    padding: 20px;
     min-width: 300px;
-    /* min-height: 250px; */
     max-height: 400px;
     border-radius: 5px;
     box-shadow: rgb(0 0 0 / 40%) 0px 5px 10px;
@@ -159,6 +158,11 @@ export const Form = styled(Unform)`
       &:hover {
         background: #98c1d8;
       }
+    }
+
+    p {
+      position: absolute;
+      padding: 10px;
     }
   }
 

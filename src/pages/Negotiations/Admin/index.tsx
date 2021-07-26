@@ -136,7 +136,7 @@ interface Negotiation {
 const selectCustomStyles = {
   container: base => ({
     ...base,
-    width: 210,
+    minWidth: 210,
     marginLeft: 10,
   }),
 };
@@ -347,8 +347,8 @@ const Negotiations: React.FC = () => {
           .filter((opt: User) => {
             return (
               opt.roles &&
-              opt.roles.every(element => {
-                return element.name === 'ROLE_CONSULTOR';
+              opt.roles.every(role => {
+                return role.name === 'ROLE_CONSULTOR';
               })
             );
           })

@@ -8,12 +8,11 @@ import {
   FaCog,
 } from 'react-icons/fa';
 
-import logo from '../../assets/logo_vacation.svg';
-
-import { Aside } from './styles';
-
 import { useAuth } from '../../hooks/auth';
-import PermissionComponent from '../PermissionComponent';
+
+import Can from '../Can';
+import logo from '../../assets/logo_vacation.svg';
+import { Aside } from './styles';
 
 interface Page {
   page: string;
@@ -45,7 +44,7 @@ const Sidebar: React.FC = () => {
         ))}
       </ul>
       <hr />
-      <PermissionComponent roles={['ROLE_ADMIN', 'ROLE_GERENTE']}>
+      <Can roles={['ROLE_ADMIN', 'ROLE_GERENTE', 'ROLE_COORDENADOR']}>
         <ul className="adminLinks">
           <li>
             <NavLink to="/settings" activeClassName="active">
@@ -54,7 +53,7 @@ const Sidebar: React.FC = () => {
             </NavLink>
           </li>
         </ul>
-      </PermissionComponent>
+      </Can>
       <button type="button" title="Log out" onClick={signOut}>
         <FaSignOutAlt />
         Log out

@@ -49,7 +49,7 @@ export const AnimationContainer = styled.div`
       color: #182390;
     }
 
-    p {
+    p.resetPasswordMessage {
       padding: 10px;
       margin-bottom: 24px;
       background: #ffc7ce;

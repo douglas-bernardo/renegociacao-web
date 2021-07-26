@@ -3,7 +3,7 @@ import axios from 'axios';
 import jwt from 'jsonwebtoken';
 
 const api = axios.create({
-  baseURL: 'http://app.renegociacao',
+  baseURL: 'http://api.renegociacao',
 });
 
 const apiTimesharing = axios.create({

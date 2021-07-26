@@ -83,7 +83,7 @@ const NewPasswordForm: React.FC = () => {
 
           <Form ref={formRef} onSubmit={handleSubmit}>
             <h1>Alterar Senha</h1>
-            <p>
+            <p className="resetPasswordMessage">
               Você esta acessando o sistema pela primeira vez ou sua senha foi
               redefinida. Por favor registre uma nova senha
             </p>

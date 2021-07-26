@@ -12,7 +12,7 @@ import { Container } from './styles';
 
 import DropMenu from '../DropMenu';
 
-import PermissionComponent from '../PermissionComponent';
+import Can from '../Can';
 
 interface Occurrence {
   id: number;
@@ -69,7 +69,7 @@ const DropOccurrenceActions: React.FC<DropActionProps> = ({
           <BiDetail className="drop info" />
           Detalhes
         </Link>
-        <PermissionComponent roles={['ROLE_CONSULTOR']} isExactlyRoles>
+        <Can roles={['ROLE_CONSULTOR']}>
           {Number(occurrenceProps.status_ocorrencia_id) === 1 && (
             <>
               <button
@@ -96,7 +96,7 @@ const DropOccurrenceActions: React.FC<DropActionProps> = ({
               </button>
             </>
           )}
-        </PermissionComponent>
+        </Can>
       </Container>
     </DropMenu>
   );

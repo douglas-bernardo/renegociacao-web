@@ -79,6 +79,7 @@ const UserForm: React.FC = () => {
   const location = useLocation<LocationProps>();
   const [roles, setRoles] = useState<Role[] | null>(null);
 
+  const [isError, setIsError] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [userSystemTSResults, setUserSystemTSResults] = useState<
@@ -119,6 +120,11 @@ const UserForm: React.FC = () => {
         const { data } = response.data;
         setUserSystemTSResults(data);
         setSearchLoading(false);
+      })
+      .catch((error: Error) => {
+        setSearchLoading(false);
+        setIsError(true);
+        console.log(error.message);
       });
   }, [searchTerm]);
 
@@ -134,6 +140,7 @@ const UserForm: React.FC = () => {
       setSearchTerm(e.target.value.toUpperCase());
       setVisible(true);
       setSearchLoading(true);
+      setIsError(false);
     },
     [setVisible],
   );
@@ -183,10 +190,6 @@ const UserForm: React.FC = () => {
         if (location.state?.id) {
           await api.put(`/users/${location.state.id}`, userData);
         } else {
-          // const newUser = {
-          //   ...userData,
-          //   password: '123456',
-          // };
           await api.post('/users', userData);
         }
 
@@ -298,6 +301,9 @@ const UserForm: React.FC = () => {
                                 </li>
                               ))}
                             </ul>
+                          )}
+                          {isError && (
+                            <p>Erro durante a busca de usuários...</p>
                           )}
                         </div>
                       )}

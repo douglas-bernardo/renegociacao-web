@@ -123,7 +123,7 @@ interface Request {
 const selectCustomStyles = {
   container: base => ({
     ...base,
-    width: 200,
+    minWidth: 200,
     marginLeft: 10,
   }),
 };
@@ -320,7 +320,7 @@ const Negotiations: React.FC = () => {
 
   const refreshPage = useCallback(() => {
     setTableRefresh(!tableRefresh);
-    window.scrollTo(0, 0);
+    // window.scrollTo(0, 0);
   }, [tableRefresh]);
 
   const handleOffsetAndLimit = useCallback(

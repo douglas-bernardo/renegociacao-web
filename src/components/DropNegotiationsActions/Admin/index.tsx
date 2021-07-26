@@ -121,7 +121,7 @@ const DropNegotiationsActions: React.FC<DropActionProps> = ({
               effect="solid"
               delayShow={1000}
             >
-              <span>Restaura a negociação para &#34Aguardando Retorno&#34</span>
+              <span>Restaura a negociação para Aguardando Retorno</span>
             </ReactTooltip>
           </>
         )}

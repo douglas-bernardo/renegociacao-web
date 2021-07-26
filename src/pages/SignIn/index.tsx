@@ -11,7 +11,7 @@ import { useToast } from '../../hooks/toast';
 
 import getValidationErros from '../../utils/getValidationErros';
 
-import logoimg from '../../assets/logo_vacation.svg';
+import logoImg from '../../assets/logo_vacation.svg';
 
 import Input from '../../components/Input';
 import Button from '../../components/Button';
@@ -88,7 +88,7 @@ const SignIn: React.FC = () => {
     <Container>
       <Content>
         <AnimationContainer>
-          <img src={logoimg} alt="RenegociacaoWeb" />
+          <img src={logoImg} alt="RenegociacaoWeb" />
           <h1>Renegociação Web</h1>
           <Form ref={formRef} onSubmit={handleSubmit}>
             <h1>Faça seu login</h1>

@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useState } from 'react';
+import { useEffect } from 'react';
 import { api } from '../services/api';
 
 import { useToast } from './toast';
@@ -8,7 +9,7 @@ interface Role {
   name: string;
 }
 
-interface User {
+export interface User {
   ativo: boolean;
   email: string;
   id: number;
@@ -17,6 +18,7 @@ interface User {
   ts_usuario_id: number;
   reset_password: boolean;
   roles: Role[];
+  permissions: string[];
 }
 
 interface AuthState {
@@ -32,9 +34,9 @@ interface SignInCredentials {
 interface AuthContextData {
   user: User;
   token: string;
-  signIn(credentials: SignInCredentials): Promise<void>;
-  signOut(): void;
-  updateUser(user: User): void;
+  signIn: (credentials: SignInCredentials) => Promise<void>;
+  signOut: () => void;
+  updateUser: (user: User) => void;
 }
 
 interface AuthResponse {
@@ -46,6 +48,8 @@ interface AuthResponse {
 export const AuthContext = createContext<AuthContextData>(
   {} as AuthContextData,
 );
+
+let authChannel: BroadcastChannel;
 
 export const AuthProvider: React.FC = ({ children }) => {
   const { addToast } = useToast();
@@ -61,6 +65,30 @@ export const AuthProvider: React.FC = ({ children }) => {
 
     return {} as AuthState;
   });
+
+  const signOut = useCallback(() => {
+    localStorage.removeItem('@Renegociacao:token');
+    localStorage.removeItem('@Renegociacao:user');
+
+    authChannel.postMessage('signOut');
+
+    setData({} as AuthState);
+  }, []);
+
+  useEffect(() => {
+    authChannel = new BroadcastChannel('auth');
+
+    authChannel.onmessage = (message: MessageEvent) => {
+      switch (message.data) {
+        case 'signOut':
+          signOut();
+          break;
+
+        default:
+          break;
+      }
+    };
+  }, [signOut]);
 
   const signIn = useCallback(
     async ({ email, password }) => {
@@ -87,13 +115,6 @@ export const AuthProvider: React.FC = ({ children }) => {
     },
     [addToast],
   );
-
-  const signOut = useCallback(() => {
-    localStorage.removeItem('@Renegociacao:token');
-    localStorage.removeItem('@Renegociacao:user');
-
-    setData({} as AuthState);
-  }, []);
 
   const updateUser = useCallback(
     (user: User) => {

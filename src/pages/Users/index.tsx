@@ -5,17 +5,21 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FaRegEdit } from 'react-icons/fa';
 import { BiReset } from 'react-icons/bi';
-
 import ReactTooltip from 'react-tooltip';
+
 import { Container, Content, MainHeader } from '../../components/Container';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import TagRoles from '../../components/TagRoles';
-
-import { Main, UsersTable } from './styles';
-import { api } from '../../services/api';
+import LoadingModal from '../../components/LoadingModal';
 import Loading from '../../components/Loading';
 import ModalConfirm from '../../components/ModalConfirm';
+import Pagination from '../../components/Pagination';
+import Whoops from '../../components/Whoops';
+import DialogBox from '../../components/DialogBox';
+
+import { Main, UsersTable, ActionButton } from './styles';
+import { api } from '../../services/api';
 import { useToast } from '../../hooks/toast';
 
 interface Role {
@@ -30,6 +34,7 @@ interface User {
   nome: string;
   primeiro_nome: string;
   ts_usuario_id: number;
+  reset_password: boolean;
   roles: Role[];
 }
 
@@ -48,24 +53,50 @@ const rolesStyles = {
 
 const Users: React.FC = () => {
   const { addToast } = useToast();
+  const [limit, setLimit] = useState(10);
+  const [offset, setOffset] = useState(0);
+
+  const [showMessageBox, setShowMessageBox] = useState(false);
+  const [showLoadingModal, setLoadingModal] = useState(false);
+  const [isError, setIsError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [tableRefresh, setTableRefresh] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [totalUsers, setTotalUsers] = useState(0);
+
   const [showModalConfirm, setShowModalConfirm] = useState(false);
 
   useEffect(() => {
     api
-      .get<Response>('/users')
+      .get<Response>('/users', {
+        params: {
+          offset,
+          limit,
+        },
+      })
       .then(response => {
+        setTotalUsers(response.headers['x-total-count']);
         const { data } = response.data;
         setUsers(data);
         setIsLoading(false);
       })
-      .catch(err => {
-        console.log(err.message);
+      .catch((error: Error) => {
+        setIsLoading(false);
+        setIsError(true);
+        console.log(error.message);
       });
-  }, [tableRefresh]);
+  }, [offset, limit, tableRefresh]);
+
+  const handleOffsetAndLimit = useCallback(
+    (_limit: number, _offset: number) => {
+      setIsLoading(true);
+
+      setLimit(_limit);
+      setOffset(_offset);
+    },
+    [],
+  );
 
   const handleRefreshPage = useCallback(() => {
     setTableRefresh(!tableRefresh);
@@ -82,10 +113,13 @@ const Users: React.FC = () => {
 
   const handleModalConfirmYes = useCallback(() => {
     toggleModalConfirm();
+    setLoadingModal(true);
     api
       .put(`/users/${selectedUser?.id}/reset-password`)
       .then(() => {
+        setLoadingModal(false);
         handleRefreshPage();
+        setShowMessageBox(true);
       })
       .catch(error => {
         addToast({
@@ -98,9 +132,20 @@ const Users: React.FC = () => {
       });
   }, [toggleModalConfirm, addToast, handleRefreshPage, selectedUser?.id]);
 
+  const toggleMessageBox = useCallback(() => {
+    setShowMessageBox(!showMessageBox);
+  }, [showMessageBox]);
+
   return (
     <Container>
       <Sidebar />
+      <LoadingModal isOpen={showLoadingModal} />
+      <DialogBox
+        title="Reset de Senha"
+        message="A senha o do usuário foi redefinida com sucesso. Peça para o mesmo deslogar e logar novamente no sistema com a senha padrão: renegociacao"
+        isOpen={showMessageBox}
+        setIsOpen={toggleMessageBox}
+      />
       <ModalConfirm
         title="Reset de Senha | Usuário"
         message={`O usuário precisará deslogar e logar novamente no sistema. Confirma o reset da senha do usuário ${selectedUser?.primeiro_nome}?`}
@@ -136,7 +181,7 @@ const Users: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {users &&
+              {!isLoading &&
                 users.map(user => (
                   <tr key={user.id} onClick={() => setSelectedUser(user)}>
                     <td>{user.primeiro_nome}</td>
@@ -157,22 +202,24 @@ const Users: React.FC = () => {
                       </div>
                     </td>
                     <td>
-                      <button
+                      <ActionButton
+                        isReseted={!!Number(user.reset_password)}
+                        disabled={!!Number(user.reset_password)}
                         data-tip
                         data-for="resetPasswordButton"
                         type="button"
                         onClick={handleResetPassword}
                       >
                         <BiReset size={28} />
-                      </button>
-                      <ReactTooltip
-                        id="resetPasswordButton"
-                        type="info"
-                        effect="solid"
-                        delayShow={1000}
-                      >
-                        <span>Reset de Senha</span>
-                      </ReactTooltip>
+                        <ReactTooltip
+                          id="resetPasswordButton"
+                          type="info"
+                          effect="solid"
+                          delayShow={1000}
+                        >
+                          <span>Reset de Senha</span>
+                        </ReactTooltip>
+                      </ActionButton>
                       <Link
                         data-tip
                         data-for="editButton"
@@ -199,6 +246,15 @@ const Users: React.FC = () => {
             </tbody>
           </UsersTable>
           {isLoading && <Loading />}
+          {totalUsers > 0 && (
+            <Pagination
+              count={totalUsers}
+              limit={limit}
+              pageRangeDisplayed={5}
+              onChange={handleOffsetAndLimit}
+            />
+          )}
+          {isError && <Whoops />}
         </Main>
       </Content>
     </Container>
