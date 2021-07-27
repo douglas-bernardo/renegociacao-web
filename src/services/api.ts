@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 
 const api = axios.create({
   baseURL: 'http://api.renegociacao',
+  // env xampp win baseURL: 'http://172.16.1.199',
 });
 
 const apiTimesharing = axios.create({

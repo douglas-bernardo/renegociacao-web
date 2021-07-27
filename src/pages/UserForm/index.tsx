@@ -212,11 +212,12 @@ const UserForm: React.FC = () => {
         setLoadingModal(false);
         addToast({
           type: 'error',
-          title: 'Não Permitido',
+          title: `Não Permitido`,
           description: err.response.data.message
             ? err.response.data.message
             : 'Erro na solicitação',
         });
+        window.scrollTo(0, 0);
       }
     },
     [addToast, user, location.state?.id, userRoles, history],
@@ -303,7 +304,7 @@ const UserForm: React.FC = () => {
                             </ul>
                           )}
                           {isError && (
-                            <p>Erro durante a busca de usuários...</p>
+                            <p>Erro ao buscar usuário no Timesharing.</p>
                           )}
                         </div>
                       )}

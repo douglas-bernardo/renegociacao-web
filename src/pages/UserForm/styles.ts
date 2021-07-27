@@ -41,13 +41,9 @@ export const ContainerRegister = styled.div`
   background: #fff;
   border-radius: 10px;
   max-width: 900px;
-  min-height: 600px;
 
   button.userSubmit {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-
+    float: right;
     display: flex;
     height: 40px;
     width: 178px;

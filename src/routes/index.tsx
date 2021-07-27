@@ -33,7 +33,7 @@ const Routes: React.FC = () => {
           render={() => (
             <Redirect
               to={{
-                pathname: '/new-password',
+                pathname: '/',
               }}
             />
           )}
@@ -67,7 +67,6 @@ const Routes: React.FC = () => {
       />
 
       {/* admin routes */}
-
       <Route
         roles={['ROLE_ADMIN']}
         path="/settings"
