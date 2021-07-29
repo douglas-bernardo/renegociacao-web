@@ -29,6 +29,8 @@ import { api } from '../../../services/api';
 
 import Loading from '../../../components/Loading';
 import { numberFormat } from '../../../utils/numberFormat';
+import BreadCrumb from '../../../components/BreadCrumb';
+import BreadCrumbItem from '../../../components/BreadCrumbItem';
 
 interface Negotiation {
   id: number;
@@ -145,7 +147,10 @@ const NegotiationDetails: React.FC = () => {
         <Header />
         <Main>
           <MainHeader>
-            <h1>Negociação | Detalhes</h1>
+            <BreadCrumb>
+              <BreadCrumbItem link="/negotiations" label="Negociações" />
+              <BreadCrumbItem label="Detalhes" />
+            </BreadCrumb>
           </MainHeader>
           <BoardDetails>
             {isLoading && <Loading />}

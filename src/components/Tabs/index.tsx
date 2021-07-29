@@ -1,6 +1,7 @@
-/* eslint-disable react/no-array-index-key */
 import React, { ReactElement, useCallback, useState } from 'react';
 import { useEffect } from 'react';
+import { v4 as uuid } from 'uuid';
+
 import TabTitle from '../TabTitle';
 
 import { Container } from './styles';
@@ -29,7 +30,7 @@ const Tabs: React.FC<TabsProps> = ({ children, onChangeTab }) => {
         {children.map((item, index) => (
           <TabTitle
             active={tabIndex === index}
-            key={index}
+            key={uuid()}
             title={item.props.title}
             index={index}
             toggleTabIndex={toggleTabIndex}

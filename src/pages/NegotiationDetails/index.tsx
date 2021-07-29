@@ -44,6 +44,8 @@ import ModalDowngradeContract from '../../components/ModalDowngradeContract';
 import ModalCancelContract from '../../components/ModalCancelContract';
 import ModalDefaultNegotiationClose from '../../components/ModalDefaultNegotiationClose';
 import NegotiationContainerDetails from './NegotiationContainerDetails';
+import BreadCrumb from '../../components/BreadCrumb';
+import BreadCrumbItem from '../../components/BreadCrumbItem';
 
 interface Situation {
   id: number;
@@ -270,7 +272,10 @@ const NegotiationDetails: React.FC = () => {
         <Header />
         <Main>
           <MainHeader>
-            <h1>Negociação | Detalhes</h1>
+            <BreadCrumb>
+              <BreadCrumbItem link="/negotiations" label="Negociações" />
+              <BreadCrumbItem label="Detalhes" />
+            </BreadCrumb>
           </MainHeader>
           <BoardDetails>
             {isError && (

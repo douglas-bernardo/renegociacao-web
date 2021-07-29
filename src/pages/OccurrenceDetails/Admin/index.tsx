@@ -42,6 +42,8 @@ import { api, apiTimesharing } from '../../../services/api';
 
 import Loading from '../../../components/Loading';
 import { numberFormat } from '../../../utils/numberFormat';
+import BreadCrumb from '../../../components/BreadCrumb';
+import BreadCrumbItem from '../../../components/BreadCrumbItem';
 
 interface Product {
   id: number;
@@ -207,7 +209,10 @@ const OccurrenceDetails: React.FC = () => {
         <Header />
         <Main>
           <MainHeader>
-            <h1>Ocorrência | Detalhes</h1>
+            <BreadCrumb>
+              <BreadCrumbItem link="/occurrences" label="Ocorrências" />
+              <BreadCrumbItem label="Detalhes" />
+            </BreadCrumb>
           </MainHeader>
           {isError && !ocorrencia && <Whoops errorCode={errorCode} />}
           {ocorrencia && (

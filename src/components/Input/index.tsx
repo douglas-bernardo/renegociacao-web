@@ -22,6 +22,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   prefix?: string;
   autoComplete?: 'on' | 'off' | undefined;
   icon?: React.ComponentType<IconBaseProps>;
+  dataTestId?: string | undefined;
 }
 
 export interface InputHandles {
@@ -29,7 +30,15 @@ export interface InputHandles {
 }
 
 const Input: React.ForwardRefRenderFunction<InputHandles, InputProps> = (
-  { name, containerStyle = {}, mask, autoComplete, icon: Icon, ...rest },
+  {
+    name,
+    containerStyle = {},
+    mask,
+    autoComplete,
+    icon: Icon,
+    dataTestId,
+    ...rest
+  },
   refInput,
 ) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -89,7 +98,7 @@ const Input: React.ForwardRefRenderFunction<InputHandles, InputProps> = (
       isErrored={!!error}
       isFilled={isFilled}
       isFocused={isFocused}
-      data-testid="input-container"
+      data-test-id={dataTestId}
     >
       {Icon && <Icon size={20} />}
       <input

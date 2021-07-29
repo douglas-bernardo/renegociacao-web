@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import {
   FaChartLine,
   FaComments,
@@ -31,7 +31,9 @@ const Sidebar: React.FC = () => {
 
   return (
     <Aside>
-      <img src={logo} className="logo" alt="Renegociação Web" />
+      <Link to="/">
+        <img src={logo} className="logo" alt="Renegociação Web" />
+      </Link>
       <h1>Renegociação</h1>
       <ul>
         {pages.map(({ label, page, icon }) => (

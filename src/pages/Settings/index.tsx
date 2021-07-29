@@ -10,7 +10,7 @@ import { Main, CardsContainer, SettingCard } from './styles';
 import team from '../../assets/team.png';
 import imports from '../../assets/import.png';
 import target from '../../assets/target.png';
-import settings from '../../assets/settings.png';
+import roles from '../../assets/roles.png';
 
 const Settings: React.FC = () => {
   return (
@@ -51,11 +51,11 @@ const Settings: React.FC = () => {
               </Link>
             </SettingCard>
             <SettingCard>
-              <Link to="/settings/others">
-                <img src={settings} alt="settings" />
+              <Link to="/settings/roles">
+                <img src={roles} alt="roles" />
                 <div className="cardContent">
-                  <h3>Configurações do sistema</h3>
-                  <p>System Settings</p>
+                  <h3>Funções</h3>
+                  <p>Ajustes de funções/permissões de usuários</p>
                 </div>
               </Link>
             </SettingCard>

@@ -11,7 +11,7 @@ export const MainHeader = styled.div`
   height: 90px;
   display: flex;
   align-items: flex-end;
-  margin-bottom: 15px;
+  margin-bottom: 30px;
 
   button.refreshPage {
     position: absolute;

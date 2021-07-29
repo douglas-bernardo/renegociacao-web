@@ -7,7 +7,7 @@ import { FaRegEdit } from 'react-icons/fa';
 import { BiReset } from 'react-icons/bi';
 import ReactTooltip from 'react-tooltip';
 
-import { Container, Content, MainHeader } from '../../components/Container';
+import { Container, Content } from '../../components/Container';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import TagRoles from '../../components/TagRoles';
@@ -18,9 +18,11 @@ import Pagination from '../../components/Pagination';
 import Whoops from '../../components/Whoops';
 import DialogBox from '../../components/DialogBox';
 
-import { Main, UsersTable, ActionButton } from './styles';
+import { Main, MainHeader, UsersTable, ActionButton } from './styles';
 import { api } from '../../services/api';
 import { useToast } from '../../hooks/toast';
+import BreadCrumb from '../../components/BreadCrumb';
+import BreadCrumbItem from '../../components/BreadCrumbItem';
 
 interface Role {
   id: number;
@@ -164,7 +166,10 @@ const Users: React.FC = () => {
         <Header />
         <Main>
           <MainHeader>
-            <h1>Configurações | Usuários </h1>
+            <BreadCrumb>
+              <BreadCrumbItem link="/settings" label="Configurações" />
+              <BreadCrumbItem label="Usuários" />
+            </BreadCrumb>
           </MainHeader>
           <div className="pageUserControls">
             <Link to="/settings/users/new">Novo</Link>

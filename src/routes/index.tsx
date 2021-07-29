@@ -12,6 +12,8 @@ import NegotiationsAdmin from '../pages/Negotiations/Admin';
 import Settings from '../pages/Settings';
 import Users from '../pages/Users';
 import UsersForm from '../pages/UserForm';
+import Roles from '../pages/Roles';
+import RolesForm from '../pages/RoleForm';
 
 import Occurrences from '../pages/Occurrences';
 import OccurrenceDetails from '../pages/OccurrenceDetails';
@@ -90,6 +92,20 @@ const Routes: React.FC = () => {
         isPrivate
       />
 
+      <Route
+        roles={['ROLE_ADMIN']}
+        path="/settings/roles/edit"
+        exact
+        component={RolesForm}
+        isPrivate
+      />
+      <Route
+        roles={['ROLE_ADMIN']}
+        path="/settings/roles"
+        exact
+        component={Roles}
+        isPrivate
+      />
       {/* Not Found */}
       <Route render={() => <Redirect to="/" />} exact component={SignIn} />
     </Switch>

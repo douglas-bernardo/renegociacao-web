@@ -1,9 +1,5 @@
-import styled, { css } from 'styled-components';
+import styled from 'styled-components';
 import { shade } from 'polished';
-
-interface ActionButtonProps {
-  isReseted?: boolean;
-}
 
 export const Main = styled.div`
   height: 100%;
@@ -13,7 +9,7 @@ export const Main = styled.div`
 
   div.pageUserControls {
     display: flex;
-    margin-bottom: 30px;
+    margin: 30px 0;
 
     a {
       display: flex;
@@ -37,15 +33,7 @@ export const Main = styled.div`
   }
 `;
 
-export const MainHeader = styled.div`
-  position: relative;
-  height: 90px;
-  display: flex;
-  align-items: flex-end;
-  margin-bottom: 30px;
-`;
-
-export const UsersTable = styled.table`
+export const RolesTable = styled.table`
   width: 100%;
   border-collapse: collapse;
   border-spacing: 0;
@@ -90,18 +78,4 @@ export const UsersTable = styled.table`
     text-decoration: none;
     color: #3c3c3c;
   }
-`;
-
-export const ActionButton = styled.button<ActionButtonProps>`
-  background: transparent;
-  border: 0;
-  margin-right: 15px;
-  color: #3c3c3c;
-
-  ${props =>
-    props.isReseted &&
-    css`
-      color: #d2cfcf;
-      cursor: default;
-    `}
 `;

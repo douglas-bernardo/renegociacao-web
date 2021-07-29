@@ -26,6 +26,8 @@ import LoadingModal from '../../components/LoadingModal';
 import { api, apiTimesharing } from '../../services/api';
 import { OutSideClick } from '../../hooks/outSideClick';
 import ToggleButton from '../../components/ToggleButton';
+import BreadCrumb from '../../components/BreadCrumb';
+import BreadCrumbItem from '../../components/BreadCrumbItem';
 
 interface LocationProps {
   id?: number | undefined;
@@ -251,11 +253,11 @@ const UserForm: React.FC = () => {
         <Header />
         <Main>
           <MainHeader>
-            <h1>
-              {`Configurações | Usuários | ${
-                location.state?.id ? 'Editar' : 'Novo'
-              }`}
-            </h1>
+            <BreadCrumb>
+              <BreadCrumbItem link="/settings" label="Configurações" />
+              <BreadCrumbItem link="/settings/users" label="Usuários" />
+              <BreadCrumbItem label={location.state?.id ? 'Editar' : 'Novo'} />
+            </BreadCrumb>
           </MainHeader>
           <div className="linkBackPage">
             <Link to="/settings/users/">
