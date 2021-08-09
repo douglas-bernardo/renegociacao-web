@@ -186,6 +186,11 @@ const ModalDowngradeContract: React.FC<IModalProps> = ({
         isOpen={showModalConfirm}
         setIsOpen={toggleModalConfirm}
         handleConfirmYes={handleModalConfirmYes}
+        buttonType={{
+          theme: {
+            confirmYes: 'success',
+          },
+        }}
       />
       <LoadingModal isOpen={showLoadingModal} setIsOpen={toggleLoadingModal} />
       <Container>

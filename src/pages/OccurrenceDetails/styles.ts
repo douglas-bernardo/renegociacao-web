@@ -9,7 +9,7 @@ export const Main = styled.div`
   height: 100%;
   width: 100%;
   max-width: 1120px;
-  padding: 20px;
+  padding: 2.5rem;
   color: #3c3c3c;
 `;
 
@@ -144,7 +144,6 @@ export const SectionRight = styled.section`
   flex: 1;
   padding: 24px;
   width: 100%;
-  /* max-width: 400px; */
 
   header {
     height: 45px;
@@ -170,17 +169,10 @@ export const AtendimentoContainer = styled.div`
   flex-direction: column;
   overflow: auto;
   height: 550px;
-  /* padding-right: 5px; */
 
   ::-webkit-scrollbar {
     width: 10px;
   }
-
-  /* Track */
-  /* ::-webkit-scrollbar-track {
-    box-shadow: inset 0 0 5px grey;
-    border-radius: 10px;
-  } */
 
   /* Handle */
   ::-webkit-scrollbar-thumb {

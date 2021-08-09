@@ -2,12 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Select, { components } from 'react-select';
 import { AiOutlineCalendar } from 'react-icons/ai';
 
-import { Container, Content } from '../../components/Container';
-import Sidebar from '../../components/Sidebar';
-import Header from '../../components/Header';
-import QCOFollowUpMonthlyRequests from '../../components/Reports/QCOFollowUpMonthlyRequests';
-import QCOFollowUpMonthlyRequestsSevenDays from '../../components/Reports/QCOFollowUpMonthlyRequestsSevenDays';
-import QCOFollowUpAccumulatedProfit from '../../components/Reports/QCOFollowUpAccumulatedProfit';
+import { Container, Content } from '../../../components/Container';
+import Sidebar from '../../../components/Sidebar';
+import Header from '../../../components/Header';
 
 import {
   Main,
@@ -15,18 +12,22 @@ import {
   CardsContainer,
   DataCard,
   QCOFollowUpContainer,
-} from './styles';
+} from '../styles';
 
-import MonthlyEfficiencyChart from '../../components/Charts/MonthlyEfficiencyChart';
-import AmountReceivedChart from '../../components/Charts/AmountReceivedChart';
+import money from '../../../assets/money.svg';
+import chartMoneyUp from '../../../assets/chart-money-up.svg';
+import chartMoneyDown from '../../../assets/chart-money-down.svg';
+import bagMoney from '../../../assets/bag-money.svg';
+import { api } from '../../../services/api';
+import { numberFormat } from '../../../utils/numberFormat';
 
-import money from '../../assets/money.svg';
-import chartMoneyUp from '../../assets/chart-money-up.svg';
-import chartMoneyDown from '../../assets/chart-money-down.svg';
-import bagMoney from '../../assets/bag-money.svg';
-import { api } from '../../services/api';
-import { numberFormat } from '../../utils/numberFormat';
-import QCOPercentageOpen from '../../components/Reports/QCOPercentageOpen';
+import AccumulatedEfficiency from '../../../components/Reports/AccumulatedEfficiency';
+import AccumulatedEfficiencySevenDays from '../../../components/Reports/AccumulatedEfficiencySevenDays';
+import OpenPercentage from '../../../components/Reports/OpenPercentage';
+import RetentionDowngradeBalance from '../../../components/Reports/RetentionDowngradeBalance';
+import EfficiencyVsGoal from '../../../components/Charts/EfficiencyVsGoal';
+import OpenPercentageAdmin from '../../../components/Charts/OpenPercentageAdmin';
+import BalanceDetails from '../../../components/Charts/BalanceDetails';
 
 const selectCustomStyles = {
   container: base => ({
@@ -82,7 +83,7 @@ interface Options {
   label: string;
 }
 
-const Dashboard: React.FC = () => {
+const DashboardAdmin: React.FC = () => {
   const [
     monthlyRequestsSummary,
     setMonthlyRequestsSummary,
@@ -94,7 +95,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     api
-      .get<RequestReport>('/reports/monthly-requests-summary', {
+      .get<RequestReport>('/reports/admin/monthly-requests-summary', {
         params: {
           year: yearResults,
         },
@@ -203,16 +204,18 @@ const Dashboard: React.FC = () => {
             </DataCard>
           </CardsContainer>
 
+          <EfficiencyVsGoal year={yearResults} />
+
           <div className="horizontalRowChart">
-            <MonthlyEfficiencyChart year={yearResults} />
-            <AmountReceivedChart year={yearResults} />
+            <OpenPercentageAdmin year={yearResults} />
+            <BalanceDetails year={yearResults} />
           </div>
 
           <QCOFollowUpContainer>
-            <QCOFollowUpMonthlyRequests year={yearResults} />
-            <QCOFollowUpMonthlyRequestsSevenDays year={yearResults} />
-            <QCOFollowUpAccumulatedProfit year={yearResults} />
-            <QCOPercentageOpen year={yearResults} />
+            <AccumulatedEfficiency year={yearResults} />
+            <AccumulatedEfficiencySevenDays year={yearResults} />
+            <OpenPercentage year={yearResults} />
+            <RetentionDowngradeBalance year={yearResults} />
           </QCOFollowUpContainer>
         </Main>
       </Content>
@@ -220,4 +223,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default DashboardAdmin;

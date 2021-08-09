@@ -164,7 +164,9 @@ export const NegotiationProvider: React.FC = ({ children }) => {
         negotiation: {
           situacao_id: 6,
           tipo_contato_id: data.tipo_contato_id,
-          valor_primeira_parcela: data.valor_primeira_parcela,
+          valor_primeira_parcela: data.valor_primeira_parcela
+            ? data.valor_primeira_parcela
+            : 0,
           observacao: data.observacao,
         },
         retention: {
@@ -182,10 +184,12 @@ export const NegotiationProvider: React.FC = ({ children }) => {
         negotiation: {
           situacao_id: 7,
           tipo_contato_id: data.tipo_contato_id,
-          reembolso: data.reembolso,
+          reembolso: data.reembolso ? data.reembolso : 0,
           numero_pc: data.numero_pc,
-          taxas_extras: data.taxas_extras,
-          valor_primeira_parcela: data.valor_primeira_parcela,
+          taxas_extras: data.taxas_extras ? data.taxas_extras : 0,
+          valor_primeira_parcela: data.valor_primeira_parcela
+            ? data.valor_primeira_parcela
+            : 0,
           observacao: data.observacao,
         },
         downgrade: {
@@ -194,6 +198,7 @@ export const NegotiationProvider: React.FC = ({ children }) => {
           valor_venda: data.valor_venda,
         },
       };
+      console.log(downgradeData);
       await api.post(`/negotiations/${id}/downgrade-contract`, downgradeData);
     },
     [],
@@ -205,13 +210,13 @@ export const NegotiationProvider: React.FC = ({ children }) => {
         negotiation: {
           situacao_id: 2,
           tipo_contato_id: data.tipo_contato_id,
-          reembolso: data.reembolso,
+          reembolso: data.reembolso ? data.reembolso : 0,
           numero_pc: data.numero_pc,
-          taxas_extras: data.taxas_extras,
+          taxas_extras: data.taxas_extras ? data.taxas_extras : 0,
           observacao: data.observacao,
         },
         cancel: {
-          multa: data.multa,
+          multa: data.multa ? data.multa : 0,
         },
       };
       await api.post(`/negotiations/${id}/cancel-contract`, cancelData);

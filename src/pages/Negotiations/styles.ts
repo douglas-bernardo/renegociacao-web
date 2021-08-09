@@ -4,7 +4,7 @@ export const Main = styled.div`
   height: 100%;
   min-height: 600px;
   margin-right: 20px;
-  padding: 20px;
+  padding: 2.5rem;
   color: #3c3c3c;
 `;
 

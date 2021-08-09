@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
+import { v4 as uuid } from 'uuid';
+
 import { api } from '../../../services/api';
 import { numberFormat } from '../../../utils/numberFormat';
 
 import { Container } from '../styles/styles';
 
 interface Report {
+  usuario_id: number;
   ano_sol: number;
   usuario_resp: string;
   valor_solicitado: number;
   valor_solicitado_formatted: string;
   valor_em_aberto: number;
   valor_em_aberto_formatted: string;
-  percentual: number;
+  percentual: string;
 }
 
 interface RequestReport {
@@ -19,16 +22,16 @@ interface RequestReport {
   data: Report[];
 }
 
-interface QCOPercentageOpenProps {
+interface OpenPercentageProps {
   year: number;
 }
 
-const QCOPercentageOpen: React.FC<QCOPercentageOpenProps> = ({ year }) => {
-  const [percentageOpen, setPercentageOpen] = useState<Report[]>([]);
+const OpenPercentage: React.FC<OpenPercentageProps> = ({ year }) => {
+  const [openPercentage, setOpenPercentage] = useState<Report[]>([]);
 
   useEffect(() => {
     api
-      .get<RequestReport>('/reports/open-percentage', {
+      .get<RequestReport>('/reports/admin/open-percentage', {
         params: {
           year,
         },
@@ -39,15 +42,13 @@ const QCOPercentageOpen: React.FC<QCOPercentageOpenProps> = ({ year }) => {
         const reportFormatted = data.map(report => {
           return {
             ...report,
-            valor_solicitado_formatted: report.valor_solicitado
-              ? numberFormat(report.valor_solicitado)
-              : '0',
-            valor_em_aberto_formatted: report.valor_em_aberto
-              ? numberFormat(report.valor_em_aberto)
-              : '0',
+            valor_solicitado_formatted: numberFormat(report.valor_solicitado),
+            valor_em_aberto_formatted: numberFormat(
+              report.valor_em_aberto ?? 0,
+            ),
           };
         });
-        setPercentageOpen(reportFormatted);
+        setOpenPercentage(reportFormatted);
       })
       .catch((error: Error) => {
         console.log(error);
@@ -62,20 +63,20 @@ const QCOPercentageOpen: React.FC<QCOPercentageOpenProps> = ({ year }) => {
       <table>
         <thead>
           <tr>
-            <th>Negociadora</th>
+            <th>Negociador(a)</th>
             <th>Valor Solicitado</th>
             <th>Valor Em Aberto</th>
-            <th>Percentual Em Aberto</th>
+            <th>(%) Percentual</th>
           </tr>
         </thead>
         <tbody>
-          {percentageOpen &&
-            percentageOpen.map(report => (
-              <tr key={report.ano_sol}>
+          {openPercentage &&
+            openPercentage.map(report => (
+              <tr key={uuid()}>
                 <td>{report.usuario_resp}</td>
                 <td>{report.valor_solicitado_formatted}</td>
                 <td>{report.valor_em_aberto_formatted}</td>
-                <td>{`${report.percentual ? report.percentual : '0.00'}%`}</td>
+                <td>{`${report.percentual ?? '0'}%`}</td>
               </tr>
             ))}
         </tbody>
@@ -84,4 +85,4 @@ const QCOPercentageOpen: React.FC<QCOPercentageOpenProps> = ({ year }) => {
   );
 };
 
-export default QCOPercentageOpen;
+export default OpenPercentage;

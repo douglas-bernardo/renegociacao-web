@@ -7,3 +7,10 @@ export const Container = styled.div`
   border-radius: 10px;
   min-width: 320px;
 `;
+
+export const ContainerLoading = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+`;

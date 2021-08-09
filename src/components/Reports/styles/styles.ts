@@ -5,10 +5,11 @@ export const Container = styled.div`
   background: #fff;
   border: 1px solid #e6e8eb;
   border-radius: 10px;
+  box-shadow: 0 0 0.875rem 0 rgb(41 48 66 / 5%);
 
-  & + div {
+  /* & + div {
     margin-top: 10px;
-  }
+  } */
 
   header {
     display: flex;

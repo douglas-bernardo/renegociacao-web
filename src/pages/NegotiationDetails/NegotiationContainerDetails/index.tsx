@@ -173,10 +173,16 @@ const NegotiationContainerDetails: React.FC<NegotiationContainerDetailsProps> = 
       data_finalizacao: negotiation.data_finalizacao
         ? format(parseISO(negotiation.data_finalizacao), 'dd/MM/yyyy')
         : undefined,
-      valor_primeira_parcela: numberFormat(negotiation.valor_primeira_parcela),
-      reembolso: numberFormat(negotiation.reembolso),
-      taxas_extras: numberFormat(negotiation.taxas_extras),
-      multa: numberFormat(negotiation.multa),
+      valor_primeira_parcela: negotiation.valor_primeira_parcela
+        ? numberFormat(negotiation.valor_primeira_parcela)
+        : '0',
+      reembolso: negotiation.reembolso
+        ? numberFormat(negotiation.reembolso)
+        : '0',
+      taxas_extras: negotiation.taxas_extras
+        ? numberFormat(negotiation.taxas_extras)
+        : '0',
+      multa: negotiation.multa ? numberFormat(negotiation.multa) : '0',
     };
   }, [negotiation]);
 

@@ -6,7 +6,8 @@ import { useAuth } from '../hooks/auth';
 import Route from './Route';
 import SignIn from '../pages/SignIn';
 import NewPasswordForm from '../pages/NewPasswordForm';
-import Dashboard from '../pages/Dashboard';
+import Dashboard from '../pages/Dashboard/Default';
+import DashboardAdmin from '../pages/Dashboard/Admin';
 
 import NegotiationsAdmin from '../pages/Negotiations/Admin';
 import Settings from '../pages/Settings';
@@ -25,7 +26,7 @@ const adminRoles = ['ROLE_ADMIN', 'ROLE_GERENTE', 'ROLE_COORDENADOR'];
 
 const Routes: React.FC = () => {
   const { user } = useAuth();
-  const userCanSeeRote = useCan({ roles: adminRoles });
+  const userIsAdmin = useCan({ roles: adminRoles });
 
   return (
     <Switch>
@@ -44,7 +45,12 @@ const Routes: React.FC = () => {
           isPrivate
         />
       )}
-      <Route path="/dashboard" exact component={Dashboard} isPrivate />
+      <Route
+        path="/dashboard"
+        exact
+        component={userIsAdmin ? DashboardAdmin : Dashboard}
+        isPrivate
+      />
 
       {/* Common Routes */}
       <Route
@@ -64,7 +70,7 @@ const Routes: React.FC = () => {
       <Route
         path="/negotiations"
         exact
-        component={userCanSeeRote ? NegotiationsAdmin : Negotiations}
+        component={userIsAdmin ? NegotiationsAdmin : Negotiations}
         isPrivate
       />
 

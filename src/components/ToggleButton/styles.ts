@@ -10,12 +10,10 @@ export const Container = styled.div<ContainerProps>`
   user-select: none;
 
   width: 50px;
-  height: 26px;
+  height: 25px;
 
-  border-radius: 3px;
-  padding: 2px;
   position: relative;
-  border-radius: 17px;
+  border-radius: 12.5px;
 
   ${props =>
     props.isActive &&
@@ -28,28 +26,23 @@ export const Container = styled.div<ContainerProps>`
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 23px;
-    height: 23px;
+    width: 25px;
+    height: 25px;
 
-    font-size: 14px;
-    line-height: 16px;
-    font-weight: bold;
     background-color: #fff;
     color: white;
-    /* padding: 8px 12px; */
-    min-width: 46px;
 
     cursor: pointer;
     min-width: unset;
-    border-radius: 15px;
+    border-radius: 50%;
 
-    left: 1px;
-    /* transition: all 0.1s ease; */
+    left: 0px;
+    transition: all 0.1s ease;
 
     ${props =>
       props.isActive &&
       css`
-        left: 26px;
+        left: 25px;
       `}
   }
 `;

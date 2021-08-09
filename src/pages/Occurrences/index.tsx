@@ -43,6 +43,7 @@ import InputDatePickerProps, {
 import ModalConfirm from '../../components/ModalConfirm';
 import { useToast } from '../../hooks/toast';
 import Can from '../../components/Can';
+import { numberFormat } from '../../utils/numberFormat';
 
 interface Options {
   value: string;
@@ -215,6 +216,7 @@ const Occurrences: React.FC = () => {
               parseISO(occurrence.dtocorrencia),
               'dd-MM-yyyy',
             ),
+            valor_venda_formatted: numberFormat(occurrence.valor_venda),
           };
         });
         setOccurrences(occurrenceFormatted);
@@ -222,10 +224,9 @@ const Occurrences: React.FC = () => {
         setBtnLoading(false);
         handleSetCurrentPage();
       })
-      .catch((error: Error) => {
+      .catch(() => {
         setIsLoading(false);
         setIsError(true);
-        console.log(error.message);
       });
   }, [
     limit,
@@ -271,10 +272,9 @@ const Occurrences: React.FC = () => {
           ...usersFilterOptions,
         ]);
       })
-      .catch((error: Error) => {
+      .catch(() => {
         setIsLoading(false);
         setIsError(true);
-        console.log(error.message);
       });
   }, []);
 
@@ -325,10 +325,9 @@ const Occurrences: React.FC = () => {
         setIsLoading(false);
         setTotalOccurrences(0);
       })
-      .catch((error: Error) => {
+      .catch(() => {
         setIsLoading(false);
         setIsError(true);
-        console.log(error.message);
       });
   }, []);
 
@@ -565,6 +564,7 @@ const Occurrences: React.FC = () => {
                   <th>Responsável</th>
                   <th>Cliente</th>
                   <th>Projeto-Contrato</th>
+                  <th>Valor Venda</th>
                   <th>Status</th>
                   <th />
                 </tr>
@@ -602,6 +602,7 @@ const Occurrences: React.FC = () => {
                         </div>
                       )}
                     </td>
+                    <td>{occurrence.valor_venda_formatted}</td>
                     <td
                       className={
                         Number(occurrence.status_ocorrencia.id) === 1

@@ -8,6 +8,18 @@ export default createGlobalStyle`
     box-sizing: border-box;
   }
 
+  @media (max-width: 1080px) {
+    html {
+      font-size: 93.75%; // 15px
+    }
+  }
+
+  @media (max-width: 720px) {
+    html {
+      font-size: 87.5%; // 14px
+    }
+  }
+
   body {
     background: #FFFFFF;
     color: #A3A3A3;
@@ -34,7 +46,7 @@ export default createGlobalStyle`
   body, input, button {
     font-family: 'Roboto', sans-serif;
     font-size: 16px;
-    font-size-adjust: 0.5;
+    /* font-size-adjust: 0.5; */
     outline: 0;
   }
 

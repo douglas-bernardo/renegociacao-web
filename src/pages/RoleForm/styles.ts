@@ -5,7 +5,7 @@ import { Form as Unform } from '@unform/web';
 export const Main = styled.div`
   height: 100%;
   margin-right: 20px;
-  padding: 20px;
+  padding: 2.5rem;
   color: #3c3c3c;
 
   div.linkBackPage {
@@ -116,7 +116,7 @@ export const PermissionsBoard = styled.div`
   main {
     margin: 0 auto;
     display: grid;
-    /* grid-gap: 1rem; */
+    grid-gap: 1rem;
 
     @media (min-width: 600px) {
       grid-template-columns: repeat(2, 1fr);
@@ -134,9 +134,11 @@ export const PermissionsBoard = styled.div`
       display: flex;
       align-items: center;
       padding: 10px;
+      min-height: 60px;
 
       p {
         margin-left: 10px;
+        font-size: 15px;
       }
     }
   }

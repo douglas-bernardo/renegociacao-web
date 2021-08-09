@@ -2,16 +2,15 @@ import styled from 'styled-components';
 
 export const Main = styled.div`
   height: 100%;
-  padding: 30px;
+  padding: 2.5rem;
   color: #3c3c3c;
   background: #f7f8fa;
 
   div.horizontalRowChart {
     display: grid;
-    grid-template-columns: 60% 40%;
-    gap: 10px;
-    margin-right: 10px;
-    margin-bottom: 10px;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
   }
 `;
 
@@ -32,22 +31,22 @@ export const MainHeader = styled.div`
 `;
 
 export const CardsContainer = styled.div`
-  display: flex;
-  flex: 1;
-  margin-bottom: 10px;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 24px;
+  margin-bottom: 24px;
 `;
 
 export const DataCard = styled.div`
   display: flex;
-  width: 250px;
-  height: 100px;
-  padding: 10px;
+  height: 130px;
+  padding: 15px;
   background: #fff;
   border-radius: 10px;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   border: 1px solid #e6e8eb;
+  box-shadow: 0 0 0.875rem 0 rgb(41 48 66 / 5%);
 
   img.data-card-logo {
     width: 55px;
@@ -63,8 +62,8 @@ export const DataCard = styled.div`
 `;
 
 export const QCOFollowUpContainer = styled.div`
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-gap: 24px;
 `;
 
 export const QCOFollowUpMonthlyRequests = styled.div`

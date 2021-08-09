@@ -293,10 +293,9 @@ const Negotiations: React.FC = () => {
         setBtnLoading(false);
         handleSetCurrentPage();
       })
-      .catch((error: Error) => {
+      .catch(() => {
         setIsLoading(false);
         setIsError(true);
-        console.log(error.message);
       });
   }, [
     limit,
@@ -535,16 +534,30 @@ const Negotiations: React.FC = () => {
     setShowModalConfirmDelete(!showModalConfirmDelete);
   }, [showModalConfirmDelete]);
 
-  const handleDeleteNegotiation = useCallback(async () => {
+  const handleDeleteNegotiation = useCallback(() => {
     toggleModalConfirmDeleteNegotiation();
     setLoadingModal(true);
-    await api.delete(`/negotiations/${selectedNegotiation?.id}`);
-    setLoadingModal(false);
-    refreshPage();
+    api
+      .delete(`/negotiations/${selectedNegotiation?.id}`)
+      .then(() => {
+        setLoadingModal(false);
+        refreshPage();
+      })
+      .catch(error => {
+        setLoadingModal(false);
+        addToast({
+          type: 'error',
+          title: 'Não Permitido',
+          description: error.response.data.message
+            ? error.response.data.message
+            : 'Erro na solicitação',
+        });
+      });
   }, [
     toggleModalConfirmDeleteNegotiation,
     selectedNegotiation?.id,
     refreshPage,
+    addToast,
   ]);
 
   const toggleModalConfirmRestoreNegotiation = useCallback(() => {

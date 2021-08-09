@@ -9,7 +9,7 @@ export const Main = styled.div`
   height: 100%;
   width: 100%;
   max-width: 1120px;
-  padding: 20px;
+  padding: 2.5rem;
   color: #3c3c3c;
 `;
 
