@@ -1,0 +1,75 @@
+import styled from 'styled-components';
+import { shade } from 'polished';
+
+export const Main = styled.div`
+  height: 100%;
+  margin-right: 20px;
+  padding: 2.5rem;
+  color: #3c3c3c;
+
+  div.pageUserControls {
+    display: flex;
+    margin: 30px 0;
+
+    a {
+      display: flex;
+      height: 40px;
+      min-width: 100px;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      background: #336299;
+      border: 0;
+      border-radius: 20px;
+      text-decoration: none;
+
+      transition-duration: 0.3s;
+
+      &:hover {
+        background: ${shade(0.2, '#336299')};
+        transform: scale(1.05);
+      }
+    }
+  }
+`;
+
+export const GoalsTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+
+  & + tr {
+    margin-top: 20px;
+  }
+
+  th {
+    text-align: left;
+    height: 40px;
+    line-height: 40px;
+  }
+
+  th.centered {
+    text-align: center;
+  }
+
+  tbody tr:hover {
+    background: #f5f5f5;
+    button.openDropAction {
+      background: #f5f5f5;
+    }
+  }
+
+  td {
+    white-space: normal;
+    text-align: left;
+    height: 55px;
+    padding: 5px;
+    border-top: 1px solid #d2cfcf;
+    font-size: 14px;
+  }
+
+  a {
+    text-decoration: none;
+    color: #3c3c3c;
+  }
+`;

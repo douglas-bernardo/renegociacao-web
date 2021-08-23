@@ -16,10 +16,15 @@ import UsersForm from '../pages/UserForm';
 import Roles from '../pages/Roles';
 import RolesForm from '../pages/RoleForm';
 
+import Goals from '../pages/Goals';
+import GoalsForm from '../pages/GoalForm';
+
 import Occurrences from '../pages/Occurrences';
 import OccurrenceDetails from '../pages/OccurrenceDetails';
+import OccurrenceDetailsAdmin from '../pages/OccurrenceDetails/Admin';
 import Negotiations from '../pages/Negotiations';
 import NegotiationDetails from '../pages/NegotiationDetails';
+import NegotiationDetailsAdmin from '../pages/NegotiationDetails/Admin';
 import { useCan } from '../hooks/useCan';
 
 const adminRoles = ['ROLE_ADMIN', 'ROLE_GERENTE', 'ROLE_COORDENADOR'];
@@ -56,7 +61,7 @@ const Routes: React.FC = () => {
       <Route
         path="/occurrences/details"
         exact
-        component={OccurrenceDetails}
+        component={userIsAdmin ? OccurrenceDetailsAdmin : OccurrenceDetails}
         isPrivate
       />
       <Route path="/occurrences" exact component={Occurrences} isPrivate />
@@ -64,7 +69,7 @@ const Routes: React.FC = () => {
       <Route
         path="/negotiations/details"
         exact
-        component={NegotiationDetails}
+        component={userIsAdmin ? NegotiationDetailsAdmin : NegotiationDetails}
         isPrivate
       />
       <Route
@@ -89,7 +94,13 @@ const Routes: React.FC = () => {
         component={UsersForm}
         isPrivate
       />
-      <Route path="/settings/users/new" exact component={UsersForm} isPrivate />
+      <Route
+        roles={['ROLE_ADMIN']}
+        path="/settings/users/new"
+        exact
+        component={UsersForm}
+        isPrivate
+      />
       <Route
         roles={['ROLE_ADMIN']}
         path="/settings/users"
@@ -110,6 +121,28 @@ const Routes: React.FC = () => {
         path="/settings/roles"
         exact
         component={Roles}
+        isPrivate
+      />
+
+      <Route
+        roles={['ROLE_ADMIN']}
+        path="/settings/goals/new"
+        exact
+        component={GoalsForm}
+        isPrivate
+      />
+      <Route
+        roles={['ROLE_ADMIN']}
+        path="/settings/goals/edit"
+        exact
+        component={GoalsForm}
+        isPrivate
+      />
+      <Route
+        roles={['ROLE_ADMIN']}
+        path="/settings/goals"
+        exact
+        component={Goals}
         isPrivate
       />
       {/* Not Found */}

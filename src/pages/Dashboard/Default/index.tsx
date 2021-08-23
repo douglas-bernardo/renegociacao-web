@@ -94,7 +94,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     api
-      .get<RequestReport>('/reports/monthly-requests-summary', {
+      .get<RequestReport>('/reports/requests-summary', {
         params: {
           year: yearResults,
         },
