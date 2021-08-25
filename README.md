@@ -29,6 +29,11 @@ O projeto **Renegociação Web** é um sistema de gerenciamento de ocorrências 
 
 Esta aplicação importa as ocorrências abertas no sistema Timesharing (Beach Park) e as disponibiliza em um sistema web, para que a equipe de renegociação possa ter fácil acesso as ocorrências que foram atribuídas a cada negociadora, onde poderão ser gerenciadas conforme a negociação com o cliente.
 
+A aplicação é dividida em três partes:
+- [Backend API - Renegociacao](https://github.com/douglas-bernardo/app-renegociacao)
+- [API Gateway - Sistema Timesharing](https://github.com/douglas-bernardo/api-timesharing)
+- [Frontend - SPA](https://github.com/douglas-bernardo/renegociacao-web)
+
 &nbsp;
 
 ## 🚀 Tecnologias utilizadas
