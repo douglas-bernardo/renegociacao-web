@@ -46,7 +46,6 @@ const Select: React.FC<Props> = ({ name, className, ...rest }) => {
         return ref.state.value.value;
       },
       setValue: (ref: any, value: any) => {
-        console.log(value);
         ref.select.setValue(value);
       },
     });

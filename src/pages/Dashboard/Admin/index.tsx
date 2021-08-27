@@ -59,7 +59,7 @@ interface Report {
   balanceFormatted: string;
 }
 
-interface RequestReport {
+interface ResponseMonthlyRequestsSummary {
   status: string;
   data: Report[];
 }
@@ -83,6 +83,16 @@ interface Options {
   label: string;
 }
 
+interface CashBalance {
+  year: number;
+  cash_balance: number;
+}
+
+interface ResponseCashBalance {
+  status: string;
+  data: CashBalance;
+}
+
 const DashboardAdmin: React.FC = () => {
   const [
     monthlyRequestsSummary,
@@ -94,15 +104,25 @@ const DashboardAdmin: React.FC = () => {
   });
 
   useEffect(() => {
-    api
-      .get<RequestReport>('/reports/admin/monthly-requests-summary', {
+    Promise.all([
+      api.get<ResponseMonthlyRequestsSummary>(
+        '/reports/admin/monthly-requests-summary',
+        {
+          params: {
+            year: yearResults,
+          },
+        },
+      ),
+      api.get<ResponseCashBalance>('/reports/admin/cash-balance', {
         params: {
           year: yearResults,
         },
-      })
+      }),
+    ])
       .then(response => {
-        const { data } = response.data;
-        const summary = data.reduce(
+        const [responseMonthlySummary, responseCashBalance] = response;
+        const { data: dataMonthlySummary } = responseMonthlySummary;
+        const summary = dataMonthlySummary.data.reduce(
           (accumulator: Summary, report: Report) => {
             accumulator.request_amount += Number(report.request_amount);
             accumulator.profit += Number(report.profit);
@@ -120,11 +140,13 @@ const DashboardAdmin: React.FC = () => {
           },
         );
 
+        const { cash_balance } = responseCashBalance.data.data;
+
         const result = {
           request_amount: numberFormat(summary.request_amount),
           profit: numberFormat(summary.profit),
           financial_loss_amount: numberFormat(summary.financial_loss_amount),
-          balance: numberFormat(summary.balance),
+          balance: numberFormat(cash_balance),
         };
 
         setMonthlyRequestsSummary(result);

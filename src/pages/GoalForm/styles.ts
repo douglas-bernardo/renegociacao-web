@@ -129,7 +129,7 @@ export const GoalsMonthBoard = styled.div`
       min-width: 100px;
     }
 
-    div.roleItem {
+    div.goalItem {
       display: flex;
       align-items: center;
       padding: 10px;

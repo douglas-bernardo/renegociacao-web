@@ -76,23 +76,8 @@ const GoalForm: React.FC = () => {
   const location = useLocation<LocationProps>();
 
   const [goalTypeOptions, setGoalTypeOptions] = useState<OptionTypeBase[]>([]);
-  const [currentGoalType, setCurrentGoalType] = useState<OptionTypeBase>();
 
   const [goal, setGoal] = useState<Goal | null>(null);
-  const [currentGoalMonthsTargets, setCurrentGoalMonthsTargets] = useState({});
-
-  // useEffect(() => {
-  //   const monthsNumbers = Array.from({ length: 12 }, (v, k) => k + 1);
-  //   const monthsGoalOptions = monthsNumbers.map(m => {
-  //     return {
-  //       [m]: m,
-  //       name: format(new Date(new Date().getFullYear(), m - 1, 1), 'MMMM', {
-  //         locale: ptBR,
-  //       }),
-  //     };
-  //   });
-  //   console.log(monthsGoalOptions);
-  // }, []);
 
   const monthsGoalOptions: Month[] = useMemo(() => {
     const monthsNumbers = Array.from({ length: 12 }, (v, k) => k + 1);
@@ -124,34 +109,25 @@ const GoalForm: React.FC = () => {
         .get<GoalResponse>(`/domain/goal/${location.state?.id}`)
         .then(response => {
           const { data } = response.data;
-          const currentTargets = {};
-          data.months.forEach(element => {
-            currentTargets[element.month_number] = String(
-              element.target,
-            ).replace('.', ',');
-          });
-
-          setCurrentGoalMonthsTargets(currentTargets);
           setGoal(data);
 
           const current = goalTypeOptions.find(opt => {
             return opt.value === data.goal_type.id;
           });
-          console.log(current);
-          setCurrentGoalType(current);
+          formRef.current?.setFieldValue('goal_type_id', {
+            value: current?.value,
+            label: current?.label,
+          });
+
+          data.months.forEach(element => {
+            formRef.current?.setFieldValue(
+              element.month_number.toString(),
+              String(element.target).replace('.', ',').padStart(5, '0'),
+            );
+          });
         });
     }
   }, [location.state?.id, goalTypeOptions]);
-
-  // useEffect(() => {
-  //   if (goal) {
-  //     const current = goalTypeOptions.find(opt => {
-  //       return opt.value === goal.goal_type.id;
-  //     });
-  //     console.log(current);
-  //     setCurrentGoalType(current);
-  //   }
-  // }, [goal, goalTypeOptions]);
 
   const handleButtonSubmit = useCallback(() => {
     formRef.current?.submitForm();
@@ -191,21 +167,31 @@ const GoalForm: React.FC = () => {
             };
           });
 
-        console.log(monthsGoals);
-
         setLoadingModal(true);
 
-        await api.post('/domain/goal', {
-          current_year: data.current_year,
-          goal_type_id: data.goal_type_id,
-          description: data.description ?? '',
-          months: monthsGoals,
-        });
+        if (location.state?.id) {
+          await api.put(`/domain/goal/${location.state?.id}`, {
+            current_year: data.current_year,
+            goal_type_id: data.goal_type_id,
+            description: data.description ?? '',
+            months: monthsGoals,
+          });
+        } else {
+          await api.post('/domain/goal', {
+            current_year: data.current_year,
+            goal_type_id: data.goal_type_id,
+            description: data.description ?? '',
+            months: monthsGoals,
+          });
+        }
 
         setLoadingModal(false);
         addToast({
           type: 'success',
-          title: 'Nova meta foi adicionada',
+          title: 'Cadastro Metas',
+          description: location.state?.id
+            ? 'Dados alterados com sucesso!'
+            : 'Metas cadastradas com sucesso!',
         });
 
         history.push('/settings/goals');
@@ -226,7 +212,7 @@ const GoalForm: React.FC = () => {
         window.scrollTo(0, 0);
       }
     },
-    [addToast, history],
+    [addToast, history, location.state?.id],
   );
 
   return (
@@ -270,7 +256,6 @@ const GoalForm: React.FC = () => {
                     name="goal_type_id"
                     options={goalTypeOptions}
                     menuPlacement="auto"
-                    defaultValue={currentGoalType}
                     placeholder="Selecione o tipo de meta"
                   />
                 </div>
@@ -288,28 +273,18 @@ const GoalForm: React.FC = () => {
                     </p>
                   </header>
                   <main>
-                    {monthsGoalOptions.map(month => (
-                      <div key={month.month_number} className="roleItem">
-                        <div className="label">{month.name}</div>
-                        {currentGoalMonthsTargets ? (
-                          <Input
-                            name={`${month.month_number}`}
-                            mask="currency"
-                            maxLength={5}
-                            defaultValue={
-                              currentGoalMonthsTargets[month.month_number]
-                            }
-                          />
-                        ) : (
+                    {monthsGoalOptions &&
+                      monthsGoalOptions.map(month => (
+                        <div key={month.month_number} className="goalItem">
+                          <div className="label">{month.name}</div>
                           <Input
                             name={`${month.month_number}`}
                             mask="currency"
                             maxLength={5}
                             defaultValue="00,00"
                           />
-                        )}
-                      </div>
-                    ))}
+                        </div>
+                      ))}
                   </main>
                 </GoalsMonthBoard>
               </Form>
