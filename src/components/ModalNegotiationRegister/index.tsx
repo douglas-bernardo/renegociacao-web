@@ -14,7 +14,7 @@ import { useToast } from '../../hooks/toast';
 import Modal from '../Modal';
 import Select from '../Select';
 
-import getValidationErros from '../../utils/getValidationErros';
+import { getValidationErrors } from '../../utils/getValidationErrors';
 
 interface IOutrasFinalizacoesDTO {
   situacao_id: number;
@@ -123,9 +123,9 @@ const ModalNegotiationRegister: React.FC<IModalProps> = ({
           title:
             "Negociação registrada para a ocorrência selecionada. Acesse 'Negociações' para gerenciar",
         });
-      } catch (err) {
+      } catch (err: any | Yup.ValidationError) {
         if (err instanceof Yup.ValidationError) {
-          const errors = getValidationErros(err);
+          const errors = getValidationErrors(err);
           formRef.current?.setErrors(errors);
           return;
         }

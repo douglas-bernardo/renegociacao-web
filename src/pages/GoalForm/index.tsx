@@ -1,4 +1,10 @@
-import React, { useRef, useCallback } from 'react';
+import React, {
+  useRef,
+  useCallback,
+  useState,
+  useMemo,
+  useEffect,
+} from 'react';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { FormHandles } from '@unform/core';
 import { TiArrowLeftThick } from 'react-icons/ti';
@@ -10,9 +16,6 @@ import ptBR from 'date-fns/locale/pt-BR';
 
 import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
 
-import { useState } from 'react';
-import { useEffect } from 'react';
-import { useMemo } from 'react';
 import { useToast } from '../../hooks/toast';
 
 import Loading from '../../components/Loading';
@@ -22,7 +25,7 @@ import Header from '../../components/Header';
 import Select from '../../components/Select';
 
 import { Main, ContainerRegister, Form, GoalsMonthBoard } from './styles';
-import getValidationErros from '../../utils/getValidationErros';
+import { getValidationErrors } from '../../utils/getValidationErrors';
 import Input from '../../components/Input';
 import LoadingModal from '../../components/LoadingModal';
 import { api } from '../../services/api';
@@ -195,9 +198,9 @@ const GoalForm: React.FC = () => {
         });
 
         history.push('/settings/goals');
-      } catch (err) {
+      } catch (err: any | Yup.ValidationError) {
         if (err instanceof Yup.ValidationError) {
-          const errors = getValidationErros(err);
+          const errors = getValidationErrors(err);
           formRef.current?.setErrors(errors);
           return;
         }

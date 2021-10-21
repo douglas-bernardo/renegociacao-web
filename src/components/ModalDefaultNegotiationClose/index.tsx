@@ -12,7 +12,7 @@ import Modal from '../Modal';
 import Input from '../Input';
 import Select from '../Select';
 
-import getValidationErros from '../../utils/getValidationErros';
+import { getValidationErrors } from '../../utils/getValidationErrors';
 import ModalConfirm from '../ModalConfirm';
 import LoadingModal from '../LoadingModal';
 
@@ -78,7 +78,7 @@ const ModalDefaultNegotiationClose: React.FC<IModalProps> = ({
       setShowModalConfirm(!showModalConfirm);
     } catch (err) {
       if (err instanceof Yup.ValidationError) {
-        const errors = getValidationErros(err);
+        const errors = getValidationErrors(err);
         formRef.current?.setErrors(errors);
       }
     }
@@ -102,9 +102,9 @@ const ModalDefaultNegotiationClose: React.FC<IModalProps> = ({
           type: 'success',
           title: 'Negociação Finalizada!',
         });
-      } catch (err) {
+      } catch (err: any | Yup.ValidationError) {
         if (err instanceof Yup.ValidationError) {
-          const errors = getValidationErros(err);
+          const errors = getValidationErrors(err);
           formRef.current?.setErrors(errors);
           return;
         }

@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/control-has-associated-label */
 import React, {
   ChangeEvent,
   FormEvent,
@@ -8,42 +7,36 @@ import React, {
   useState,
 } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
-import { FaFilter, FaInfoCircle } from 'react-icons/fa';
+import { FaInfoCircle } from 'react-icons/fa';
 import { HiOutlineRefresh } from 'react-icons/hi';
-
+import { RiFilterOffFill } from 'react-icons/ri';
 import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
 import Loader from 'react-loader-spinner';
-
 import Select from 'react-select';
 import * as Yup from 'yup';
-
 import format from 'date-fns/format';
 import { parseISO } from 'date-fns';
-
 import ReactTooltip from 'react-tooltip';
-import { Container, Content, MainHeader } from '../../components/Container';
 
+import { Container, Content, MainHeader } from '../../components/Container';
 import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 import Whoops from '../../components/Whoops';
-
 import Pagination, { PaginationHandles } from '../../components/Pagination';
-
-import { Main, FilterBar, OccurrenceTable } from './styles';
-
-import { api } from '../../services/api';
-
 import Loading from '../../components/Loading';
 import ModalNegotiationRegister from '../../components/ModalNegotiationRegister';
 import DropOccurrenceActions from '../../components/DropOccurrenceActions';
-
-import InputDatePickerProps, {
+import InputDatePicker, {
   InputDatePickerHandles,
 } from '../../components/InputDatePicker';
 import ModalConfirm from '../../components/ModalConfirm';
-import { useToast } from '../../hooks/toast';
 import Can from '../../components/Can';
+
+import { api } from '../../services/api';
+import { Main, FilterBar, OccurrenceTable } from './styles';
+import { useToast } from '../../hooks/toast';
 import { numberFormat } from '../../utils/numberFormat';
+import { getValidationErrors } from '../../utils/getValidationErrors';
 
 interface Options {
   value: string;
@@ -135,7 +128,6 @@ const Occurrences: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [dateError, setDateError] = useState<String | undefined>('');
 
   const [limit, setLimit] = useState(() => {
     if (location.state?.limit) {
@@ -151,6 +143,7 @@ const Occurrences: React.FC = () => {
     return 0;
   });
 
+  const [isDateFiltered, setIsDateFiltered] = useState(false);
   const [startDate, setStartDate] = useState(() => {
     return new Date(new Date().getFullYear(), 0, 1);
   });
@@ -360,41 +353,92 @@ const Occurrences: React.FC = () => {
     [handleRefreshPage, addToast],
   );
 
-  const handleDatePicker = useCallback(() => {
-    setDateError('');
+  const handleStartDatePicker = useCallback(
+    (date: Date) => {
+      inputStartDateRef.current?.setError('');
 
-    const dateFilterParams = {
-      startDate: inputStartDateRef.current?.selectedDate,
-      endDate: inputEndDateRef.current?.selectedDate,
-    };
+      const dateFilterParams = {
+        startDate: date,
+        endDate,
+      };
 
-    const schema = Yup.object().shape({
-      startDate: Yup.date().required('Data inicial não pode ser vazia'),
-      endDate: Yup.date()
-        .required('Data final não pode ser vazia')
-        .min(
-          Yup.ref('startDate'),
-          'Data final não pode ser anterior a data inicial',
-        ),
-    });
+      const schema = Yup.object().shape({
+        startDate: Yup.date()
+          .required('Data inicial não pode ser vazia')
+          .max(
+            Yup.ref('endDate'),
+            'Data inicial não pode ser posterior a data final',
+          ),
+        endDate: Yup.date()
+          .required('Data final não pode ser vazia')
+          .min(
+            Yup.ref('startDate'),
+            'Data final não pode ser anterior a data inicial',
+          ),
+      });
 
-    schema
-      .validate(dateFilterParams, { abortEarly: false })
-      .then(valid => {
-        setStartDate(valid.startDate);
-        setEndDate(valid.endDate);
-        setOffset(0);
-      })
-      .catch(err => {
-        err.inner.forEach(error => {
-          if (error.path === 'startDate') {
-            setDateError(error.message);
-          }
-          if (error.path === 'endDate') {
-            setDateError(error.message);
+      schema
+        .validate(dateFilterParams, { abortEarly: false })
+        .then(valid => {
+          setStartDate(valid.startDate);
+          setEndDate(valid.endDate);
+          setIsLoading(true);
+          setOffset(0);
+          setIsDateFiltered(true);
+        })
+        .catch(err => {
+          if (err instanceof Yup.ValidationError) {
+            const errors = getValidationErrors(err);
+            inputStartDateRef.current?.setError(errors.startDate);
           }
         });
+    },
+    [endDate],
+  );
+
+  const handleEndDatePicker = useCallback(
+    (date: Date) => {
+      inputEndDateRef.current?.setError('');
+
+      const dateFilterParams = {
+        startDate,
+        endDate: date,
+      };
+
+      const schema = Yup.object().shape({
+        startDate: Yup.date().required('Data inicial não pode ser vazia'),
+        endDate: Yup.date()
+          .required('Data final não pode ser vazia')
+          .min(
+            Yup.ref('startDate'),
+            'Data final não pode ser anterior a data inicial',
+          ),
       });
+
+      schema
+        .validate(dateFilterParams, { abortEarly: false })
+        .then(valid => {
+          setStartDate(valid.startDate);
+          setEndDate(valid.endDate);
+          setIsLoading(true);
+          setOffset(0);
+          setIsDateFiltered(true);
+        })
+        .catch(err => {
+          if (err instanceof Yup.ValidationError) {
+            const errors = getValidationErrors(err);
+            inputEndDateRef.current?.setError(errors.endDate);
+          }
+        });
+    },
+    [startDate],
+  );
+
+  const handleClearDateFilter = useCallback(() => {
+    setStartDate(new Date(new Date().getFullYear(), 0, 1));
+    setEndDate(new Date());
+    setIsLoading(true);
+    setIsDateFiltered(false);
   }, []);
 
   const handleSelectStatusFilter = useCallback(
@@ -501,29 +545,32 @@ const Occurrences: React.FC = () => {
             <div className="dateFilter">
               <span>Data da ocorrência:</span>
               <div className="inputDates">
-                <InputDatePickerProps
+                <InputDatePicker
                   ref={inputStartDateRef}
                   name="start_date"
                   label="Início:"
                   defaultDate={startDate}
+                  onChange={handleStartDatePicker}
                 />
-                <InputDatePickerProps
+                <InputDatePicker
                   ref={inputEndDateRef}
                   name="end_date"
                   label="Fim:"
                   defaultDate={endDate}
+                  onChange={handleEndDatePicker}
                 />
-                <button
-                  className="dateFilterRange"
-                  type="button"
-                  onClick={handleDatePicker}
-                  title="Filtrar"
-                >
-                  <FaFilter />
-                  Filtrar
-                </button>
+                {isDateFiltered && (
+                  <button
+                    className="dateFilterRange"
+                    type="button"
+                    onClick={handleClearDateFilter}
+                    title="Limpar filtros"
+                  >
+                    <RiFilterOffFill size={20} />
+                    Limpar
+                  </button>
+                )}
               </div>
-              {dateError && <span className="invalidDate">{dateError}</span>}
             </div>
             <div className="typesFilters">
               <Can roles={['ROLE_ADMIN', 'ROLE_GERENTE', 'ROLE_COORDENADOR']}>

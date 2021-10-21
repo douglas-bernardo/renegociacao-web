@@ -24,7 +24,7 @@ import {
   ContainerDetails,
   StaticContainerDetails,
 } from './styles';
-import getValidationErros from '../../../utils/getValidationErros';
+import { getValidationErrors } from '../../../utils/getValidationErrors';
 import { useNegotiation } from '../../../hooks/negotiation';
 import { numberFormat } from '../../../utils/numberFormat';
 import LoadingModal from '../../../components/LoadingModal';
@@ -248,9 +248,9 @@ const NegotiationContainerDetails: React.FC<NegotiationContainerDetailsProps> = 
           title: 'Dados da negociação atualizados',
         });
         window.scrollTo(0, 0);
-      } catch (err) {
+      } catch (err: any | Yup.ValidationError) {
         if (err instanceof Yup.ValidationError) {
-          const errors = getValidationErros(err);
+          const errors = getValidationErrors(err);
           formRef.current?.setErrors(errors);
           return;
         }

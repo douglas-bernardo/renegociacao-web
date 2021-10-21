@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/control-has-associated-label */
 import React, {
   ChangeEvent,
   FormEvent,
@@ -13,7 +12,7 @@ import * as Yup from 'yup';
 import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
 import Loader from 'react-loader-spinner';
 
-import { FaFilter } from 'react-icons/fa';
+import { RiFilterOffFill } from 'react-icons/ri';
 import { HiOutlineRefresh } from 'react-icons/hi';
 import format from 'date-fns/format';
 import { parseISO } from 'date-fns';
@@ -44,6 +43,7 @@ import ModalTransferNegotiation, {
 import ModalConfirm from '../../../components/ModalConfirm';
 import LoadingModal from '../../../components/LoadingModal';
 import { useToast } from '../../../hooks/toast';
+import { getValidationErrors } from '../../../utils/getValidationErrors';
 
 const situationStyles = {
   '1': 'warning',
@@ -154,7 +154,6 @@ const Negotiations: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [btnLoading, setBtnLoading] = useState(false);
   const [isError, setIsError] = useState(false);
-  const [dateError, setDateError] = useState<String | undefined>('');
   const [tableRefresh, setTableRefresh] = useState(false);
 
   /** Modal states and options */
@@ -198,6 +197,7 @@ const Negotiations: React.FC = () => {
     return 0;
   });
 
+  const [isDateFiltered, setIsDateFiltered] = useState(false);
   const [startDate, setStartDate] = useState(() => {
     return new Date(new Date().getFullYear(), 0, 1);
   });
@@ -431,41 +431,92 @@ const Negotiations: React.FC = () => {
     [refreshPage],
   );
 
-  const handleDatePicker = useCallback(() => {
-    setDateError('');
+  const handleStartDatePicker = useCallback(
+    (date: Date) => {
+      inputStartDateRef.current?.setError('');
 
-    const dateFilterParams = {
-      startDate: inputStartDateRef.current?.selectedDate,
-      endDate: inputEndDateRef.current?.selectedDate,
-    };
+      const dateFilterParams = {
+        startDate: date,
+        endDate,
+      };
 
-    const schema = Yup.object().shape({
-      startDate: Yup.date().required('Data inicial não pode ser vazia'),
-      endDate: Yup.date()
-        .required('Data final não pode ser vazia')
-        .min(
-          Yup.ref('startDate'),
-          'Data final não pode ser anterior a data inicial',
-        ),
-    });
+      const schema = Yup.object().shape({
+        startDate: Yup.date()
+          .required('Data inicial não pode ser vazia')
+          .max(
+            Yup.ref('endDate'),
+            'Data inicial não pode ser posterior a data final',
+          ),
+        endDate: Yup.date()
+          .required('Data final não pode ser vazia')
+          .min(
+            Yup.ref('startDate'),
+            'Data final não pode ser anterior a data inicial',
+          ),
+      });
 
-    schema
-      .validate(dateFilterParams, { abortEarly: false })
-      .then(valid => {
-        setStartDate(valid.startDate);
-        setEndDate(valid.endDate);
-        setOffset(0);
-      })
-      .catch(err => {
-        err.inner.forEach(error => {
-          if (error.path === 'startDate') {
-            setDateError(error.message);
-          }
-          if (error.path === 'endDate') {
-            setDateError(error.message);
+      schema
+        .validate(dateFilterParams, { abortEarly: false })
+        .then(valid => {
+          setStartDate(valid.startDate);
+          setEndDate(valid.endDate);
+          setIsLoading(true);
+          setOffset(0);
+          setIsDateFiltered(true);
+        })
+        .catch(err => {
+          if (err instanceof Yup.ValidationError) {
+            const errors = getValidationErrors(err);
+            inputStartDateRef.current?.setError(errors.startDate);
           }
         });
+    },
+    [endDate],
+  );
+
+  const handleEndDatePicker = useCallback(
+    (date: Date) => {
+      inputEndDateRef.current?.setError('');
+
+      const dateFilterParams = {
+        startDate,
+        endDate: date,
+      };
+
+      const schema = Yup.object().shape({
+        startDate: Yup.date().required('Data inicial não pode ser vazia'),
+        endDate: Yup.date()
+          .required('Data final não pode ser vazia')
+          .min(
+            Yup.ref('startDate'),
+            'Data final não pode ser anterior a data inicial',
+          ),
       });
+
+      schema
+        .validate(dateFilterParams, { abortEarly: false })
+        .then(valid => {
+          setStartDate(valid.startDate);
+          setEndDate(valid.endDate);
+          setIsLoading(true);
+          setOffset(0);
+          setIsDateFiltered(true);
+        })
+        .catch(err => {
+          if (err instanceof Yup.ValidationError) {
+            const errors = getValidationErrors(err);
+            inputEndDateRef.current?.setError(errors.endDate);
+          }
+        });
+    },
+    [startDate],
+  );
+
+  const handleClearDateFilter = useCallback(() => {
+    setStartDate(new Date(new Date().getFullYear(), 0, 1));
+    setEndDate(new Date());
+    setIsLoading(true);
+    setIsDateFiltered(false);
   }, []);
 
   const handleUserRespFilter = useCallback(
@@ -683,24 +734,27 @@ const Negotiations: React.FC = () => {
                   name="start_date"
                   label="Início:"
                   defaultDate={startDate}
+                  onChange={handleStartDatePicker}
                 />
                 <InputDatePickerProps
                   ref={inputEndDateRef}
                   name="end_date"
                   label="Fim:"
                   defaultDate={endDate}
+                  onChange={handleEndDatePicker}
                 />
-                <button
-                  className="dateFilterRange"
-                  type="button"
-                  onClick={handleDatePicker}
-                  title="Filtrar"
-                >
-                  <FaFilter />
-                  Filtrar
-                </button>
+                {isDateFiltered && (
+                  <button
+                    className="dateFilterRange"
+                    type="button"
+                    onClick={handleClearDateFilter}
+                    title="Limpar filtros"
+                  >
+                    <RiFilterOffFill size={20} />
+                    Limpar
+                  </button>
+                )}
               </div>
-              {dateError && <span className="invalidDate">{dateError}</span>}
             </div>
             <div className="typesFilters">
               <Select

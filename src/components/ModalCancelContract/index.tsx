@@ -13,7 +13,7 @@ import Modal from '../Modal';
 import Input from '../Input';
 import Select from '../Select';
 
-import getValidationErros from '../../utils/getValidationErros';
+import { getValidationErrors } from '../../utils/getValidationErrors';
 import Tabs from '../Tabs';
 import Tab from '../Tab';
 import { Card, CardBody, CardHeader } from '../Container';
@@ -95,7 +95,7 @@ const ModalCancelContract: React.FC<IModalProps> = ({
       setShowModalConfirm(!showModalConfirm);
     } catch (err) {
       if (err instanceof Yup.ValidationError) {
-        const errors = getValidationErros(err);
+        const errors = getValidationErrors(err);
         formRef.current?.setErrors(errors);
       }
     }
@@ -120,7 +120,7 @@ const ModalCancelContract: React.FC<IModalProps> = ({
           title: 'Negociação Finalizada!',
           description: 'Cancelamento de Contrato',
         });
-      } catch (err) {
+      } catch (err: any) {
         setLoadingModal(false);
         addToast({
           type: 'error',

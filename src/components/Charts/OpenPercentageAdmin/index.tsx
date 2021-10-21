@@ -121,7 +121,7 @@ const OpenPercentageAdmin: React.FC<OpenPercentageAdminProps> = ({ year }) => {
           options={chartOptions}
           series={series}
           type="area"
-          height={350}
+          height={260}
         />
       )}
     </Container>

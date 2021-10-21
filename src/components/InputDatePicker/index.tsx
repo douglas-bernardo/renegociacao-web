@@ -6,18 +6,15 @@ import React, {
   useImperativeHandle,
   useEffect,
 } from 'react';
-import { format } from 'date-fns';
 
+import { format } from 'date-fns';
 import DayPicker, { DayModifiers } from 'react-day-picker';
 import 'react-day-picker/lib/style.css';
-
 import { BiCalendar } from 'react-icons/bi';
 
 import { OutSideClick } from '../../hooks/outSideClick';
-
-import { Container, DropCalendarContainer } from './styles';
-
 import { dateMask } from '../Input/masks';
+import { Container, DropCalendarContainer } from './styles';
 
 export interface InputDatePickerHandles {
   selectedDate: Date;
@@ -28,12 +25,13 @@ interface InputDatePickerProps {
   name: string;
   label: string;
   defaultDate?: Date;
+  onChange?: (date: Date) => void;
 }
 
 const InputDatePicker: React.ForwardRefRenderFunction<
   InputDatePickerHandles,
   InputDatePickerProps
-> = ({ name, label, defaultDate }, refInput) => {
+> = ({ name, label, defaultDate, onChange }, refInput) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const { visible, setVisible, ref } = OutSideClick(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -66,12 +64,17 @@ const InputDatePicker: React.ForwardRefRenderFunction<
         setVisible((prevState: boolean) => !prevState);
         inputRef.current.value = format(date, 'dd/MM/yyyy');
       }
+
+      if (typeof onChange === 'function') {
+        onChange(date);
+      }
     },
-    [setVisible],
+    [setVisible, onChange],
   );
 
   const handleInputDate = useCallback(
     (e: React.FormEvent<HTMLInputElement>) => {
+      setVisible(false);
       if (inputRef.current && e.currentTarget.value.length === 10) {
         inputRef.current.value = e.currentTarget.value;
         const parts = e.currentTarget.value.split('/');
@@ -79,17 +82,33 @@ const InputDatePicker: React.ForwardRefRenderFunction<
         const mouth = parseInt(parts[1], 10);
         const day = parseInt(parts[0], 10);
         const newDate = new Date(year, mouth - 1, day);
-        console.log(newDate);
+
         setSelectedDate(newDate);
-        setVisible(false);
+
+        if (typeof onChange === 'function') {
+          onChange(newDate);
+        }
       }
     },
-    [setVisible],
+    [setVisible, onChange],
   );
 
   const handleKeyUp = useCallback((e: React.FormEvent<HTMLInputElement>) => {
     dateMask(e);
   }, []);
+
+  const handleEscape = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === 'Escape') {
+        if (inputRef.current && defaultDate) {
+          inputRef.current.value = format(defaultDate, 'dd/MM/yyyy');
+          setSelectedDate(defaultDate);
+          setError('');
+        }
+      }
+    },
+    [defaultDate],
+  );
 
   return (
     <Container ref={ref}>
@@ -105,10 +124,11 @@ const InputDatePicker: React.ForwardRefRenderFunction<
           onChange={handleInputDate}
           onKeyUp={handleKeyUp}
           autoComplete="off"
+          onKeyDown={handleEscape}
         />
         <BiCalendar />
       </label>
-      {error && <span>{error}</span>}
+      {error && <span className="error">{error}</span>}
       {visible && (
         <DropCalendarContainer>
           <DayPicker

@@ -1,5 +1,3 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { ChangeEvent, useRef, useCallback } from 'react';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { FormHandles } from '@unform/core';
@@ -20,7 +18,7 @@ import Sidebar from '../../components/Sidebar';
 import Header from '../../components/Header';
 
 import { Main, ContainerRegister, Form, RoleBoard } from './styles';
-import getValidationErros from '../../utils/getValidationErros';
+import { getValidationErrors } from '../../utils/getValidationErrors';
 import Input from '../../components/Input';
 import LoadingModal from '../../components/LoadingModal';
 import { api, apiTimesharing } from '../../services/api';
@@ -205,9 +203,9 @@ const UserForm: React.FC = () => {
         });
 
         history.push('/settings/users');
-      } catch (err) {
+      } catch (err: any | Yup.ValidationError) {
         if (err instanceof Yup.ValidationError) {
-          const errors = getValidationErros(err);
+          const errors = getValidationErrors(err);
           formRef.current?.setErrors(errors);
           return;
         }

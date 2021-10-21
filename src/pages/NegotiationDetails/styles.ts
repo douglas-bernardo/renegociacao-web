@@ -151,7 +151,7 @@ export const SectionRight = styled.section`
     display: flex;
     height: 45px;
 
-    div.negotiationInfo {
+    div.errorInfo {
       display: flex;
       svg {
         cursor: pointer;

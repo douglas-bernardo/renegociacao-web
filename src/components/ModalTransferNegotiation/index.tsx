@@ -10,7 +10,7 @@ import Modal from '../Modal';
 import Input from '../Input';
 import Select from '../Select';
 
-import getValidationErros from '../../utils/getValidationErros';
+import { getValidationErrors } from '../../utils/getValidationErrors';
 import ModalConfirm from '../ModalConfirm';
 import LoadingModal from '../LoadingModal';
 
@@ -104,7 +104,7 @@ const ModalTransferNegotiation: React.FC<IModalProps> = ({
       setShowModalConfirm(!showModalConfirm);
     } catch (err) {
       if (err instanceof Yup.ValidationError) {
-        const errors = getValidationErros(err);
+        const errors = getValidationErrors(err);
         formRef.current?.setErrors(errors);
       }
     }
@@ -127,7 +127,7 @@ const ModalTransferNegotiation: React.FC<IModalProps> = ({
           type: 'success',
           title: 'Negociação transferida com sucesso!',
         });
-      } catch (err) {
+      } catch (err: any | Yup.ValidationError) {
         setLoadingModal(false);
         addToast({
           type: 'error',

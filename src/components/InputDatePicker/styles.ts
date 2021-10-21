@@ -6,8 +6,11 @@ export const Container = styled.div`
   display: flex;
   flex-direction: column;
 
-  span {
-    color: #c53030;
+  span.error {
+    position: absolute;
+    color: #9c0006;
+    bottom: -20px;
+    white-space: nowrap;
   }
 
   label {

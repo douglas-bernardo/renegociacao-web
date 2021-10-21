@@ -19,11 +19,23 @@ const ChartOptions = {
     align: 'left',
     margin: 0,
   },
+  dataLabels: {
+    enabled: true,
+    style: {
+      fontSize: '14px',
+      fontFamily: 'Helvetica, Arial, sans-serif',
+    },
+  },
+  legend: {
+    fontSize: '10px',
+    fontFamily: 'Helvetica, Arial',
+    position: 'bottom',
+  },
   labels: ['Retenção', 'Reversão'],
   plotOptions: {
     pie: {
       donut: {
-        size: '60%',
+        size: '65%',
         labels: {
           show: true,
         },

@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { shade } from 'polished';
 
 export const Main = styled.div`
   height: 100%;
@@ -24,12 +25,6 @@ export const FilterBar = styled.div`
   div.dateFilter {
     display: flex;
     flex-direction: column;
-
-    span.invalidDate {
-      position: absolute;
-      color: #9c0006;
-      bottom: -10px;
-    }
   }
 
   div.inputDates {
@@ -39,13 +34,17 @@ export const FilterBar = styled.div`
       color: #3c3c3c;
       display: flex;
       align-items: center;
-      background: transparent;
+      background: #eb5757;
+      color: #fff;
       border: 0;
+      border-radius: 10px;
+      padding: 0 10px;
       font-size: 14px;
-      transition: color 0.2s;
+
+      transition: background-color 0.2s;
 
       &:hover {
-        color: #003379;
+        background: ${shade(0.2, '#eb5757')};
       }
 
       svg {
